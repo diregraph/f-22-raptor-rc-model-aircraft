@@ -110,14 +110,15 @@ const rows = [
   ['escM', 'Speed controller, main', 'Electronics', 'Bought', 'Buy', 26, [2, -10, 55], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
   ['escL', 'Speed controller, left roll', 'Electronics', 'Bought', 'Buy', 26, [-140, -10, -55], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
   ['escR', 'Speed controller, right roll', 'Electronics', 'Bought', 'Buy', 26, [-140, -10, 55], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
-  ['stabServoL', 'Tail servo, left', 'Electronics', 'Bought', 'Owned', 10, [-365, 0, -96], 7, 'Press-fit pocket in the boom.', '9 g servo.'],
-  ['stabServoR', 'Tail servo, right', 'Electronics', 'Bought', 'Owned', 10, [-365, 0, 96], 7, 'Press-fit pocket in the boom.', '9 g servo.'],
+  ['harness', 'Wiring harness', 'Electronics', 'Bought', 'Solder', 45, [-90, -8, 0], 5, 'Plugs: XT60 to the battery, 3-pin leads to the ESP32 sled, bullet plugs to the motors.', 'Red and black 14 AWG power pair to each speed controller; three thin wires from each controller to its motor; servo and signal leads to the ESP32. Solder it once on the bench as one loom so it lifts out whole.'],
+  ['stabServoL', 'Tail servo, left', 'Electronics', 'Bought', 'Owned', 10, [-362, -17, -96], 7, 'Drops into a pocket from under the boom; a clip holds it.', '9 g servo, shaft down. The horn and pushrod run under the tail so the fin root stays clear.'],
+  ['stabServoR', 'Tail servo, right', 'Electronics', 'Bought', 'Owned', 10, [-362, -17, 96], 7, 'Drops into a pocket from under the boom; a clip holds it.', '9 g servo, shaft down. The horn and pushrod run under the tail so the fin root stays clear.'],
   // ---- Landing gear
   ['skidF', 'Front skid', 'Landing gear', 'PETG', 'Print', 14, [10, -55, 0], 4, 'C-clips onto both longerons.', 'Keeps the main propeller 9 mm off the ground. Flexes on hard landings.'],
   ['skidR', 'Rear skid', 'Landing gear', 'PETG', 'Print', 14, [-150, -55, 0], 4, 'C-clips onto both longerons.', 'Flexes on hard landings; cheap to reprint.'],
 ];
 
-export const WIRING_G = 45; // harness, connectors: spread around the balance point
+export const WIRING_G = 0; // wiring is now the 'harness' part
 
 export const PARTS = rows.map(([id, name, group, material, process, mass, cg, step, lock, note]) =>
   ({ id, name, group, material, process, mass, cg, step, lock, note }));
@@ -127,7 +128,7 @@ export const PART = Object.fromEntries(PARTS.map(p => [p.id, p]));
 // Mass properties. batteryX overrides the battery (and tray) station.
 export function massProps(batteryX = D.battery.xDefault) {
   let m = WIRING_G, mx = WIRING_G * -90, my = WIRING_G * -5, mz = 0;
-  const pts = [{ m: WIRING_G, p: [-90, -5, 0] }];
+  const pts = [];
   for (const p of PARTS) {
     const c = [...p.cg];
     if (p.id === 'battery' || p.id === 'batteryTray') c[0] = batteryX;

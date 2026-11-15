@@ -22,6 +22,7 @@ const camera = new THREE.PerspectiveCamera(32, 1, 10, 30000);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 150; controls.maxDistance = 6000;
 const HOME_TARGET = new THREE.Vector3(-40, -10, 0);
+let dirty = 3; controls.addEventListener('change', () => { dirty = Math.max(dirty, 2); });
 
 const sun = new THREE.DirectionalLight(0xfff4e6, 2.4); sun.position.set(420, 1100, 520); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -800, right: 800, top: 800, bottom: -800, near: 100, far: 2600 }); sun.shadow.bias = -0.0005; sun.shadow.radius = 6;
@@ -75,7 +76,7 @@ function apply() {
   const cutOn = state.cut < 468; clipPlane.constant = state.cut; renderer.clippingPlanes = cutOn ? [clipPlane] : [];
   ground.visible = state.explode < 0.03;
   // balance
-  mp = massProps(state.battX); trim = hoverTrim(mp, Math.max(state.tilt, 30));
+  mp = massProps(state.battX); trim = hoverTrim(mp, Math.max(state.tilt, 45));
   const hov = state.tilt >= 45, show = state.forces && state.explode < 0.03 && !asm;
   overlay.visible = show;
   if (show) {
@@ -89,7 +90,7 @@ function apply() {
     arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, (hov ? trim.M : mp.mass * 0.35) * k);
     arrows.W.set(cg.clone(), new THREE.Vector3(0, -1, 0), 60);
   }
-  hud(); syncUI();
+  hud(); syncUI(); dirty = Math.max(dirty, 2);
 }
 
 // ---------- HUD
@@ -102,7 +103,7 @@ function hud() {
     ['Balance point', `${Math.round(mp.cg[0])} mm`, ''],
     ['Front / main lift', `${Math.round(trim.split * 100)} / ${Math.round((1 - trim.split) * 100)}%`, ''],
     ['Thrust-to-weight', `${tw.toFixed(2)} (est.)`, cls(tw)],
-    ['Hover throttle', `${Math.round(thr * 100)}% (est.)`, thr < 0.7 ? 'ok' : thr < 0.8 ? 'warn' : 'bad'],
+    state.tilt >= 45 ? ['Hover throttle', `${Math.round(thr * 100)}% (est.)`, thr < 0.7 ? 'ok' : thr < 0.8 ? 'warn' : 'bad'] : ['Mode', 'wing-borne', ''],
   ].map(([k, v, c]) => `<span class="chip ${c}">${k}<b>${v}</b></span>`).join('');
 }
 
@@ -168,7 +169,7 @@ function focus(id) {
   flyTo(c, c.clone().addScaledVector(dir, r / Math.tan(rad(camera.fov / 2)) * 1.25));
 }
 function homeView(anim = true) {
-  const portrait = innerWidth / innerHeight < 0.9, dist = portrait ? 3900 : 2050;
+  const portrait = innerWidth / innerHeight < 0.9, dist = portrait ? 3400 : 2050;
   const pos = HOME_TARGET.clone().add(new THREE.Vector3(0.62, 0.46, 0.64).normalize().multiplyScalar(dist));
   if (anim) flyTo(HOME_TARGET.clone(), pos); else { controls.target.copy(HOME_TARGET); camera.position.copy(pos); }
 }
@@ -243,7 +244,7 @@ $('#tabs').addEventListener('click', e => { const b = e.target.closest('button')
 
 // ---------- loop
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
-  const desk = w > 900; camera.setViewOffset(w, h, desk ? 8 : 0, desk ? 80 : 60, w, h); camera.updateProjectionMatrix(); }
+  const desk = w > 900; camera.setViewOffset(w, h, desk ? 8 : 0, desk ? 80 : 60, w, h); camera.updateProjectionMatrix(); dirty = 3; }
 addEventListener('resize', resize);
 let last = performance.now();
 function frame(now) {
@@ -251,8 +252,11 @@ function frame(now) {
   if (Math.abs(state.tilt - state.tiltTarget) > 0.2) { state.tilt += (state.tiltTarget - state.tilt) * Math.min(1, dt * 4); if (Math.abs(state.tilt - state.tiltTarget) <= 0.2) state.tilt = state.tiltTarget; apply(); }
   if (camAnim) { const k = Math.min(1, (now - camAnim.t0) / camAnim.ms), e = k * k * (3 - 2 * k); controls.target.lerpVectors(camAnim.a, camAnim.b, e); camera.position.lerpVectors(camAnim.pa, camAnim.pb, e); if (k >= 1) camAnim = null; }
   const hov = state.tilt >= 45;
-  props.forEach((p, i) => { const on = state.spin && (hov || p === parts.get('propM')); if (on) p.rotateY(p.userData.dir * dt * 38); p.userData.disc.material.opacity += ((on ? 0.16 : 0) - p.userData.disc.material.opacity) * 0.15; });
-  controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+  props.forEach(p => { const on = state.spin && (hov || p === parts.get('propM')), d = p.userData.disc.material, tgt = on ? 0.16 : 0; if (on) { p.rotateY(p.userData.dir * dt * 38); dirty = Math.max(dirty, 1); } if (Math.abs(d.opacity - tgt) > 0.004) { d.opacity += (tgt - d.opacity) * 0.15; dirty = Math.max(dirty, 1); } else d.opacity = tgt; });
+  if (camAnim) dirty = Math.max(dirty, 1);
+  controls.update();
+  if (dirty > 0) { renderer.render(scene, camera); dirty--; }
+  requestAnimationFrame(frame);
 }
 
 resize(); homeView(false); buildTree(); inspector(); apply(); showTab(innerWidth <= 900 ? null : 'controls');
