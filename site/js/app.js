@@ -99,8 +99,8 @@ function apply() {
     const up = new THREE.Vector3(0, 1, 0), k = 0.26;
     const mDir = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion().multiplyQuaternions(joints.tiltG.quaternion, joints.yawG.quaternion));
     arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, hov ? trim.F * k : 0);
-    arrows.L.set(new THREE.Vector3(D.sparX, 44, -D.rollZ), up, hov ? trim.L * k : 0);
-    arrows.R.set(new THREE.Vector3(D.sparX, 44, D.rollZ), up, hov ? trim.R * k : 0);
+    arrows.L.set(new THREE.Vector3(D.rollX, 14, -D.rollZ), up, hov ? trim.L * k : 0);
+    arrows.R.set(new THREE.Vector3(D.rollX, 14, D.rollZ), up, hov ? trim.R * k : 0);
     arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, (hov ? trim.M : mp.mass * 0.35) * k);
     arrows.W.set(cg.clone(), new THREE.Vector3(0, -1, 0), 60);
   }
@@ -309,7 +309,7 @@ function simFrame(dt, now) {
   sun.position.copy(SUN0).add(cgW); sun.target.position.copy(cgW); ground.position.set(cgW.x, D.groundY, cgW.z); simGrid.position.x = cgW.x; simGrid.position.z = cgW.z;
   if (overlay.visible) {
     const up = new THREE.Vector3(0, 1, 0), kL = 26, mDir = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion().multiplyQuaternions(joints.tiltG.quaternion, joints.yawG.quaternion));
-    arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, s.T[0] * kL); arrows.L.set(new THREE.Vector3(D.sparX, 44, -D.rollZ), up, s.T[2] * kL); arrows.R.set(new THREE.Vector3(D.sparX, 44, D.rollZ), up, s.T[3] * kL);
+    arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, s.T[0] * kL); arrows.L.set(new THREE.Vector3(D.rollX, 14, -D.rollZ), up, s.T[2] * kL); arrows.R.set(new THREE.Vector3(D.rollX, 14, D.rollZ), up, s.T[3] * kL);
     arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, s.T[1] * kL);
     const cgB = new THREE.Vector3(...mp.cg); cgBall.position.copy(cgB); arrows.W.set(cgB, new THREE.Vector3(0, -1, 0).applyQuaternion(q.clone().invert()), 60);
   }

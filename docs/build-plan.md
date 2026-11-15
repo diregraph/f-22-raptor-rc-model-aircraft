@@ -92,7 +92,7 @@ Wing loading stays low, so forward flight is slow and forgiving.
 | MPU6050 module (GY-521) | 2 | One spare |
 | 5 V 3 A regulator (UBEC) | 2 | Powers servos and ESP32 |
 | Propellers 6 in (6040 or 6045), clockwise + anticlockwise | 10 pairs | Main crash consumable |
-| Propellers 5 in, clockwise + anticlockwise | 6 pairs | |
+| Propellers 4 in, clockwise + anticlockwise | 6 pairs | Roll motors, buried in the wings |
 | MG90S servos | 7 | 4 spares + 3 for the nozzle demo |
 | XT60 connectors, 14 AWG silicone wire, heat-shrink | — | Power harness |
 | Low-voltage buzzer alarm for the battery | 2 | |
@@ -187,27 +187,27 @@ foamed wall with 4% infill.
 | `tilt_bearing_right` | PETG | 28 x 27 x 20 | 7 |
 | `tilt_yoke` | PETG | 35 x 140 x 28 | 20 |
 | `motor_cradle` | PETG | 41 x 43 x 32 | 6 |
-| `roll_pod_right` | PETG | 32 x 60 x 24 | 9 |
-| `roll_pod_left` | PETG | 32 x 60 x 24 | 9 |
+| `roll_mount_right` | PETG | 45 x 32 x 28 | 5 |
+| `roll_mount_left` | PETG | 45 x 32 x 28 | 5 |
 | `skid_front` | PETG | 90 x 200 x 30 | 14 |
 | `skid_rear` | PETG | 90 x 200 x 30 | 14 |
 | `battery_tray` | PETG | 142 x 50 x 10 | 14 |
 | `fc_sled` | PETG | 88 x 36 x 11 | 7 |
 | `nose_plug` | PETG | 74 x 138 x 11 | 17 |
 | `hatch_latch` | PETG | 6 x 30 x 13 | 1 |
-| `canopy` | PETG-clear | 180 x 68 x 42 | 14 |
-| `nose` | LW-PLA | 86 x 160 x 150 | 56 |
-| `nose_cone` | LW-PLA | 65 x 111 x 128 | 17 |
-| `fan_bay` | LW-PLA | 84 x 216 x 231 | 90 |
-| `centre_section` | LW-PLA | 88 x 216 x 200 | 95 |
-| `hatch` | LW-PLA | 197 x 167 x 40 | 50 |
+| `canopy` | PETG-clear | 180 x 68 x 43 | 15 |
+| `nose` | LW-PLA | 86 x 160 x 150 | 58 |
+| `nose_cone` | LW-PLA | 65 x 111 x 128 | 18 |
+| `fan_bay` | LW-PLA | 84 x 216 x 231 | 86 |
+| `centre_section` | LW-PLA | 88 x 216 x 200 | 93 |
+| `hatch` | LW-PLA | 197 x 167 x 40 | 47 |
 | `aft_bridge` | LW-PLA | 84 x 216 x 90 | 41 |
-| `tail_boom_right` | LW-PLA | 50 x 24 x 170 | 11 |
-| `tail_boom_left` | LW-PLA | 50 x 24 x 170 | 11 |
-| `wing_inner_right` | LW-PLA | 304 x 27 x 123 | 38 |
-| `wing_inner_left` | LW-PLA | 304 x 27 x 123 | 38 |
-| `wing_outer_right` | LW-PLA | 198 x 22 x 119 | 20 |
-| `wing_outer_left` | LW-PLA | 198 x 22 x 119 | 20 |
+| `tail_boom_right` | LW-PLA | 48 x 24 x 170 | 11 |
+| `tail_boom_left` | LW-PLA | 48 x 24 x 170 | 10 |
+| `wing_inner_right` | LW-PLA | 304 x 27 x 77 | 28 |
+| `wing_inner_left` | LW-PLA | 304 x 27 x 77 | 28 |
+| `wing_outer_right` | LW-PLA | 238 x 24 x 165 | 22 |
+| `wing_outer_left` | LW-PLA | 238 x 24 x 165 | 22 |
 | `stabilator_right` | LW-PLA | 160 x 36 x 107 | 11 |
 | `stabilator_left` | LW-PLA | 160 x 36 x 107 | 11 |
 | `fin_right` | LW-PLA | 202 x 157 x 9 | 15 |
@@ -218,7 +218,7 @@ infill, 3 bottom layers and 0 top layers so they print hollow. The inner wing
 panels have a 304 mm root chord: place them diagonally on the 220 mm bed.
 
 **PETG first.** Print one clip test, then the tilt mount, fan spider, spar carrier
-and roll pods: with the three tubes that is a flyable test frame before any shell
+and roll-motor mounts: with the three tubes that is a flyable test frame before any shell
 exists.
 
 Check on the first prints, then adjust the parameters at the top of `cad/build.py`:
@@ -229,9 +229,9 @@ Check on the first prints, then adjust the parameters at the top of `cad/build.p
 - **Horn recesses.** Sized for a typical single-arm horn (`HORN_*`): measure yours.
 - **Motor screws.** 4 x M3 on a 16 mm square, 4 mm pad: use M3 x 6 or 7.
 
-Hardware not printed: three 8 mm tubes (two 637 mm, one 802 mm), 3 mm bamboo
-skewers (nose pins, nose-cone dowels, wing alignment pins), 3 mm steel wire (tail pivots), 2 mm pin
-per roll pod, servo screws, zip ties as a second lock on each clip.
+Hardware not printed: three 8 mm tubes (two 637 mm, one 676 mm), 3 mm bamboo
+skewers (nose pins, nose-cone dowels, wing alignment pins), 3 mm steel wire (tail pivots), 2 mm pins
+(one per roll-motor mount, one per wing tip), servo screws, zip ties as a second lock on each clip.
 
 ## 9. Safety
 

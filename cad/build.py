@@ -20,7 +20,9 @@ SLIDE_ID = 8.35       # bore a tube slides through
 LZ = 92.0             # longeron centre-line, +/- Z
 FAN_X, PIVOT_X, SPAR_X, SPAR_Y = 130.0, -300.0, -130.0, -9.0
 WING_TIP_Z = 345.0
-ROLL_Z = WING_TIP_Z + 45.0
+ROLL_X, ROLL_Z, ROLL_HOLE_R = -108.0, 240.0, 55.0   # roll motors buried in the wings, 4 in propellers
+ROLL_PAD_Y, ROLL_PROP_Y = -27.0, 2.0
+SPAR_HALF = WING_TIP_Z - 7.0
 M3 = 3.4              # clearance hole
 MOTOR_PITCH = 16.0    # EMAX ECO II 2306: 16 x 16 mm M3 pattern
 MOTOR_BORE = 9.5      # clearance for shaft circlip
@@ -165,16 +167,16 @@ def cradle():
     return body.cut(cut)
 
 def roll_pod(side=1):
-    z, x = side * ROLL_Z, SPAR_X
-    lo, hi = sorted((side * (WING_TIP_Z + 2), side * (WING_TIP_Z + 62)))
-    body = cyl("z", 7.0, lo, hi, x, SPAR_Y)
-    body = body.union(box(x - 5.4, x + 5.4, SPAR_Y, 4.0, z - 13, z + 13)).union(cyl("y", 16.0, 4.0, 8.0, x, z))
-    blo, bhi = sorted((side * (WING_TIP_Z + 1), side * (WING_TIP_Z + 56)))
-    cut = cyl("z", SLIDE_ID / 2, blo, bhi, x, SPAR_Y)
-    cut = cut.union(motor_holes("y", 3.0, 9.0, x, z))
-    cut = cut.union(cyl("y", 1.1, SPAR_Y - 8, SPAR_Y + 8, x, side * (WING_TIP_Z + 12)))   # 2 mm retaining pin through pod and spar
+    """Roll-motor mount, buried in the wing. Clips up onto the spar inside the wing duct and hangs the motor
+    just ahead of the spar with the propeller at the wing's upper surface. A 2 mm pin stops it sliding."""
+    z = side * ROLL_Z; yb = ROLL_PAD_Y - 4.0
+    ring = cyl("z", CLIP_OD / 2, z - 12, z + 12, SPAR_X, SPAR_Y).union(box(SPAR_X - CLIP_OD / 2, SPAR_X + CLIP_OD / 2, yb, SPAR_Y, z - 12, z + 12))
+    body = ring.union(box(SPAR_X, ROLL_X, yb, ROLL_PAD_Y, z - 8, z + 8)).union(cyl("y", 16.0, yb, ROLL_PAD_Y, ROLL_X, z))
+    cut = cyl("z", CLIP_ID / 2, z - 13, z + 13, SPAR_X, SPAR_Y).union(box(SPAR_X - CLIP_SLOT / 2, SPAR_X + CLIP_SLOT / 2, SPAR_Y, SPAR_Y + CLIP_OD, z - 13, z + 13))
+    cut = cut.union(motor_holes("y", yb - 1, ROLL_PAD_Y + 1, ROLL_X, z, cbore=(yb - 1, yb + 1.2)))
+    cut = cut.union(cyl("x", 1.1, SPAR_X - 10, SPAR_X + 10, SPAR_Y, z))                    # 2 mm retaining pin through clip and spar
+    cut = cut.union(box(SPAR_X - 4, SPAR_X + 4, yb - 1, -15.5, z - 13, z + 13))               # motor wires pass under the spar
     return body.cut(cut)
-
 
 # ================================================================ airframe (LW-PLA) and remaining PETG parts
 import math
@@ -186,7 +188,7 @@ TUBE_FRONT, TUBE_REAR = 212.0, -425.0
 HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, 81.0
 CAV = dict(x0=-162.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay (the spar crosses it)
 HATCH = dict(x0=-166.0, x1=24.0, z=84.0)
-WING = dict(root_z=108.0, bury=5.0, mid_z=226.0, tip_z=WING_TIP_Z, root_le=70.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
+WING = dict(root_z=108.0, bury=5.0, mid_z=180.0, tip_z=WING_TIP_Z, root_le=70.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
 STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=217.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
 FIN = dict(root_le=-218.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
 SKID_X, GROUND_Y = (10.0, -150.0), -85.0
@@ -195,10 +197,11 @@ STAB_SERVO_X = -362.0
 
 # fuselage cross-sections: hexagon (top flat, chine, bottom flat) -> the faceted look of the real aircraft
 #        x     chine  top   bot   y_top  y_bot  y_chine
-MID = [(230.0, 108.0, 88.0, 78.0, 38.0, -46.0, 0.0), (130.0, 108.0, 90.0, 80.0, 38.0, -46.0, 0.0), (30.0, 108.0, 90.0, 80.0, 36.0, -46.0, 0.0),
-       (-170.0, 108.0, 88.0, 76.0, 30.0, -42.0, 0.0), (-260.0, 108.0, 98.0, 72.0, 25.0, -37.0, 0.0), (-430.0, 106.0, 101.0, 88.0, 15.0, -21.0, -2.0)]
-NOSE = [(230.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0), (300.0, 72.0, 36.0, 44.0, 38.0, -43.0, 0.0), (370.0, 58.0, 27.0, 34.0, 31.0, -37.0, -1.0),
-        (430.0, 42.0, 17.0, 23.0, 21.0, -28.0, -2.0), (472.0, 26.0, 9.0, 13.0, 10.0, -18.0, -3.0), (498.0, 10.0, 3.0, 4.5, 3.0, -10.0, -4.0), (508.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0)]
+#        x     chine  (top)  bot   y_top  y_bot  y_chine  roundness of the top (2 = ellipse, 5 = nearly flat)
+MID = [(230.0, 108.0, 88.0, 78.0, 38.0, -46.0, 0.0, 2.6), (130.0, 108.0, 90.0, 80.0, 38.0, -46.0, 0.0, 2.6), (30.0, 108.0, 90.0, 80.0, 36.0, -46.0, 0.0, 2.8),
+       (-170.0, 108.0, 88.0, 76.0, 30.0, -42.0, 0.0, 3.4), (-260.0, 108.0, 98.0, 72.0, 25.0, -37.0, 0.0, 4.5), (-430.0, 106.0, 101.0, 88.0, 15.0, -21.0, -2.0, 5.0)]
+NOSE = [(230.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0, 2.6), (300.0, 72.0, 36.0, 44.0, 38.0, -43.0, 0.0, 2.6), (370.0, 58.0, 27.0, 34.0, 31.0, -37.0, -1.0, 2.5),
+        (430.0, 42.0, 17.0, 23.0, 21.0, -28.0, -2.0, 2.4), (472.0, 26.0, 9.0, 13.0, 10.0, -18.0, -3.0, 2.3), (498.0, 10.0, 3.0, 4.5, 3.0, -10.0, -4.0, 2.2), (508.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0, 2.2)]
 X_CONE = 380.0                # the nose is split here so each half fits the printer height
 CHEEK_X = 262.0               # forward reach of the intake lips
 
@@ -215,6 +218,12 @@ def wire(pts):   # aircraft (x,y,z) -> closed CadQuery wire
 def hexwire(x, w, tw, bw, yt, yb, yc, k=1.0):
     return wire([(x, yt * k, tw * k), (x, yc * k, w * k), (x, yb * k, bw * k), (x, yb * k, -bw * k), (x, yc * k, -w * k), (x, yt * k, -tw * k)])
 
+def secwire(x, w, tw, bw, yt, yb, yc, n=2.6, N=10):
+    """fuselage section: rounded upper surface from the chine over the top, faceted belly below the chine"""
+    arc = [(w * math.sin(math.pi / 2 * i / N) ** (2 / n), yc + (yt - yc) * math.cos(math.pi / 2 * i / N) ** (2 / n)) for i in range(N + 1)]
+    pts = [(x, y, z) for z, y in arc] + [(x, yb, bw), (x, yb, -bw)] + [(x, y, -z) for z, y in reversed(arc[1:])]
+    return wire(pts)
+
 def loft(wires, ruled=True):
     return W_(cq.Solid.makeLoft(wires, ruled))
 
@@ -229,12 +238,12 @@ def foil(le, c, t, place, n=22):
     return wire(up + lo)
 
 def body_master():
-    body = loft([hexwire(*s) for s in MID])
+    body = loft([secwire(*s) for s in MID])
     hump = [(24.0, 64.0, 46.0, 50.0), (-60.0, 60.0, 42.0, 50.0), (-170.0, 50.0, 34.0, 42.0), (-214.0, 40.0, 26.0, 31.0)]   # engine spine behind the lift fan
-    hw = [wire([(x, top, tw), (x, 20.0, w), (x, 20.0, -w), (x, top, -tw)]) for x, w, tw, top in hump]
+    hw = [secwire(x, w, tw, w, top, 14.0, 20.0, 2.3) for x, w, tw, top in hump]
     body = body.union(loft(hw))
     # intake lips: the body sides run forward of the intake face, swept so the outboard edge leads
-    ext = loft([hexwire(X_NOSE - 1, *MID[0][1:]), hexwire(CHEEK_X, *MID[0][1:])])
+    ext = loft([secwire(X_NOSE - 1, *MID[0][1:]), secwire(CHEEK_X, *MID[0][1:])])
     for sg in (-1, 1):
         tri = [(X_NOSE - 1, -sg * 82.0), (X_NOSE - 1, -sg * 109.0), (CHEEK_X, -sg * 109.0)]
         wedge = cq.Workplane("XY").polyline(tri).close().extrude(140).translate((0, 0, -70))
@@ -242,11 +251,11 @@ def body_master():
     return body
 
 def nose_solid():
-    return loft([hexwire(*s) for s in NOSE])
+    return loft([secwire(*s) for s in NOSE])
 
 def spigot(k):    # PETG plug that joins nose to fan bay
     s0 = NOSE[0]
-    a = hexwire(X_NOSE, *s0[1:], k=k); b = hexwire(X_NOSE - 12.0, *s0[1:], k=k)
+    a = hexwire(X_NOSE, *s0[1:7], k=k); b = hexwire(X_NOSE - 12.0, *s0[1:7], k=k)
     return loft([b, a])
 
 def wing_le(z): return WING["root_le"] - (z - WING["root_z"]) * TAN(WING["sweep"])
@@ -258,9 +267,12 @@ def wing_panel(z0, z1, side=1, grow=0.0):
     return loft(secs)
 
 def wing_cuts(side):
-    lo, hi = sorted((side * 60.0, side * (WING_TIP_Z + 5)))
-    c = cyl("z", BORE / 2, lo, hi, SPAR_X, SPAR_Y)
-    c = c.union(box(SPAR_X - 4, SPAR_X + 4, -24.0, -15.2, lo, hi))                        # wire slot under the spar
+    lo, hi = sorted((side * 60.0, side * (SPAR_HALF + 0.6)))
+    c = cyl("z", BORE / 2, lo, hi, SPAR_X, SPAR_Y)                                        # spar bore, closed at the tip
+    lo, hi = sorted((side * 60.0, side * ROLL_Z))
+    c = c.union(box(SPAR_X - 4, SPAR_X + 4, -24.0, -15.2, lo, hi))                        # wire slot under the spar, as far as the roll motor
+    c = c.union(cyl("y", ROLL_HOLE_R, -60, 60, ROLL_X, side * ROLL_Z))                    # duct for the roll propeller
+    c = c.union(cyl("y", 1.1, -30, 30, SPAR_X, side * (SPAR_HALF - 8)))                   # 2 mm tip pin through wing and spar
     zm = WING["mid_z"]; xp = wing_le(zm) - 0.22 * wing_c(zm)
     a, b = sorted((side * (zm - 22), side * (zm + 22)))
     return c.union(cyl("z", 1.7, a, b, xp, WING["y"]))                                    # 3 mm bamboo-skewer alignment pin
@@ -418,8 +430,8 @@ PARTS = {
     "tilt_bearing_right": (bearing_right, "bearingR", (0, 0, 0), None, "PETG"),
     "tilt_yoke": (yoke, "yoke", (PIVOT_X, 0, 0), ((1, 0, 0), 180), "PETG"),
     "motor_cradle": (cradle, "cradle", (PIVOT_X, 0, 0), ((1, 0, 0), 90), "PETG"),
-    "roll_pod_right": (lambda: roll_pod(1), "podR", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
-    "roll_pod_left": (lambda: roll_pod(-1), "podL", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
+    "roll_mount_right": (lambda: roll_pod(1), "podR", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
+    "roll_mount_left": (lambda: roll_pod(-1), "podL", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
     "skid_front": (lambda: skid(SKID_X[0]), "skidF", (0, 0, 0), ROT_UP, "PETG"),
     "skid_rear": (lambda: skid(SKID_X[1]), "skidR", (0, 0, 0), ROT_UP, "PETG"),
     "battery_tray": (battery_tray, "batteryTray", (BATT_X, 0, 0), None, "PETG"),
@@ -449,7 +461,9 @@ def envelopes():
     sx = PIVOT_X - SV_SHAFT_OFF
     return {
         "longerons": cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, -LZ).union(cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, LZ)),
-        "spar": cyl("z", TUBE / 2, -(WING_TIP_Z + 56), WING_TIP_Z + 56, SPAR_X, SPAR_Y),
+        "spar": cyl("z", TUBE / 2, -SPAR_HALF, SPAR_HALF, SPAR_X, SPAR_Y),
+        "roll propeller discs": cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, -ROLL_Z).union(cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, ROLL_Z)),
+        "roll motor bodies": cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, -ROLL_Z).union(cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, ROLL_Z)),
         "tilt servo body": box(sx - SV_L / 2, sx + SV_L / 2, -SV_W / 2, SV_W / 2, SV_TILT_ZC - SV_HALF_H, SV_TILT_ZC + SV_HALF_H),
         "yaw servo body": box(sx - SV_L / 2, sx + SV_L / 2, YAW_SY - SV_HALF_H, YAW_SY + SV_HALF_H, -SV_W / 2, SV_W / 2),
         "lift propeller disc": cyl("y", 77.0, 5.0, 14.0, FAN_X, 0),

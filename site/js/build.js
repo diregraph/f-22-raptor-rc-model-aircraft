@@ -251,7 +251,7 @@ export function buildModel(cad = {}) {
 
   // --- backbone
   for (const [id, s] of [['longeronL', -1], ['longeronR', 1]]) add(id, tubeAl(D.tubeFront - D.tubeRear, 'x', (D.tubeFront + D.tubeRear) / 2, 0, s * LZ));
-  add('spar', tubeAl(2 * (D.rollZ + 11), 'z', D.sparX, D.sparY, 0), [0, -70, 0]);
+  add('spar', tubeAl(2 * D.sparHalf, 'z', D.sparX, D.sparY, 0), [0, -70, 0]);
   { const m = MAT.petg();
     add('sparCarrier', grp(mesh(box(26, 7, 2 * LZ + 20, D.sparX, -18.5, 0), m), [-60, 60].map(z => mesh(box(26, 13, 16, D.sparX, -9.5, z), m)),
       [-LZ, LZ].map(z => mesh(box(26, 13, 9, D.sparX, -11, z), m)), clip(D.sparX, -LZ, 24, m), clip(D.sparX, LZ, 24, m)), [0, -150, 0]); }
@@ -317,14 +317,13 @@ export function buildModel(cad = {}) {
     add('wingOutR', outer(), [0, 0, 360]); add('wingOutL', mirrorZ(outer()), [0, 0, -360]);
     add('hatchLatch', mesh(box(11, 5.6, 30, -158, 17, 0), MAT.petg()), [0, 240, 0]);
   }
-  // --- roll pods, motors, props
+  // --- roll motors buried in the wings: mount on the spar, motor below, 4 in propeller at the upper surface
   const props = [];
   for (const [sfx, s, dir] of [['R', 1, -1], ['L', -1, 1]]) {
-    const m = MAT.petg('z'), z = s * D.rollZ;
-    add('pod' + sfx, grp(mesh(cylZ(6.6, 62, D.sparX, D.sparY, s * 429, 28), m), mesh(box(15, 14, 22, D.sparX, -1, z), m), mesh(cylY(15, 4.5, D.sparX, 7.7, z), m),
-      mesh(new THREE.SphereGeometry(6.6, 24, 14).scale(1, 1, 1.5).translate(D.sparX, D.sparY, s * 460), m), mesh(cylY(2.2, 3, D.sparX, D.sparY - 6.5, s * 412, 14), m)), [0, 0, s * 520]);
-    const mo = motor(); mo.position.set(D.sparX, 8, z); add('motor' + sfx, mo, [0, 80, s * 520]);
-    const pr = prop(127, 3, dir); pr.position.set(D.sparX, 29, z); add('prop' + sfx, pr, [0, 170, s * 520]); props.push(pr);
+    const m = MAT.petg('y'), z = s * D.rollZ;
+    add('pod' + sfx, grp(mesh(box(22, 4, 16, (D.rollX + D.sparX) / 2, D.rollPadY - 2, z), m), mesh(cylY(16, 4, D.rollX, D.rollPadY - 2, z), m), mesh(box(14, 22, 24, D.sparX, -20, z), m)), [0, -150, 0]);
+    const mo = motor(); mo.position.set(D.rollX, D.rollPadY, z); add('motor' + sfx, mo, [0, -90, 0]);
+    const pr = prop(102, 3, dir); pr.position.set(D.rollX, D.rollPropY, z); add('prop' + sfx, pr, [0, 150, 0]); props.push(pr);
   }
   // --- lift fan: spider, motor, prop
   { const m = MAT.petg(), sp = grp(), ang = Math.atan2(LZ, 50), len = 2 * Math.hypot(LZ, 50) - 6;
@@ -408,7 +407,7 @@ export function buildModel(cad = {}) {
       const three = (pts, axis) => [-2.4, 0, 2.4].forEach(o => h.add(tube(pts, 1.15, K, axis === 'z' ? [0, 0, o] : axis === 'x' ? [o, 0, 0] : [0, o, 0])));
       three([[-149, -8, -11.5], [-140, 0, -18], [-128, 4, -30], [-20, 6, -30], [14, -8, -20], [22, -15, -4], [60, -15, 0], [112, -15, -6], [124, -11, -9]], 'z');   // front motor: over the spar, along the battery
       three([[-149, -8, 11.5], [-158, -10, 30], [-166, -14, 62], [-190, -14, 70], [-225, -8, 76], [-272, -4, 62], [-293, -3, 30]], 'y');                            // main motor: out through the rear wall
-      for (const s of [-1, 1]) three([[-149, -17, s * 11.5], [-140, -18, s * 7], [sx - 1, -17.6, s * 12], [sx, -17.6, s * 60], [sx, -17.6, s * 112], [sx, -17.6, s * 250], [sx, -17, s * (RZ - 46)], [sx + 1, -9, s * (RZ - 13)], [sx, 6, s * (RZ - 8)]], 'x');   // roll motors: under the spar
+      for (const s of [-1, 1]) three([[-149, -17, s * 11.5], [-140, -18, s * 7], [sx - 1, -17.6, s * 12], [sx, -17.6, s * 60], [sx, -17.6, s * 112], [sx, -17.6, s * (RZ - 30)], [sx + 6, -22, s * (RZ - 12)], [D.rollX - 8, -29, s * (RZ - 5)]], 'x');   // roll motors: under the spar to the mount
       const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
       lead([[-308, -9, -76], [-285, -10, -80], [-215, -14, -72], [-170, -13, -72], [-160, 5, -75], [-128, 6, -76], [-100, -4, -76], [-78, -9, -70]]);          // tilt servo
       lead([[-321, -11, 0], [-300, -14, -30], [-268, -10, -66], [-215, -15, -70], [-170, -14, -70], [-159, 7, -73], [-126, 8, -75], [-98, -3, -75], [-70, -9, -69]]);   // yaw servo

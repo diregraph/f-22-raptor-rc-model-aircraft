@@ -12,12 +12,13 @@ not used. Reference images are not stored in this repository.
 | Wing planform | Leading edge swept about 34 deg, trailing edge swept forward, clipped tip | Same | Matches |
 | Tailplane span / wing span | about 0.62 | 0.63 after correction (was 0.76) | Corrected |
 | Fins | Twin, canted outward about 25 deg, both edges swept aft, clipped tip | Same | Matches |
-| Fuselage section | Faceted with a chine, deep belly | Six-sided sections with chine, 84 mm deep | Matches in character |
+| Fuselage section | Rounded top, chine, faceted deep belly | Rounded top, chine, faceted belly, 84 mm deep | Matches in character |
 | Intakes | Side intakes beside the cockpit with forward-swept lips | Swept lips on the fan-bay corners, running 32 mm ahead of the intake face | Corrected |
-| Dorsal line | Rounded spine from canopy to nozzle | Flat top with a spine only behind the lift fan | Simplified |
+| Dorsal line | Rounded spine from canopy to nozzle | Rounded upper surface from the chine over the top; spine behind the lift fan | Corrected |
 | Wing position | Root leading edge about 40% of length from the nose | 44% after correction (was 49%) | Corrected |
 | Nose length | Intake face about 29% of length from the nose | 28% after lengthening the nose to 278 mm (was 24%) | Corrected |
-| Propulsion | Ducted lift fan with doors, swivel nozzle, hidden roll ducts | Open propellers, tip pods, open fan hole, propeller notch | Functional choice |
+| Roll control | Hidden roll ducts in the wings | Roll motors buried in the wings in 110 mm ducts; clean wing tips (were tip pods) | Corrected |
+| Lift fan and nozzle | Ducted lift fan with doors; swivel nozzle between the booms | Open fan hole, no doors; open propeller in a notch between the booms | Inherent to open propellers |
 
 Second pass (same day): the wing was moved 60 mm forward and the nose lengthened by
 58 mm. Consequences of the wing move:
@@ -29,3 +30,13 @@ Second pass (same day): the wing was moved 60 mm forward and the nose lengthened
 - Pitch stability margin in forward flight is smaller: the balance point is now only
   about 10 mm ahead of the estimated neutral point. The flight controller holds it in
   the simulator, but treat forward flight as stabilised-only until measured.
+
+Third pass: the upper fuselage was rounded and the roll motors were moved from
+wing-tip pods into ducts inside the wings, with 4 in propellers in place of 5 in.
+The roll pair is estimated at 500 g thrust each (was 700 g), so four-motor
+thrust-to-weight falls from about 2.1 to about 1.9.
+
+What cannot be matched without changing the propulsion: a closed lift-fan door, and
+a nozzle in place of the open main propeller. A cover over the tail notch was
+considered and rejected: in hover it would sit directly above the main propeller
+and starve it of air.

@@ -7,8 +7,8 @@ export const D = {
   halfW: 108, yT: 22, longZ: 92, tubeR: 4,
   fanX: 130, fanR: 81,
   pivotX: -300, propOffset: 58,
-  sparX: -130, sparY: -9, rollZ: 390, tubeFront: 212, tubeRear: -425,
-  wing: { rootZ: 108, midZ: 226, tipZ: 345, rootLE: 70, rootC: 300, tipC: 95, sweep: 34, y: -9 },
+  sparX: -130, sparY: -9, sparHalf: 338, rollX: -108, rollZ: 240, rollPadY: -27, rollPropY: 2, tubeFront: 212, tubeRear: -425,
+  wing: { rootZ: 108, midZ: 180, tipZ: 345, rootLE: 70, rootC: 300, tipC: 95, sweep: 34, y: -9 },
   stab: { pivotX: -400, pivotY: -9, rootZ: 110, tipZ: 217, rootLE: -328, rootC: 160, tipC: 62, sweep: 34 },
   fin: { rootLE: -255, rootC: 170, tipC: 55, h: 150, sweep: 40, cant: 25, z: 96 },
   groundY: -85,
@@ -19,8 +19,8 @@ export const D = {
 export const THRUSTERS = [
   { id: 'F', name: 'Front lift', part: 'motorF', pos: [D.fanX, 10, 0], maxG: 1000, spin: 'CW', prop: '6 in' },
   { id: 'M', name: 'Main (vectored)', part: 'motorM', pos: [D.pivotX, 0, 0], maxG: 1000, spin: 'CCW', prop: '6 in' },
-  { id: 'L', name: 'Roll left', part: 'motorL', pos: [D.sparX, 20, -D.rollZ], maxG: 700, spin: 'CW', prop: '5 in' },
-  { id: 'R', name: 'Roll right', part: 'motorR', pos: [D.sparX, 20, D.rollZ], maxG: 700, spin: 'CCW', prop: '5 in' },
+  { id: 'L', name: 'Roll left', part: 'motorL', pos: [D.rollX, D.rollPropY, -D.rollZ], maxG: 500, spin: 'CW', prop: '4 in' },
+  { id: 'R', name: 'Roll right', part: 'motorR', pos: [D.rollX, D.rollPropY, D.rollZ], maxG: 500, spin: 'CCW', prop: '4 in' },
 ];
 
 export const JOINTS = {
@@ -39,14 +39,14 @@ export const MATERIALS = {
 export const GROUPS = ['Backbone', 'Airframe shells', 'Wings & tail', 'Propulsion', 'Vectoring mount', 'Electronics', 'Landing gear'];
 
 export const STEPS = [
-  { n: 1, title: 'Backbone', text: 'Lay out the two 637 mm longerons and the 802 mm spar. Nothing is fixed yet: the shells slide on first, then the PETG parts clip up from below and lock each shell in place.' },
+  { n: 1, title: 'Backbone', text: 'Lay out the two 637 mm longerons and the 676 mm spar. Nothing is fixed yet: the shells slide on first, then the PETG parts clip up from below and lock each shell in place.' },
   { n: 2, title: 'Lift-fan mount', text: 'Bolt the front motor to the fan spider (4 x M3). With the fan bay on the tubes, snap the spider up onto both longerons through the four pockets in the bay floor.' },
   { n: 3, title: 'Vectoring mount', text: 'Snap both tilt bearings onto the longerons. Fit the tilt servo to the left bearing, seat the yoke on its horn and stub axle. Yaw servo drops into the yoke; cradle seats on its horn. Bolt on the main motor.' },
   { n: 4, title: 'Centre section and skids', text: 'Slide the centre section onto the longerons behind the fan bay. Clip both skids up through the floor pockets: they lock it. Drop in the battery tray.' },
   { n: 5, title: 'Electronics', text: 'Flight-controller sled on the left of the bay, receiver and regulator on the right, speed controllers stacked in pairs behind the spar. Plug in servos and motors. Bench-test with propellers OFF.' },
   { n: 6, title: 'Body shells', text: 'Fan bay slides on from the front until the tubes bottom out. Aft bridge and the two tail booms slide on from the rear. Push the spar through the centre section, across the bay, and clip a carrier block up onto each longeron around it.' },
   { n: 7, title: 'Tail', text: 'Tail servos drop into the boom pockets from below. Each stabilator turns on a 3 mm wire pushed through the boom. Fins seat in their sockets on the boom tops.' },
-  { n: 8, title: 'Wings and roll motors', text: 'Slide each inner panel along the spar into its root socket, then the outer panel with its skewer pin. Push a roll pod onto each spar end and pin it: the pod holds the wing on.' },
+  { n: 8, title: 'Wings and roll motors', text: 'Slide each inner panel along the spar into its root socket, then the outer panel with its skewer pin. Pin each wing tip to the spar. Clip a roll-motor mount onto the spar inside each wing duct and pin it.' },
   { n: 9, title: 'Nose', text: 'Glue the nose cone to the nose section on its two skewer dowels, and the PETG plug into the back, once. Push the nose into the fan bay and drop the two skewer pins in from the top. Canopy is glued or taped on.' },
   { n: 10, title: 'Fly-ready', text: 'Strap in the battery and slide it to set the balance. Fit the hatch: tongue in at the front, press down at the rear until the latch clicks. Propellers go on LAST.' },
 ];
@@ -56,24 +56,24 @@ const rows = [
   // ---- Backbone
   ['longeronL', 'Longeron, left', 'Backbone', 'Aluminium', 'Cut', 38, [-106,  0,  -92], 1, 'Everything snaps onto this tube with C-clips.', '8 mm tube, 637 mm long. Runs nose to tail and doubles as the tail boom.'],
   ['longeronR', 'Longeron, right', 'Backbone', 'Aluminium', 'Cut', 38, [-106,  0,  92], 1, 'Everything snaps onto this tube with C-clips.', '8 mm tube, 637 mm long.'],
-  ['spar', 'Wing spar', 'Backbone', 'Aluminium', 'Cut', 46, [-130, -9, 0], 1, 'Slides through both carrier blocks and across the electronics bay.', '8 mm tube, 802 mm long. Carries both wings and both roll motors, so roll loads never pass through printed shells.'],
+  ['spar', 'Wing spar', 'Backbone', 'Aluminium', 'Cut', 40, [-130, -9, 0], 1, 'Slides through both carrier blocks and across the electronics bay.', '8 mm tube, 676 mm long. Carries both wings and both roll-motor mounts, so roll loads never pass through printed shells.'],
   ['sparCarrier', 'Spar carrier', 'Backbone', 'PETG', 'Print', 15, [-130, -9, 0], 1, 'Each block clips up onto its longeron through a pocket in the body floor; the spar slides through both.', 'A pair of blocks in one file. The spar ties them together and sets the airframe square. The notch under each bore carries the roll-motor wires.'],
   // ---- Airframe shells
-  ['nose', 'Nose section', 'Airframe shells', 'LW-PLA', 'Print', 56, [300, -4, 0], 9, 'Pushes onto the nose plug; two 3 mm bamboo-skewer pins drop in from the top.', 'Rear half of the nose. Carries the canopy and the PETG plug.'],
-  ['noseCone', 'Nose cone', 'Airframe shells', 'LW-PLA', 'Print', 17, [425, -6, 0], 9, 'Glued to the nose section; two 3 mm bamboo-skewer dowels line it up.', 'The nose is 278 mm long, taller than the printer, so it prints in two pieces. This tip is the first thing to hit the ground: keep spares.'],
+  ['nose', 'Nose section', 'Airframe shells', 'LW-PLA', 'Print', 58, [300, -4, 0], 9, 'Pushes onto the nose plug; two 3 mm bamboo-skewer pins drop in from the top.', 'Rear half of the nose. Carries the canopy and the PETG plug.'],
+  ['noseCone', 'Nose cone', 'Airframe shells', 'LW-PLA', 'Print', 18, [425, -6, 0], 9, 'Glued to the nose section; two 3 mm bamboo-skewer dowels line it up.', 'The nose is 278 mm long, taller than the printer, so it prints in two pieces. This tip is the first thing to hit the ground: keep spares.'],
   ['noseRing', 'Nose plug', 'Airframe shells', 'PETG', 'Print', 17, [224,  -6,  0], 9, 'Glued into the back of the nose. Plugs 12 mm into the fan bay.', 'A hard PETG collar so the soft nose seats the same way every time.'],
-  ['canopy', 'Canopy', 'Airframe shells', 'PETG', 'Print', 14, [335, 45, 0], 9, 'Glued or taped to the nose.', 'Print in clear PETG, vase mode.'],
-  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 90, [135, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', '162 mm duct, 84 mm deep, for the 152 mm (6 in) propeller. The dark recesses at the front corners are the intakes.'],
-  ['tray', 'Centre tray', 'Airframe shells', 'LW-PLA', 'Print', 95, [-70,  -18,  0], 4, 'Slides onto both longerons; the skids and spar carrier blocks clip on through its floor and lock it.', 'Open-top bay for battery and electronics, with pockets in the floor for the skids.'],
-  ['hatch', 'Top hatch', 'Airframe shells', 'LW-PLA', 'Print', 50, [-70,  26,  0], 10, 'Front tongue under the fan bay, rear PETG latch. No tools.', 'Lift off for battery swaps. The dorsal spine stiffens it.'],
+  ['canopy', 'Canopy', 'Airframe shells', 'PETG', 'Print', 15, [335, 45, 0], 9, 'Glued or taped to the nose.', 'Print in clear PETG, vase mode.'],
+  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 86, [135, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', '162 mm duct, 84 mm deep, for the 152 mm (6 in) propeller. The dark recesses at the front corners are the intakes.'],
+  ['tray', 'Centre tray', 'Airframe shells', 'LW-PLA', 'Print', 93, [-70,  -18,  0], 4, 'Slides onto both longerons; the skids and spar carrier blocks clip on through its floor and lock it.', 'Open-top bay for battery and electronics, with pockets in the floor for the skids.'],
+  ['hatch', 'Top hatch', 'Airframe shells', 'LW-PLA', 'Print', 47, [-70,  26,  0], 10, 'Front tongue under the fan bay, rear PETG latch. No tools.', 'Lift off for battery swaps. The dorsal spine stiffens it.'],
   ['aftBridge', 'Aft bridge', 'Airframe shells', 'LW-PLA', 'Print', 41, [-210,  -6,  0], 6, 'Slides onto the longerons between the centre section and the booms.', 'U-shaped: the notch is the swing space for the main propeller. The spar passes through it.'],
-  ['boomL', 'Tail boom, left', 'Airframe shells', 'LW-PLA', 'Print', 11, [-345, 0, -96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
+  ['boomL', 'Tail boom, left', 'Airframe shells', 'LW-PLA', 'Print', 10, [-345, 0, -96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
   ['boomR', 'Tail boom, right', 'Airframe shells', 'LW-PLA', 'Print', 11, [-345, 0, 96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
   // ---- Wings & tail
-  ['wingInL', 'Wing, inner left', 'Wings & tail', 'LW-PLA', 'Print', 38, [-65, -9, -165], 8, 'Slides along the spar; the root keys 5 mm into a socket in the body.', 'Print upright (span vertical), placed diagonally on the bed: the root chord is 304 mm.'],
-  ['wingInR', 'Wing, inner right', 'Wings & tail', 'LW-PLA', 'Print', 38, [-65, -9, 165], 8, 'Slides along the spar; the root keys 5 mm into a socket in the body.', 'Print upright (span vertical), placed diagonally on the bed: the root chord is 304 mm.'],
-  ['wingOutL', 'Wing, outer left', 'Wings & tail', 'LW-PLA', 'Print', 20, [-115, -9, -280], 8, 'Slides on the spar; a 3 mm skewer pin aligns it to the inner panel and the roll pod traps both.', 'Crash consumable. No electronics inside.'],
-  ['wingOutR', 'Wing, outer right', 'Wings & tail', 'LW-PLA', 'Print', 20, [-115, -9, 280], 8, 'Slides on the spar; a 3 mm skewer pin aligns it to the inner panel and the roll pod traps both.', 'Crash consumable. No electronics inside.'],
+  ['wingInL', 'Wing, inner left', 'Wings & tail', 'LW-PLA', 'Print', 28, [-80, -9, -142], 8, 'Slides along the spar; the root keys 5 mm into a socket in the body.', 'Print upright (span vertical), placed diagonally on the bed: the root chord is 304 mm.'],
+  ['wingInR', 'Wing, inner right', 'Wings & tail', 'LW-PLA', 'Print', 28, [-80, -9, 142], 8, 'Slides along the spar; the root keys 5 mm into a socket in the body.', 'Print upright (span vertical), placed diagonally on the bed: the root chord is 304 mm.'],
+  ['wingOutL', 'Wing, outer left', 'Wings & tail', 'LW-PLA', 'Print', 22, [-105, -9, -262], 8, 'Slides on the spar; a skewer pin aligns it to the inner panel and a 2 mm pin through the tip and spar holds both panels on.', 'Has the 110 mm duct for the roll propeller. The spar crosses the duct and carries the motor mount.'],
+  ['wingOutR', 'Wing, outer right', 'Wings & tail', 'LW-PLA', 'Print', 22, [-105, -9, 262], 8, 'Slides on the spar; a skewer pin aligns it to the inner panel and a 2 mm pin through the tip and spar holds both panels on.', 'Has the 110 mm duct for the roll propeller. The spar crosses the duct and carries the motor mount.'],
   ['hatchLatch', 'Hatch latch', 'Airframe shells', 'PETG', 'Print', 1, [-158, 17, 0], 10, 'Glued into the rear of the hatch; its ridge clicks into a groove in the centre section.', 'The only spring part on the hatch. Print a few.'],
   ['stabL', 'Stabilator, left', 'Wings & tail', 'LW-PLA', 'Print', 11, [-410, -9, -156], 7, 'Turns on a 3 mm wire through the boom; pushrod hooks into the horn under the root.', 'All-moving tail. Both together = pitch, opposite = roll.'],
   ['stabR', 'Stabilator, right', 'Wings & tail', 'LW-PLA', 'Print', 11, [-410, -9, 156], 7, 'Turns on a 3 mm wire through the boom; pushrod hooks into the horn under the root.', 'All-moving tail.'],
@@ -83,12 +83,12 @@ const rows = [
   ['fanSpider', 'Lift-fan spider', 'Propulsion', 'PETG', 'Print', 32, [130, -12, 0], 2, 'Four C-clips onto the longerons.', 'X-brace that carries the front motor in the middle of the duct.'],
   ['motorF', 'Front lift motor', 'Propulsion', 'Bought', 'Owned', 34, [130, 0, 0], 2, '4 x M3 screws into the spider pad.', 'EMAX ECO II 2306 1700KV. Spins clockwise.'],
   ['propF', 'Front propeller, 6 in', 'Propulsion', 'Bought', 'Buy', 6, [130, 17, 0], 10, 'Motor nut. Fit last.', '6040 or 6045, clockwise. Main crash consumable.'],
-  ['podL', 'Roll pod, left', 'Propulsion', 'PETG', 'Print', 9, [-130, -4, -377], 8, 'Slides onto the spar end; a 2 mm pin through pod and spar.', 'Also traps the outer wing panel on the spar.'],
-  ['podR', 'Roll pod, right', 'Propulsion', 'PETG', 'Print', 9, [-130, -4, 377], 8, 'Slides onto the spar end; a 2 mm pin through pod and spar.', 'Also traps the outer wing panel on the spar.'],
-  ['motorL', 'Roll motor, left', 'Propulsion', 'Bought', 'Owned', 34, [-130, 18, -390], 8, '4 x M3 screws into the pod.', 'EMAX ECO II 2306 1700KV. Idles in hover; speeds up or slows down to roll.'],
-  ['motorR', 'Roll motor, right', 'Propulsion', 'Bought', 'Owned', 34, [-130, 18, 390], 8, '4 x M3 screws into the pod.', 'EMAX ECO II 2306 1700KV. Opposite spin to the left one.'],
-  ['propL', 'Roll propeller, left, 5 in', 'Propulsion', 'Bought', 'Buy', 4, [-130, 34, -390], 10, 'Motor nut. Fit last.', '5 in three-blade.'],
-  ['propR', 'Roll propeller, right, 5 in', 'Propulsion', 'Bought', 'Buy', 4, [-130, 34, 390], 10, 'Motor nut. Fit last.', '5 in three-blade.'],
+  ['podL', 'Roll motor mount, left', 'Propulsion', 'PETG', 'Print', 5, [-118, -22, -240], 8, 'Clips up onto the spar inside the wing duct; a 2 mm pin through clip and spar stops it sliding.', 'Hangs the motor just ahead of the spar so the propeller sits at the upper surface of the wing. Replaces the old wing-tip pod.'],
+  ['podR', 'Roll motor mount, right', 'Propulsion', 'PETG', 'Print', 5, [-118, -22, 240], 8, 'Clips up onto the spar inside the wing duct; a 2 mm pin through clip and spar stops it sliding.', 'Hangs the motor just ahead of the spar so the propeller sits at the upper surface of the wing. Replaces the old wing-tip pod.'],
+  ['motorL', 'Roll motor, left', 'Propulsion', 'Bought', 'Owned', 34, [-108, -14, -240], 8, '4 x M3 screws up through the mount pad.', 'EMAX ECO II 2306 1700KV, buried in the wing. Carries part of the weight in hover and speeds up or slows down to roll.'],
+  ['motorR', 'Roll motor, right', 'Propulsion', 'Bought', 'Owned', 34, [-108, -14, 240], 8, '4 x M3 screws up through the mount pad.', 'EMAX ECO II 2306 1700KV, buried in the wing. Opposite spin to the left one.'],
+  ['propL', 'Roll propeller, left, 4 in', 'Propulsion', 'Bought', 'Buy', 4, [-108, 2, -240], 10, 'Motor nut. Fit last.', '4 in three-blade, turning in a 110 mm duct through the wing.'],
+  ['propR', 'Roll propeller, right, 4 in', 'Propulsion', 'Bought', 'Buy', 4, [-108, 2, 240], 10, 'Motor nut. Fit last.', '4 in three-blade, turning in a 110 mm duct through the wing.'],
   // ---- Vectoring mount
   ['bearingL', 'Tilt bearing, left', 'Vectoring mount', 'PETG', 'Print', 8, [-300, 0, -92], 3, 'C-clip onto the longeron.', 'Holds the tilt servo.'],
   ['bearingR', 'Tilt bearing, right', 'Vectoring mount', 'PETG', 'Print', 7, [-300, 0, 92], 3, 'C-clip onto the longeron.', 'Plain bearing for the yoke stub axle.'],
@@ -163,7 +163,7 @@ export function hoverTrim(mp, tiltDeg = 90, rollShare = 0.25) {   // the roll pa
 const P1 = 'Flat on its base, no supports.', UP = 'Standing on its tail end (nose up), no supports.', SPAN = 'Span vertical, root on the bed.';
 export const CAD = {
   sparCarrier: 'Two blocks in one file: split to objects in the slicer and print them side by side, flat on their bases.', fanSpider: 'Flat, clips up, no supports. Counterbores face the bed.', bearingL: 'Floor on the bed; the servo window bridges 23 mm.', bearingR: P1,
-  noseCone: UP + ' Split face on the bed, tip up.', yoke: 'Upside down on its flat top face; the stirrup bridges 22 mm.', cradle: 'On its side so the two arms are not layered across their bend.', podL: 'Motor pad on the bed.', podR: 'Motor pad on the bed.',
+  noseCone: UP + ' Split face on the bed, tip up.', yoke: 'Upside down on its flat top face; the stirrup bridges 22 mm.', cradle: 'On its side so the two arms are not layered across their bend.', podL: 'Upside down, motor pad on the bed.', podR: 'Upside down, motor pad on the bed.',
   skidF: 'Lying on its front face.', skidR: 'Lying on its front face.', batteryTray: P1, fcSled: P1, noseRing: 'Flat, 12 mm tall.', hatchLatch: 'On its side so layers run along the spring.',
   canopy: 'Clear PETG, vase mode (single spiral wall), open base down.',
   nose: UP + ' Back face on the bed, tip up.', fanbay: UP, tray: UP, hatch: 'Upside down on its top.', aftBridge: UP, boomL: UP, boomR: UP,
