@@ -1,0 +1,31 @@
+{
+ "s_ref_m2": 0.1584,
+ "span_m": 0.69,
+ "aspect_ratio": 3.01,
+ "wing_loading_g_dm2": 119.4,
+ "CL_per_deg": 0.0628,
+ "neutral_point_mm_behind_datum": 25,
+ "static_margin_pct": -23.6,
+ "CL_max_est": 1.05,
+ "stall_speed_m_s": 13.5,
+ "best_L_over_D": 12.4,
+ "alpha_best_deg": 2,
+ "cruise_14ms": {
+  "CL": 0.98,
+  "alpha_deg": 14.5,
+  "drag_N": 3.56,
+  "thrust_power_W": 50.0
+ },
+ "cruise_18ms": {
+  "CL": 0.59,
+  "alpha_deg": 8.4,
+  "drag_N": 2.61,
+  "thrust_power_W": 47.0
+ },
+ "cruise_24ms": {
+  "CL": 0.33,
+  "alpha_deg": 4.3,
+  "drag_N": 2.06,
+  "thrust_power_W": 49.0
+ }
+}
