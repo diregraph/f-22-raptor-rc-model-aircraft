@@ -19,6 +19,7 @@ sized around parts on hand.
   servos buried beside the fan duct. Interactive model at `/nozzle.html`;
   joint maths in `site/js/nozzle.js`. Read `docs/ducted-propulsion.md` first: it is an
   untested design with a thrust-stand gate before any airframe change.
+- Layout history and open problems: `docs/engineering/` (latest: `02-layout-applied.md`).
 - `analysis/` — engineering studies (AeroSandbox, JSBSim, blade-element fan model, topology
   optimisation). Results at `/analysis.html`; summary in `docs/engineering/`.
 - `tools/sim-test.mjs`, `tools/nozzle-test.mjs` — headless flight and nozzle checks: `npm test`.

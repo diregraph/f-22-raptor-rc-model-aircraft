@@ -105,11 +105,11 @@ def rotor(bore, blades, rpm, v_axial, chord0, chord1, skirt_end, hand=1):
 def impeller():             # main fan: 80 mm, 7 blades, about 18,000 rpm
     return rotor(BORE, N_BLADES, RPM, V_AXIAL, 21.0, 26.0, X_SKIRT1)
 
-# lift fan: bigger and slower. Sized by motor torque: about 20 A in the hover at 13,500 rpm.
-LIFT_BORE, LIFT_BLADES, LIFT_RPM, LIFT_V = 120.0, 9, 13500.0, 26.0
+# lift fan: 140 mm. Matched to the motor in analysis/fan_bem.py: about 35 A at 15,000 to 20,000 rpm.
+LIFT_BORE, LIFT_BLADES, LIFT_RPM, LIFT_V = 140.0, 7, 17000.0, 27.0     # from analysis/fan_bem.py: larger disc, finer and fewer blades, so the motor reaches its power
 LIFT_SKIRT = -52.0
 def lift_rotor():
-    return rotor(LIFT_BORE, LIFT_BLADES, LIFT_RPM, LIFT_V, 22.0, 30.0, LIFT_SKIRT, hand=-1)
+    return rotor(LIFT_BORE, LIFT_BLADES, LIFT_RPM, LIFT_V, 13.2, 18.0, LIFT_SKIRT, hand=-1)
 
 LIFT_RING_ID, LIFT_RING_WALL = LIFT_BORE + 2 * TIP_GAP, 1.6
 def lift_ring():            # hard, round shroud pressed into the soft body: sets the blade tip gap

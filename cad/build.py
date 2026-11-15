@@ -18,11 +18,11 @@ CLIP_OD = 13.6
 CLIP_SLOT = 6.9       # mouth of the C-clip: tube must spring it open by ~1.1 mm
 SLIDE_ID = 8.35       # bore a tube slides through
 LZ = 92.0             # longeron centre-line, +/- Z
-FAN_X, PIVOT_X, SPAR_X, SPAR_Y = 130.0, -300.0, -130.0, -9.0
+FAN_X, PIVOT_X, SPAR_X, SPAR_Y = 210.0, -300.0, -160.0, -9.0      # layout from analysis/sizing.py: lift fan forward, wing aft; the spar crosses the main fan's inlet
 WING_TIP_Z = 345.0
-ROLL_X, ROLL_Z, ROLL_HOLE_R = -108.0, 240.0, 55.0   # roll motors buried in the wings, 4 in propellers
+ROLL_X, ROLL_Z, ROLL_HOLE_R = -183.0, 240.0, 55.0   # roll motors buried in the wings, 4 in propellers
 ROLL_PAD_Y, ROLL_PROP_Y = -27.0, 2.0
-SPAR_HALF = WING_TIP_Z - 7.0
+SPAR_HALF = 300.0        # the swept wing is too thin for the tube beyond this
 M3 = 3.4              # clearance hole
 MOTOR_PITCH = 16.0    # EMAX ECO II 2306: 16 x 16 mm M3 pattern
 MOTOR_BORE = 9.5      # clearance for shaft circlip
@@ -168,10 +168,10 @@ def cradle():
 
 def roll_pod(side=1):
     """Roll-motor mount, buried in the wing. Clips up onto the spar inside the wing duct and hangs the motor
-    just ahead of the spar with the propeller at the wing's upper surface. A 2 mm pin stops it sliding."""
+    just behind the spar with the propeller at the wing's upper surface. A 2 mm pin stops it sliding."""
     z = side * ROLL_Z; yb = ROLL_PAD_Y - 4.0
     ring = cyl("z", CLIP_OD / 2, z - 12, z + 12, SPAR_X, SPAR_Y).union(box(SPAR_X - CLIP_OD / 2, SPAR_X + CLIP_OD / 2, yb, SPAR_Y, z - 12, z + 12))
-    body = ring.union(box(SPAR_X, ROLL_X, yb, ROLL_PAD_Y, z - 8, z + 8)).union(cyl("y", 16.0, yb, ROLL_PAD_Y, ROLL_X, z))
+    body = ring.union(box(min(SPAR_X, ROLL_X), max(SPAR_X, ROLL_X), yb, ROLL_PAD_Y, z - 8, z + 8)).union(cyl("y", 16.0, yb, ROLL_PAD_Y, ROLL_X, z))
     cut = cyl("z", CLIP_ID / 2, z - 13, z + 13, SPAR_X, SPAR_Y).union(box(SPAR_X - CLIP_SLOT / 2, SPAR_X + CLIP_SLOT / 2, SPAR_Y, SPAR_Y + CLIP_OD, z - 13, z + 13))
     cut = cut.union(motor_holes("y", yb - 1, ROLL_PAD_Y + 1, ROLL_X, z, cbore=(yb - 1, yb + 1.2)))
     cut = cut.union(cyl("x", 1.1, SPAR_X - 10, SPAR_X + 10, SPAR_Y, z))                    # 2 mm retaining pin through clip and spar
@@ -183,7 +183,7 @@ import math
 TAN = lambda d: math.tan(math.radians(d))
 W_ = lambda solid: cq.Workplane("XY").newObject([solid])
 BORE = 8.5                    # tube bore in foamed shells
-X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 230.0, 30.0, -170.0, -260.0, -258.0, -430.0
+X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 300.0, 96.0, -140.0, -260.0, -258.0, -430.0
 X_J1, Y_AX = -272.0, 2.0           # first nozzle bearing and the main fan axis (cad/propulsion.py kit frame origin)
 NAC_R, DUCT_R = 51.0, 43.1          # engine nacelle (flush with the nozzle's bearing rings) and the bore the fan duct slides into
 # nozzle servos: buried either side of the fan duct, shaft pointing inboard, each turning a cord drum that stands on edge
@@ -192,27 +192,30 @@ NZ["zc"] = NZ["zd"] + NZ["drum_t"] / 2 - HORN_T + SV_HORN_PLANE     # servo body
 NZ["xc"] = NZ["xs"] + SV_SHAFT_OFF                                  # servo body is forward of its shaft
 NZ["cord_y"] = (NZ["yc"] + NZ["drum_r"], NZ["yc"] - NZ["drum_r"])   # the two cords leave the drum top and bottom, heading aft
 PLENUM = (-176.0, -140.0, 58.0)     # x range and half width of the main fan's air inlet, open above and below
-LIFT_HOLE_R = 62.4                  # bore for the lift-fan shroud ring
-TUBE_FRONT, TUBE_REAR = 212.0, -425.0
+LIFT_HOLE_R = 72.4                  # bore for the lift-fan shroud ring
+TUBE_FRONT, TUBE_REAR = 282.0, -425.0
 HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, LIFT_HOLE_R
-CAV = dict(x0=-136.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay (the spar crosses it)
-HATCH = dict(x0=-140.0, x1=24.0, z=84.0)
-WING = dict(root_z=108.0, bury=5.0, mid_z=180.0, tip_z=WING_TIP_Z, root_le=70.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
-STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=217.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
+CAV = dict(x0=-58.0, x1=90.0, z=80.0, floor=-21.0, top=14.0)      # battery bay, behind the lift fan
+NB = dict(x0=322.0, x1=412.0, z=30.0, floor=-22.0, top=26.0, open_x0=350.0, open_z=28.0)   # electronics bay in the nose, reached by lifting the canopy
+WIRE = dict(y0=-36.0, y1=-26.0, z0=74.0, z1=82.0)                   # wire ducts past the lift fan, one each side
+HATCH = dict(x0=-62.0, x1=94.0, z=84.0)
+WING = dict(root_z=108.0, bury=5.0, mid_z=180.0, tip_z=WING_TIP_Z, root_le=-5.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
+STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=217.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft; making it bigger barely helps (analysis/)
 FIN = dict(root_le=-218.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
-SKID_X, GROUND_Y = (10.0, -150.0), -150.0     # tall skids: the nozzle hangs about 130 mm below the fan axis when it points down
-BATT_X = -52.0
+SKID_X, GROUND_Y = (10.0, -115.0), -150.0     # tall skids: the nozzle hangs about 130 mm below the fan axis when it points down
+BATT_X = 16.0
+BAY_DX = BATT_X + 52.0     # how far the bay contents moved forward from the first layout
 STAB_SERVO_X = -362.0
 
 # fuselage cross-sections: hexagon (top flat, chine, bottom flat) -> the faceted look of the real aircraft
 #        x     chine  top   bot   y_top  y_bot  y_chine
 #        x     chine  (top)  bot   y_top  y_bot  y_chine  roundness of the top (2 = ellipse, 5 = nearly flat)
-MID = [(230.0, 108.0, 88.0, 78.0, 38.0, -46.0, 0.0, 2.6), (130.0, 108.0, 90.0, 80.0, 38.0, -46.0, 0.0, 2.6), (30.0, 108.0, 90.0, 80.0, 36.0, -46.0, 0.0, 2.8),
+MID = [(300.0, 108.0, 88.0, 78.0, 38.0, -46.0, 0.0, 2.6), (130.0, 108.0, 90.0, 80.0, 38.0, -46.0, 0.0, 2.6), (30.0, 108.0, 90.0, 80.0, 36.0, -46.0, 0.0, 2.8),
        (-170.0, 108.0, 88.0, 76.0, 30.0, -42.0, 0.0, 3.4), (-260.0, 108.0, 98.0, 72.0, 25.0, -37.0, 0.0, 4.5), (-430.0, 106.0, 101.0, 88.0, 15.0, -21.0, -2.0, 5.0)]
-NOSE = [(230.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0, 2.6), (300.0, 72.0, 36.0, 44.0, 38.0, -43.0, 0.0, 2.6), (370.0, 58.0, 27.0, 34.0, 31.0, -37.0, -1.0, 2.5),
-        (430.0, 42.0, 17.0, 23.0, 21.0, -28.0, -2.0, 2.4), (472.0, 26.0, 9.0, 13.0, 10.0, -18.0, -3.0, 2.3), (498.0, 10.0, 3.0, 4.5, 3.0, -10.0, -4.0, 2.2), (508.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0, 2.2)]
-X_CONE = 380.0                # the nose is split here so each half fits the printer height
-CHEEK_X = 262.0               # forward reach of the intake lips
+NOSE = [(300.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0, 2.6), (370.0, 72.0, 36.0, 44.0, 38.0, -43.0, 0.0, 2.6), (440.0, 58.0, 27.0, 34.0, 31.0, -37.0, -1.0, 2.5),
+        (500.0, 42.0, 17.0, 23.0, 21.0, -28.0, -2.0, 2.4), (542.0, 26.0, 9.0, 13.0, 10.0, -18.0, -3.0, 2.3), (568.0, 10.0, 3.0, 4.5, 3.0, -10.0, -4.0, 2.2), (578.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0, 2.2)]
+X_CONE = 450.0                # the nose is split here so each half fits the printer height
+CHEEK_X = 332.0               # forward reach of the intake lips
 
 def interp(tab, x, col):
     t = sorted(tab)
@@ -248,7 +251,7 @@ def foil(le, c, t, place, n=22):
 
 def body_master():
     body = loft([secwire(*s) for s in MID])
-    hump = [(24.0, 64.0, 46.0, 50.0), (-60.0, 60.0, 42.0, 50.0), (-139.0, 54.0, 38.0, 48.0)]   # engine spine behind the lift fan
+    hump = [(126.0, 64.0, 46.0, 50.0), (-10.0, 60.0, 42.0, 50.0), (-139.0, 54.0, 38.0, 48.0)]   # engine spine behind the lift fan
     hw = [secwire(x, w, tw, w, top, 14.0, 20.0, 2.3) for x, w, tw, top in hump]
     body = body.union(loft(hw))
     body = body.union(cyl("x", NAC_R, X_NOTCH, PLENUM[0], Y_AX, 0))                               # round engine nacelle around the main fan duct
@@ -260,8 +263,14 @@ def body_master():
         body = body.union(ext.intersect(wedge))
     return body
 
-def nose_solid():
-    return loft([secwire(*s) for s in NOSE])
+def nose_bay_cut():
+    c = box(NB["x0"], NB["x1"], NB["floor"], NB["top"], -NB["z"], NB["z"])                                   # speed controllers below, flight controller and receiver above
+    c = c.union(box(NB["open_x0"], NB["x1"], NB["top"] - 1, 70, -NB["open_z"], NB["open_z"]))                # opening under the canopy
+    for s in (-1, 1): c = c.union(zbox(X_NOSE - 2, NB["x0"] + 8, WIRE["y0"], NB["floor"] + 1, s, 20, 30))    # wires come in under the floor
+    return c
+
+def nose_loft(): return loft([secwire(*s) for s in NOSE])
+def nose_solid(): return nose_loft().cut(nose_bay_cut())
 
 def spigot(k):    # PETG plug that joins nose to fan bay
     s0 = NOSE[0]
@@ -272,9 +281,16 @@ def wing_le(z): return WING["root_le"] - (z - WING["root_z"]) * TAN(WING["sweep"
 def wing_c(z): return WING["root_c"] + (WING["tip_c"] - WING["root_c"]) * (z - WING["root_z"]) / (WING["tip_z"] - WING["root_z"])
 def wing_t(z): return 0.09 + 0.04 * (z - WING["root_z"]) / (WING["tip_z"] - WING["root_z"])
 
+SD7062 = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "sd7062.json")))   # wing section chosen in analysis/sizing.py: 14% thick, 4% camber
+def wing_foil(z, side, grow=0.0):
+    """SD7062 section at span station z, upper surface first. grow fattens it for the root socket. The 30% chord point stays at
+    the spar height, so the spar bore sits inside the thickest part of the section."""
+    le, c = wing_le(z) + grow, wing_c(z) + 2 * grow; k = 1 + grow / (0.07 * c)
+    pts = [(le - c * x, WING["y"] - 0.035 * c + (y - 0.035) * c * k + 0.035 * c, side * z) for x, y in SD7062[:-1]]
+    return wire(pts)
+
 def wing_panel(z0, z1, side=1, grow=0.0):
-    secs = [foil(wing_le(z) + grow, wing_c(z) + 2 * grow, wing_t(z) * (1 + grow / 6), lambda x, th, z=z: (x, WING["y"] + th, side * z)) for z in (z0, (z0 + z1) / 2, z1)]
-    return loft(secs)
+    return loft([wing_foil(z, side, grow) for z in (z0, (z0 + z1) / 2, z1)])
 
 def wing_cuts(side):
     lo, hi = sorted((side * 60.0, side * (SPAR_HALF + 0.6)))
@@ -315,12 +331,12 @@ def fin(side, grow=0.0):
 def canopy_solid():
     ws = []
     for i in range(13):
-        s = i / 12; x = 246 + 180 * s; k = math.sin(math.pi * s ** 0.72)
+        s = i / 12; x = 316 + 180 * s; k = math.sin(math.pi * s ** 0.72)
         cw, ch = max(1.2, 34 * k ** 0.5), max(1.2, 27 * k ** 0.65)
         yb = interp(NOSE, x, 4) - 14
         pts = [(x, yb + 14 + ch * math.sin(a) ** 0.9, cw * math.cos(a)) for a in [math.pi * j / 16 for j in range(17)]]
         ws.append(wire(pts + [(x, yb, -cw), (x, yb, cw)]))
-    return loft(ws).cut(nose_solid())
+    return loft(ws).cut(nose_loft())
 
 # ---- cut-outs shared by the fuselage modules
 def longeron_bores():
@@ -373,7 +389,7 @@ def fuselage_cuts():
     for sg in (-1, 1): c = c.union(cyl("y", 1.7, -12.0, 60.0, X_NOSE - 6.0, sg * 40.0))             # nose retaining pins (3 mm bamboo skewer)
     c = c.union(box(HATCH["x0"] - 2.4, HATCH["x0"] + 1, 15.0, 19.0, -16, 16))                    # hatch latch groove
     for s in (-1, 1):
-        lo, hi = sorted((s * 82.0, s * 109.0)); c = c.union(box(222.0, 232.0, -40.0, -3.0, lo, hi))   # intake mouths
+        lo, hi = sorted((s * 82.0, s * 109.0)); c = c.union(box(X_NOSE - 8, X_NOSE + 2, -40.0, -3.0, lo, hi))   # intake mouths
         for dx in (-50, 50):                                                                     # fan spider: clips + arms
             c = c.union(clip_pocket(FAN_X + dx, 8.2, s, yb)).union(bar((FAN_X, 0), (FAN_X + dx, s * (LZ - 2)), 11.0, yb, -11.0))
         c = c.union(clip_pocket(SPAR_X, 15.6, s, yb))                                            # spar carrier block
@@ -389,6 +405,11 @@ def fuselage_cuts():
         c = c.union(wing_panel(WING["root_z"] - WING["bury"] - 0.4, WING["mid_z"], s, grow=0.35))  # wing root socket
         c = c.union(fin(s, grow=0.3))
     c = c.union(box(CAV["x1"] - 2, FAN_X - FAN_R + 6, -19.0, -11.0, -9, 9))                      # wire run to the fan motor
+    for s in (-1, 1):                                                                            # wire ducts from the battery bay, past the lift fan, into the nose
+        c = c.union(zbox(CAV["x1"] - 2, X_NOSE - 13, WIRE["y0"], WIRE["y1"], s, WIRE["z0"], WIRE["z1"]))
+        c = c.union(zbox(X_NOSE - 21, X_NOSE - 13, WIRE["y0"], WIRE["y1"], s, 20, WIRE["z1"]))
+        c = c.union(zbox(X_NOSE - 21, X_NOSE + 1, WIRE["y0"], WIRE["y1"], s, 20, 30))
+        c = c.union(zbox(CAV["x1"] - 10, CAV["x1"] + 2, WIRE["y0"], CAV["floor"] + 1, s, WIRE["z0"] - 4, WIRE["z1"] - 2))   # drop from the bay floor into the duct
     return c
 
 _cache = {}
@@ -447,14 +468,15 @@ def battery_tray():  # slides fore-aft on the bay floor; strap slots
     for xx in (x - 30, x + 30): b = b.cut(box(xx - 11, xx + 11, y - 1, y + 4, -22, -18)).cut(box(xx - 11, xx + 11, y - 1, y + 4, 18, 22))
     return b
 
-def fc_sled():       # carries the ESP32 (47 x 23.5 mm hole pattern) and the gyro board
-    y = CAV["floor"]; zc = -52.0
-    b = box(-110, -22, y + 5.0, y + 7.0, zc - 18, zc + 18)
-    for xx in (-106, -26): b = b.union(box(xx - 4, xx + 4, y + 0.4, y + 5.0, zc - 18, zc + 18))
+def fc_sled():       # carries the ESP32 (47 x 23.5 mm hole pattern) and the gyro board; stands on four legs over the speed controllers
+    y = NB["floor"] + 17.0; x0, x1 = NB["x0"] + 1.0, NB["x1"] - 1.0; xm = (x0 + x1) / 2
+    b = box(x0, x1, y, y + 2.0, -NB["z"] + 0.6, NB["z"] - 0.6)
+    for xx in (x0 + 4, x1 - 4):
+        for s in (-1, 1): b = b.union(zbox(xx - 4, xx + 4, NB["floor"] + 0.4, y, s, NB["z"] - 4.0, NB["z"] - 0.6))
     for dx in (-23.5, 23.5):
-        for dz in (-11.75, 11.75): b = b.union(cyl("y", 1.3, y + 7.0, y + 11.0, -52 + dx, zc + dz))
-    for dz in (-7.62, 7.62): b = b.union(cyl("y", 1.3, y + 7.0, y + 10.0, -98, zc + dz))
-    return b
+        for dz in (-11.75, 11.75): b = b.union(cyl("y", 1.3, y + 2.0, y + 6.0, xm - 12 + dx, dz))
+    for dz in (-7.62, 7.62): b = b.union(cyl("y", 1.3, y + 2.0, y + 5.0, x1 - 12, dz))
+    return b.cut(box(xm - 30, xm + 30, y - 1, y + 3, -6, 6))             # slot for the wires coming up from below
 
 LW, PETG_D = 0.62e-3, 1.27e-3
 # name: (builder, twin id, pivot, print rotation, material)
@@ -498,12 +520,12 @@ def envelopes():
     return {
         "longerons": cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, -LZ).union(cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, LZ)),
         "spar": cyl("z", TUBE / 2, -SPAR_HALF, SPAR_HALF, SPAR_X, SPAR_Y),
-        "lift fan rotor": cyl("y", 60.2, -6.0, 24.0, FAN_X, 0),
-        "lift fan shroud ring": cyl("y", LIFT_HOLE_R - 0.2, -4.0, MID[1][4] - 5.5, FAN_X, 0).cut(cyl("y", 60.6, -10, 60, FAN_X, 0)),
+        "lift fan rotor": cyl("y", 70.2, -6.0, 24.0, FAN_X, 0),
+        "lift fan shroud ring": cyl("y", LIFT_HOLE_R - 0.2, -4.0, MID[1][4] - 5.5, FAN_X, 0).cut(cyl("y", 70.6, -10, 60, FAN_X, 0)),
         "main fan duct": cyl("x", DUCT_R - 0.3, X_J1, PLENUM[0] + 4, Y_AX, 0),
         "roll propeller discs": cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, -ROLL_Z).union(cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, ROLL_Z)),
         "roll motor bodies": cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, -ROLL_Z).union(cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, ROLL_Z)),
-        "speed controllers": box(-128.5, -29.5, -18.5, 7.5, -79.8, -72.0).union(box(-128.5, -29.5, -18.5, 7.5, 72.0, 79.8)),
+        "speed controllers": box(NB["x0"] + 2, NB["x1"] - 2, NB["floor"] + 0.5, NB["floor"] + 16.5, -25.5, 25.5),
         "nozzle servos": nozzle_servo_env(1).union(nozzle_servo_env(-1)),
         "cord drums": cyl("z", NZ["drum_r"] + 1.4, NZ["zd"] - 3, NZ["zd"] + 3, NZ["xs"], NZ["yc"]).union(cyl("z", NZ["drum_r"] + 1.4, -NZ["zd"] - 3, -NZ["zd"] + 3, NZ["xs"], NZ["yc"])),
         "battery": box(BATT_X - 67.5, BATT_X + 67.5, CAV["floor"] + 2.5, CAV["floor"] + 32.5, -21.5, 21.5),

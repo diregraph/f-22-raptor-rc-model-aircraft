@@ -43,7 +43,8 @@ def match(at, throttle=1.0):
     return dict(rpm=round(rpm), thrust_g=round(t / 9.81 * 1000), amps=round(i, 1), watts=round(i * throttle * (V_BATT - i * R_BATT)), jet_m_s=round(va, 1), blade_incidence_deg=round(a, 1), g_per_W=round(t / 9.81 * 1000 / max(1, i * throttle * (V_BATT - i * R_BATT)), 2))
 if __name__ == "__main__":
     fans = {"main": dict(args=(80.0, 17.0, 7, 21.0, 26.0, 18000.0, 37.6), assumed=850, label="Main fan, 80 mm, 7 blades"),
-            "lift": dict(args=(120.0, 17.0, 9, 22.0, 30.0, 13500.0, 26.0), assumed=1300, label="Lift fan, 120 mm, 9 blades")}
+            "lift": dict(args=(140.0, 17.0, 7, 13.2, 18.0, 17000.0, 27.0), assumed=1300, label="Lift fan, 140 mm, 7 blades"),
+            "lift_old": dict(args=(120.0, 17.0, 9, 22.0, 30.0, 13500.0, 26.0), assumed=1300, label="Previous lift fan, 120 mm, 9 blades")}
     out = {}
     for k, f in fans.items():
         at = fan(*f["args"]); curve = []

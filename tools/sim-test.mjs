@@ -32,7 +32,7 @@ check('yaw: heading changed 60-200 deg, roll and pitch stay within 10 deg', Math
 r = run('transition to forward flight and back', (t, s) => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : t < 14 ? 90 - (t - 8) * 15 : t < 26 ? 0 : Math.min(90, (t - 26) * 15), pitch: t > 31 && s.v[0] * Math.cos(s.att.heading) - s.v[2] * Math.sin(s.att.heading) > 1.5 ? 0.6 : 0 }), 60);   // pilot holds the nose up to brake
 check('transition: no ground strike', r.minAlt > 1);
 check('transition: back to a slow hover within 34 s of tilting up', r.s.speed < 3 && r.s.tilt > 85 && r.s.T[0] > 3);
-let c = run('cruise', t => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : Math.max(0, 90 - (t - 8) * 15) }), 30);
+let c = run('cruise', t => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : Math.max(0, 90 - (t - 8) * 15) }), 38);   // the hand-over from fans to wing takes about 25 s in this layout
 check('cruise: wing-borne above 12 m/s with lift fans off', c.s.speed > 12 && c.s.T[0] < 0.2);
 check('cruise: holds height (vertical speed < 0.5 m/s)', c.minAlt > 1 && Math.abs(c.s.v[1]) < 0.5);
 

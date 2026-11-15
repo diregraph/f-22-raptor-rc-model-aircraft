@@ -76,12 +76,18 @@ def simulate(co, mass, mode, t_end=6.0, kq=0.0, kth=0.0, servo_rate=np.radians(4
     return out
 
 if __name__ == "__main__":
-    sz = json.load(open(os.path.join(here, "..", "site", "analysis", "sizing.json"))); res = {}
-    for key, d, foil in (("today", sz["base"], "naca2408"), ("sized", sz["best"], "naca4412")):   # naca4412 stands in for the SD7062 in the lattice model (same camber)
-        co = coefficients(-d["cg"] / 1000, d["wing_dx"] / 1000, foil); m = d["mass"] / 1000
+    out = os.path.join(here, "..", "site", "analysis", "flight.json")
+    res = {"today": json.load(open(out))["today"]}                     # the first layout, kept for comparison (its geometry is no longer in the spec)
+    cur = json.load(open(os.path.join(here, "..", "site", "analysis", "current.json")))["now"]
+    for key, foil in (("sized", "naca2408"),):                        # the aircraft as drawn
+        co = coefficients(B.CG_X, 0.0, foil); m = cur["mass"] / 1000
+        # The lattice solver is unreliable with a thick, strongly cambered section, so the SD7062's camber is added by hand:
+        # section lift at zero incidence about 0.45 and pitching moment about -0.08, acting on the exposed wing (60% of the area),
+        # whose lift centre is about 45 mm behind the balance point.
+        dcl = 0.45 * 0.6 * 0.75; co["CL0"] += dcl; co["CM0"] += -0.08 * 0.6 * 0.9 - dcl * 0.045 / C
         wn2 = -co["CMA"] * 0.5 * 1.225 * V * V * co["S"] * C / 0.0524                        # pitch 'spring': positive = stable
-        r = dict(coefficients={k: round(v, 4) for k, v in co.items()}, static_margin_pct=d["margin"],
+        r = dict(coefficients={k: round(v, 4) for k, v in co.items()}, static_margin_pct=cur["margin"],
                  mode="oscillates at %.1f Hz" % (np.sqrt(wn2) / 2 / np.pi) if wn2 > 0 else "diverges: doubles every %.2f s" % (np.log(2) / np.sqrt(-wn2)),
                  free=simulate(co, m, "kick"), damped=simulate(co, m, "kick", kq=0.12, kth=1.2), step=simulate(co, m, "step", kq=0.12, kth=1.2))
-        res[key] = r; print(key, r["mode"], "| free departed:", r["free"]["departed"], "| with controller departed:", r["damped"]["departed"], "| trim", r["free"]["trim"], "| max tail in step %.1f deg" % max(abs(v) for v in r["step"]["tail"]), flush=True)
+        res[key] = r; print(key, r["mode"], "| free departed:", r["free"]["departed"], "| trim", r["free"]["trim"], "| max tail in step %.1f deg" % max(abs(v) for v in r["step"]["tail"]), flush=True)
     json.dump(res, open(os.path.join(here, "..", "site", "analysis", "flight.json"), "w"))

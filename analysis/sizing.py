@@ -64,8 +64,10 @@ if __name__ == "__main__":
     base = evaluate(-52, 130, 1.0, 0.0)
     sweep = [evaluate(xb, 130, 1.0, 0.0) for xb in range(-60, 341, 20)]                                   # the central trade, one variable at a time
     sweep_tail = [evaluate(xb, 130, 1.5, 100.0) for xb in range(-60, 341, 20)]
-    clear = lambda c: abs(c["xb"] - c["fan_x"]) > 136                                                      # the battery cannot sit in the lift-fan duct
-    cands = [evaluate(xb, fx, ts, dx, "sd7062") for xb in range(-60, 341, 10) for fx in (110, 130, 150, 170, 190, 210) for ts in (1.0, 1.25, 1.5) for dx in (0.0, 25.0, 50.0, 75.0, 100.0)]
+    # the 140 mm fan must stay inside the wide centre body, so it cannot go further forward than x = 139 mm;
+    # the battery (135 mm long) then sits behind it, or ahead of it in the nose
+    clear = lambda c: abs(c["xb"] - c["fan_x"]) > 146                                                      # the battery cannot sit in the lift-fan duct
+    cands = [evaluate(xb, fx, ts, dx, "sd7062") for xb in range(-60, 341, 10) for fx in (120, 130, 139) for ts in (1.0, 1.25, 1.5) for dx in (0.0, 25.0, 50.0, 75.0, 100.0)]
     ok = [c for c in cands if c["hover_worst"] is not None and 5.0 <= c["margin"] <= 12.0 and clear(c)]
     ok.sort(key=lambda c: c["hover_worst"] + 0.03 * (c["tail"] - 1) + 0.0003 * c["wing_dx"] + 0.0002 * abs(c["fan_x"] - 130))  # small penalties: prefer the least change to the outline
     best = ok[0] if ok else None

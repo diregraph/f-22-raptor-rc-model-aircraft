@@ -393,7 +393,8 @@ export function buildModel(cad = {}) {
   // --- electronics
   const battG = carrier(V(D.battery.xDefault, 0, 0), [0, 0, 0]);
   { add('battery', battery(), [0, 300, 0], battG);
-    const pt = MAT.petg();
+    const pt = MAT.petg(), BX = D.battery.xDefault + 52;      // the bay and everything in it moved forward with the battery
+    const addB = (id, o, ex, dx, dy, dz) => { o.position.set(dx, dy, dz); return add(id, o, ex); };   // electronics now live in the nose bay, under the canopy
     add('batteryTray', grp(mesh(box(142, 2, 50, 0, -19.6, 0), pt), [-1, 1].map(s => mesh(box(142, 7, 2, 0, -16, s * 24), pt)), mesh(box(3, 9, 50, 70, -15.5, 0), pt)), [0, -90, 0], battG);
     add('fcSled', grp(mesh(box(100, 2, 36, -74, -15, -55), pt), mesh(box(100, 5, 2, -74, -13, -74), pt), mesh(box(100, 5, 2, -74, -13, -36), pt), mesh(box(8, 6, 10, -22, -12, -55), pt)), [0, 60, -40]);
     // ESP32 DevKit v1 (51.5 x 28.3): shielded module, USB, two header rows, buttons
@@ -402,42 +403,36 @@ export function buildModel(cad = {}) {
         mesh(box(5, 1.6, 5, -56, -6.9, -55), MAT.dark()), mesh(box(6, 1.8, 3.5, -64, -6.8, -55), MAT.dark()));
       for (const z of [-67.7, -42.3]) { g.add(mesh(box(38.2, 2.5, 2.5, -52, -10.5, z), MAT.dark())); for (let i = 0; i < 15; i++) g.add(mesh(box(0.64, 9.5, 0.64, -69.8 + i * 2.54, -11.5, z), MAT.gold())); }
       g.add(label([['ESP-WROOM-32', 1.9]], 15, 5, '#c9cdd1', '#222', -38.5, -4.5, -55));
-      add('esp32', g, [0, 130, -40]); }
+      addB('esp32', g, [0, 130, -40], 407, 8.5, 55); }
     { const g = grp(mesh(box(21, 1.6, 16, -98, -11, -55), MAT.pcbB()), mesh(box(4, 1, 4, -99, -9.7, -55), MAT.dark()), mesh(box(2.5, 2.5, 20.3, -107, -9.2, -55), MAT.dark()));
       for (let i = 0; i < 8; i++) g.add(mesh(box(0.64, 8, 0.64, -107, -9.5, -63.9 + i * 2.54), MAT.gold()));
-      add('imu', g, [0, 200, -40]); }
+      addB('imu', g, [0, 200, -40], 496, 9, 55); }
     { const g = grp(mesh(rbox(47, 15, 26, 1.5, -52, -8, 55), MAT.dark()), label([['FlySky', 3.4], ['FS-iA6B  2.4G', 2.4, 400]], 30, 13, '#101214', '#e8e8e8', -57, -0.42, 55), mesh(box(9, 12, 20, -31.5, -8.5, 55), MAT.dark()));
       for (let i = 0; i < 7; i++) for (let j = 0; j < 3; j++) g.add(mesh(box(5, 0.64, 0.64, -26.5, -12.5 + j * 2.54, 47.4 + i * 2.54), MAT.gold()));
       g.add(tube([[-75, -5, 61], [-95, -2, 68], [-120, 8, 84], [-150, 13, 92]], 0.6, 0x1a1a1a), tube([[-75, -5, 49], [-100, -3, 44], [-128, 2, 60], [-150, 9, 30]], 0.6, 0x1a1a1a));
       g.add(mesh(cylX(1.1, 28, -160, 13, 92, 8), MAT.tin()), mesh(cylZ(1.1, 28, -150, 9.5, 20, 8), MAT.tin()));
-      add('rx', g, [0, 130, 40]); }
-    add('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 58), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 58, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 58)), [0, 60, 60]);
-    // speed controllers stand on edge against the bay side walls, two per side
-    for (const [id, x, s, flip] of [['escF', -53, -1, 0], ['escL', -105, -1, 1], ['escM', -53, 1, 1], ['escR', -105, 1, 1]]) {
-      const e = esc(); e.rotation.order = 'YXZ'; e.rotation.y = flip ? Math.PI : 0; e.rotation.x = s * Math.PI / 2; e.position.set(x, -5.5, s * 76); add(id, e, [0, 120, -s * 30]);
+      addB('rx', g, [0, 170, 40], 404, 22, -55); }
+    addB('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 58), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 58, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 58)), [0, 60, 60], 488, 25, -58);
+    // four speed controllers lie flat on the nose-bay floor, two deep
+    for (const [id, y, sd] of [['escF', -17, -1], ['escL', -9, -1], ['escM', -17, 1], ['escR', -9, 1]]) {
+      const e = esc(); e.rotation.y = Math.PI; e.position.set(367, y, sd * 13); add(id, e, [0, 90, sd * 60]);
     }
     // wiring loom
-    { const h = grp(), R = 0xc81e1e, K2 = 0x101010, sx = D.sparX, RZ = D.rollZ, bx = D.battery.xDefault;
-      const pw = (pts) => { h.add(tube(pts, 1.9, R, [0, 1.6, 2.2]), tube(pts, 1.9, K2, [0, -1.6, -2.2])); };
-      h.add(mesh(rbox(16, 8.2, 16, 1.5, bx + 14, -8, 33), MAT.yellow()));                                                       // mate of the battery plug, beside the battery
-      pw([[bx + 22, -8, 33], [bx + 30, -14, 44], [-26, -8, 68], [-26, -5.5, 74]]);                                              // main fan controller (right front)
-      pw([[bx + 22, -8, 33], [bx + 6, -15, 46], [-70, -12, 64], [-78, -5.5, 74]]);                                              // right roll controller (right rear)
-      pw([[bx + 22, -8, 33], [-80, -16, 30], [-122.5, -16, 12], [-122.5, -16, -30], [-104, -18, -44], [-88, -17, -62], [-79, -5.5, -74]]);   // round the back of the battery to the left pair
-      pw([[-100, -18, -48], [-84, -16, -66], [-80, -5.5, -74]]);
-      const three = (pts, axis) => [-2.4, 0, 2.4].forEach(o => h.add(tube(pts, 1.15, K2, axis === 'z' ? [0, 0, o] : axis === 'x' ? [o, 0, 0] : [0, o, 0])));
-      three([[-26, -5.5, -76], [-8, -9, -72], [12, -14, -44], [22, -15, -4], [60, -15, 0], [112, -15, -6], [124, -11, -9]], 'y');                       // lift-fan motor
-      three([[-80, -5.5, 76], [-100, 9, 74], [-134, 10, 70], [-146, 16, 56], [-166, 26, 34], [-180, 22, 22], [-200, 14, 14], [-214, 8, 10]], 'y');   // main fan motor: over the rear controller, through the inlet, into the duct
-      for (const s of [-1, 1]) three([[-132, -5.5, s * 76], [-133, -13, s * 77], [sx, -17.6, s * 84], [sx, -17.6, s * 112], [sx, -17.6, s * (RZ - 30)], [sx + 6, -22, s * (RZ - 12)], [D.rollX - 8, -29, s * (RZ - 5)]], 'x');   // roll motors: under the spar to the mounts
-      const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
-      lead([[-204, -8, 74], [-190, -14, 74], [-178, -12, 70], [-140, -2, 66], [-126, 10, 40], [-100, 8, -20], [-66, -8, -64]]);                                  // nozzle servo 1 (right side of the body)
-      lead([[-204, -8, -74], [-190, -14, -74], [-178, -14, -72], [-140, -6, -70], [-128, 6, -66], [-100, -4, -66], [-78, -9, -68]]);                            // nozzle servo 2 (left side)
-      for (const s of [-1, 1]) lead([[-383, -22, s * 96], [-340, -14, s * 92], [-262, -13, s * 88], [-178, -16, s * 74], [-140, -8, s * 70], [-126, 12, s * 50 - 14], [-90, 8, s * 30 - 30], [-62, -6, -62 + (s > 0 ? 4 : 0)]]);   // tail servos
-      const sig = (pts, c = 0xeeeeee) => h.add(tube(pts, 0.6, c));
-      sig([[-78, -3, -72], [-76, -6, -70], [-74, -8, -68]]); sig([[-80, -3, -72], [-80, -6, -70], [-76, -8, -68]]);                                   // left pair of throttle signals
-      for (const x of [-28, -80]) sig([[x, -3, 72], [x + 4, 13, 40], [-60, 14, -20], [-72, -8, -66]]);                                              // right pair, over the battery
-      sig([[-27, -9, 55], [-25, 14, 28], [-36, 15, -28], [-44, -8, -43]], 0xf0c020);                                  // receiver PPM
-      sig([[-111, -13, 58], [-100, -15, 44], [bx + 20, -12, 36]], R); sig([[-77, -13, 58], [-70, 13, 36], [-64, 14, -20], [-60, -8, -43]], R);   // regulator
-      sig([[-107, -8, -57], [-96, -5, -50], [-70, -7, -43]], 0x2e9e4f);                                               // gyro
+    { const h = grp(), R = 0xc81e1e, K2 = 0x101010, sx = D.sparX, RZ = D.rollZ, bx = -52, BX = D.battery.xDefault + 52;
+      const sh = pts => pts.map(p => p[0] > -141 ? [p[0] + BX, p[1], p[2]] : p), tube0 = tube; { }
+      const pw = (pts) => { h.add(tube0(pts, 1.9, R, [0, 1.6, 2.2]), tube0(pts, 1.9, K2, [0, -1.6, -2.2])); };
+      h.add(mesh(rbox(16, 8.2, 16, 1.5, bx + 14 + BX, -8, 33), MAT.yellow()));                                                       // mate of the battery plug, beside the battery
+      const three = (pts, axis) => [-2.4, 0, 2.4].forEach(o => h.add(tube0(pts, 1.15, K2, axis === 'z' ? [0, 0, o] : axis === 'x' ? [o, 0, 0] : [0, o, 0])));
+      const duct = sd => [[88, -20, sd * 72], [95, -31, sd * 78], [286, -31, sd * 78], [286, -31, sd * 26], [326, -31, sd * 26]];   // bay -> past the lift fan -> under the nose-bay floor
+      pw([[bx + 22 + BX, -8, 33], [70, -16, 60], ...duct(1), [332, -18, 20]]);                                                          // battery power to the four speed controllers
+      three([[334, -18, 0], [300, -30, 0], [244, -19, -4], [224, -12, -8]], 'y');                                                     // lift-fan motor
+      three([[332, -18, -16], ...duct(-1).reverse(), [-20, -22, -78], [-134, -14, -70], [-150, 10, -50], [-166, 24, -30], [-200, 14, -14], [-214, 8, -10]], 'y');   // main fan motor
+      for (const sd of [-1, 1]) three([[332, -18, sd * 22], ...duct(sd).reverse(), [-60, -22, sd * 80], [sx + 10, -17.6, sd * 84], [sx, -17.6, sd * 112], [sx, -17.6, sd * (RZ - 30)], [sx - 6, -22, sd * (RZ - 12)], [D.rollX + 8, -29, sd * (RZ - 5)]], 'x');   // roll motors: along the spar
+      const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube0(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
+      for (const sd of [-1, 1]) {
+        lead([[-204, -8, sd * 74], [-190, -14, sd * 74], [-140, -14, sd * 72], ...duct(sd), [334, -8, sd * 8]]);                    // nozzle servos
+        lead([[-383, -22, sd * 96], [-340, -14, sd * 92], [-262, -13, sd * 88], [-190, -16, sd * 80], [-140, -17, sd * 76], ...duct(sd), [336, -8, sd * 12]]);   // tail servos
+      }
       add('harness', h, [0, 250, 0]); }
   }
   // --- skids: sprung bows clipped to both longerons

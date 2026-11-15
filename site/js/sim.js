@@ -17,11 +17,13 @@ const qinv = q => [-q[0], -q[1], -q[2], q[3]];
 const qmul = (a, b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]];
 const qnorm = q => { const n = Math.hypot(...q); return q.map(c => c / n); };
 
+// Lift slope and the point where lift acts come from the vortex-lattice model (analysis/baseline_aero.py):
+// about 2.5 per radian on 0.158 m2, neutral point 36 mm behind the datum.
 export const AERO = {
-  wingS: 0.20, wingX: -0.045, wingZ: 0.175,      // wing + lifting body area (m^2), aerodynamic centre station, half-span arm
+  wingS: 0.20, wingX: -0.011, wingZ: 0.175,      // wing + lifting body area (m^2), aerodynamic centre station, half-span arm
   tailS: 0.024, tailX: -0.41, tailZ: 0.155,
   finS: 0.035, finX: -0.35, sideS: 0.04,
-  CLa: 3.2, alphaStall: 0.27, CD0: 0.04, kInduced: 7.3,
+  CLa: 2.0, camber: 0.07, alphaStall: 0.40, CD0: 0.04, kInduced: 7.3,
   downwash: 0.45, pitchSpeed: 34,                // tail sees less incidence behind the wing; propeller thrust fades to zero at this airspeed
   kq: 0.015,                                    // propeller reaction torque per newton of thrust (m)
   rotDamp: 0.012, motorTau: 0.07, tiltRate: 150, nozzleRate: 300, tailRate: 400,
@@ -53,7 +55,7 @@ export function createSim(batteryX = D.battery.xDefault) {
   function step(dt, inp) {
     const att = attitude(s.q); s.att = att;
     const vb = qrot(qinv(s.q), s.v), V = Math.hypot(vb[0], vb[1]);
-    const wingW = sstep(14, 19, vb[0]), hoverW = 1 - wingW;          // 0 = fans carry the weight, 1 = wing-borne
+    const wingW = sstep(15, 20, vb[0]), hoverW = 1 - wingW;          // 0 = fans carry the weight, 1 = wing-borne
     s.speed = Math.hypot(...s.v); s.alpha = V > 1 ? Math.atan2(-vb[1], vb[0]) : 0; s.wingW = wingW;
     const armed = inp.armed !== false; s.armed = armed;
 
@@ -61,12 +63,12 @@ export function createSim(batteryX = D.battery.xDefault) {
     const vyD = Math.abs(inp.thr - 0.5) < 0.06 ? 0 : (inp.thr - 0.5) * 5;        // climb-rate command, +/- 2.5 m/s
     const eVy = vyD - s.v[1], fly = armed && !s.onGround;
     if (fly) { s.iVy = clamp(s.iVy + eVy * dt, -3, 3); s.iPitch = clamp(s.iPitch + eVy * dt * wingW, -1.5, 1.5); }
-    const pitchWing = clamp(0.05 + 0.10 * eVy + 0.12 * s.iPitch, -0.3, 0.38);    // wing-borne: hold height with pitch
+    const pitchWing = clamp(0.17 + 0.10 * eVy + 0.12 * s.iPitch, -0.3, 0.38);    // wing-borne: hold height with pitch
     const pitchD = hoverW * inp.pitch * 20 * DEG + wingW * (inp.altHold ? pitchWing + inp.pitch * 10 * DEG : inp.pitch * 25 * DEG + 0.08);
     const rollD = inp.roll * (30 + 15 * wingW) * DEG;
     const eR = rollD - att.roll, eP = pitchD - att.pitch;
     if (fly) { s.iAtt[0] = clamp(s.iAtt[0] + eR * dt, -0.4, 0.4); s.iAtt[2] = clamp(s.iAtt[2] + eP * dt, -1, 1); }
-    const wD = [5 * eR + 4 * s.iAtt[0], -inp.yaw * 2.2, 5 * eP + 4 * s.iAtt[2]];
+    const wD = [5 * eR + 4 * s.iAtt[0], -inp.yaw * 1.8, 5 * eP + 4 * s.iAtt[2]];
     if (wingW > 0.5 && V > 6) wD[1] = -G * Math.tan(att.roll) / V * 0.9;         // coordinated turn when wing-borne
     if (fly) s.iAtt[1] = clamp(s.iAtt[1] + (wD[1] - s.w[1]) * dt, -0.6, 0.6);
     const u = [I[0] * 11 * (wD[0] - s.w[0]), I[1] * (7 * (wD[1] - s.w[1]) + 6 * s.iAtt[1]), I[2] * 11 * (wD[2] - s.w[2])];   // torque demand
@@ -100,7 +102,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     for (let i = 0; i < 4; i++) s.T[i] += (cmd[i] - s.T[i]) * Math.min(1, dt / AERO.motorTau);
     // With the nozzle straight nothing aft of the balance point can hold the tail up, so until the wing is flying the
     // controller keeps the nozzle at least partly down, whatever the pilot asks for.
-    const dMin = s.onGround ? 0 : 60 * (1 - sstep(8, 19, vb[0]));
+    const dMin = s.onGround ? 0 : 35 * (1 - sstep(3, 12, vb[0]));
     s.tilt = slew(s.tilt, clamp(Math.max(inp.tilt, dMin), 0, 100), AERO.tiltRate); s.nozzle = slew(s.nozzle, nozzleD, AERO.nozzleRate);
     s.tailL = slew(s.tailL, tailLD, AERO.tailRate); s.tailR = slew(s.tailR, tailRD, AERO.tailRate);
 
@@ -114,7 +116,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     Tb = add(Tb, [0, AERO.kq * (F.spin * s.T[0] + L.spin * s.T[2] + R.spin * s.T[3]), 0]); Tb = add(Tb, mul(mDir, AERO.kq * M.spin * s.T[1]));
     const at = (r) => add(vb, cross(s.w, r));
     for (const sg of [-1, 1]) {
-      const rw = [AERO.wingX - cg[0], 0, sg * AERO.wingZ]; push(surface(at(rw), 0, AERO.wingS / 2), rw);
+      const rw = [AERO.wingX - cg[0], 0, sg * AERO.wingZ]; push(surface(at(rw), AERO.camber, AERO.wingS / 2), rw);
       const rt = [AERO.tailX - cg[0], 0, sg * AERO.tailZ]; push(surface(at(rt), (sg < 0 ? s.tailL : s.tailR) * DEG, AERO.tailS / 2, AERO.downwash), rt);
     }
     { const rf = [AERO.finX - cg[0], 0.05, 0], vf = at(rf), V2 = vf[0] * vf[0] + vf[2] * vf[2];

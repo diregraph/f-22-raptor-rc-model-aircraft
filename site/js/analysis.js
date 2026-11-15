@@ -1,6 +1,6 @@
 // Engineering analysis page: reads the JSON written by analysis/*.py and draws it. No chart library.
 const J = async f => (await fetch('analysis/' + f)).json();
-const [sz, fl, fans, st] = await Promise.all(['sizing.json', 'flight.json', 'fans.json', 'structure.json'].map(J));
+const [sz, fl, fans, st, cur] = await Promise.all(['sizing.json', 'flight.json', 'fans.json', 'structure.json', 'current.json'].map(J));
 const C = { s1: '#3987e5', s2: '#d95926', s3: '#199e70' }, pct = v => Math.round(v * 100) + '%';
 const el = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
 const status = (ok, warn) => ok ? '<span class="st good"><i>✓</i>Met</span>' : warn ? '<span class="st warn"><i>!</i>Close</span>' : '<span class="st crit"><i>✕</i>Not met</span>';
@@ -44,24 +44,25 @@ function field(d, nx, ny) {   // density map of a generated part: one hue, light
 }
 const app = document.getElementById('app'); app.className = ''; app.innerHTML = '';
 const add = h => { const n = typeof h === 'string' ? el(h) : h; app.append(n); return n; };
+// ---- scorecard
+const n = cur.now, f0 = cur.first;
+add(`<section id="score"><h2>Scorecard</h2><p>The first layout against the aircraft as it is now drawn in the 3D model and the CAD.</p>
+<div class="card"><table><tr><th>Requirement</th><th>Target</th><th class="n">First layout</th><th></th><th class="n">As drawn now</th><th></th></tr>
+<tr><td>Pitch stability margin in forward flight</td><td>+5 to +12%</td><td class="n">${f0.margin}%</td><td>${status(false)}</td><td class="n">+${n.margin}%</td><td>${status(n.margin >= 5)}</td></tr>
+<tr><td>Hardest-working fan in the hover</td><td>60% or less</td><td class="n">${pct(f0.hover_worst)}</td><td>${status(false)}</td><td class="n">${pct(n.hover_worst)}</td><td>${status(n.hover_worst <= .6, n.hover_worst <= .7)}</td></tr>
+<tr><td>Stall speed</td><td>12 m/s or less</td><td class="n">${f0.stall}</td><td>${status(false)}</td><td class="n">${n.stall}</td><td>${status(n.stall <= 12)}</td></tr>
+<tr><td>All-up weight</td><td>1,900 g or less</td><td class="n">${f0.mass} g</td><td>${status(true)}</td><td class="n">${n.mass} g</td><td>${status(n.mass <= 1900, n.mass <= 1950)}</td></tr></table></div>
+<div class="tiles"><div class="tile"><b>${pct(n.hover.F)}</b><span>lift fan in the hover (${n.thrust_g.lift} g available)</span></div><div class="tile"><b>${pct(n.hover.M)}</b><span>tail nozzle (${n.thrust_g.nozzle_down} g available pointing down)</span></div><div class="tile"><b>${pct(n.hover.R)}</b><span>roll motors (${n.thrust_g.roll_pair} g the pair, unmodelled guess)</span></div><div class="tile"><b>${pct(n.ideal_equal_load)}</b><span>the best any layout could do with this thrust and weight</span></div></div>
+<div class="note">Stable now, but the hover is not met and cannot be with these motors at this weight: even perfectly shared, every fan would run at ${pct(n.ideal_equal_load)}. Stability pulled the balance point forward, which unloads the tail nozzle and loads the lift fan and roll motors.</div>
+<div class="card"><h3>What changed from the first layout</h3><table><tr><th>Item</th><th>Change</th><th>Why</th></tr>${cur.changes.map(c => `<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join('')}</table></div></section>`);
 const b = sz.base, s = sz.best, T = sz.tmax;
 
-// ---- scorecard
-add(`<section id="score"><h2>Scorecard</h2><p>Today's layout against the layout the sizing study proposes. The proposal is a recommendation: the 3D model still shows today's layout.</p>
-<div class="card"><table><tr><th>Requirement</th><th>Target</th><th class="n">Today</th><th></th><th class="n">Proposed</th><th></th></tr>
-<tr><td>Pitch stability margin in forward flight</td><td>+5 to +12%</td><td class="n">${b.margin}%</td><td>${status(b.margin >= 5)}</td><td class="n">+${s.margin}%</td><td>${status(s.margin >= 5)}</td></tr>
-<tr><td>Hardest-working fan in the hover</td><td>60% or less</td><td class="n">${pct(b.hover_worst)}</td><td>${status(b.hover_worst <= .6, b.hover_worst <= .7)}</td><td class="n">${pct(s.hover_worst)}</td><td>${status(s.hover_worst <= .6, s.hover_worst <= .7)}</td></tr>
-<tr><td>Stall speed</td><td>12 m/s or less</td><td class="n">${b.stall}</td><td>${status(b.stall <= 12, b.stall <= 13)}</td><td class="n">${s.stall}</td><td>${status(s.stall <= 12)}</td></tr>
-<tr><td>All-up weight</td><td>1,900 g or less</td><td class="n">${b.mass} g</td><td>${status(b.mass <= 1900)}</td><td class="n">${s.mass} g</td><td>${status(s.mass <= 1900)}</td></tr></table></div>
-<div class="tiles"><div class="tile"><b>${s.wing_dx} mm</b><span>wing and roll motors move aft</span></div><div class="tile"><b>${s.fan_x - b.fan_x} mm</b><span>lift fan moves forward</span></div><div class="tile"><b>${s.xb - b.xb} mm</b><span>battery and electronics move forward, into the space the fan leaves</span></div><div class="tile"><b>SD7062</b><span>wing section: 14% thick, more lift before stall</span></div></div>
-<div class="note">The hover line got worse, not better, because the fan model below says the lift-fan motor can give about ${T.F} g within its current limit, not the 1,300 g assumed until now. That is the next thing to fix.</div></section>`);
-
 // ---- central trade
-const sec = add(`<section id="trade"><h2>The central trade: where the battery sits</h2><p>One variable, today's layout. Moving the battery forward makes forward flight stable but takes load off the tail nozzle and puts it on the lift fan and roll motors. No battery position satisfies both, which is why the wing and the lift fan have to move too.</p><div class="grid2"><div class="card" id="c1"><h3>Pitch stability margin</h3></div><div class="card" id="c2"><h3>Fan load in the hover</h3></div></div>
+const sec = add(`<section id="trade"><h2>The central trade: where the battery sits</h2><p>One variable, in the first layout (this is the study that started the re-layout). Moving the battery forward makes forward flight stable but takes load off the tail nozzle and puts it on the lift fan and roll motors. No battery position satisfies both, which is why the wing and the lift fan have to move too.</p><div class="grid2"><div class="card" id="c1"><h3>Pitch stability margin</h3></div><div class="card" id="c2"><h3>Fan load in the hover</h3></div></div>
 <div class="card"><h3>Try a battery position</h3><input id="bx" type="range" min="0" max="${sz.sweep.length - 1}" value="0" aria-label="Battery position"><div class="tiles" id="bt"></div></div></section>`);
-sec.querySelector('#c1').append(lineChart({ xLabel: 'battery position, mm ahead of the datum', yLabel: 'margin, % of chord', yMin: -30, yMax: 40, yFmt: v => v + '%', band: { lo: 5, hi: 12, label: 'target' }, mark: { x: -60, label: 'today' },
-  series: [{ name: "Today's layout", short: 'today', color: C.s1, pts: sz.sweep.map(d => [d.xb, d.margin]) }, { name: 'Wing 100 mm aft, tail 1.5x', short: 'wing aft', color: C.s2, pts: sz.sweep_tail.map(d => [d.xb, d.margin]) }] }));
-sec.querySelector('#c2').append(lineChart({ xLabel: 'battery position, mm ahead of the datum', yLabel: 'share of maximum thrust', yMin: 0, yMax: 1, yFmt: pct, band: { lo: 0, hi: .6, label: 'target: 60% or less' }, mark: { x: -60, label: 'today' },
+sec.querySelector('#c1').append(lineChart({ xLabel: 'battery position, mm ahead of the datum', yLabel: 'margin, % of chord', yMin: -30, yMax: 40, yFmt: v => v + '%', band: { lo: 5, hi: 12, label: 'target' }, mark: { x: -60, label: 'first layout' },
+  series: [{ name: 'First layout', short: 'first', color: C.s1, pts: sz.sweep.map(d => [d.xb, d.margin]) }, { name: 'Wing 100 mm aft, tail 1.5x', short: 'wing aft', color: C.s2, pts: sz.sweep_tail.map(d => [d.xb, d.margin]) }] }));
+sec.querySelector('#c2').append(lineChart({ xLabel: 'battery position, mm ahead of the datum', yLabel: 'share of maximum thrust', yMin: 0, yMax: 1, yFmt: pct, band: { lo: 0, hi: .6, label: 'target: 60% or less' }, mark: { x: -60, label: 'first layout' },
   series: [{ name: 'Lift fan', color: C.s1, pts: sz.sweep.map(d => [d.xb, d.hover && d.hover.F]) }, { name: 'Tail nozzle', short: 'nozzle', color: C.s2, pts: sz.sweep.map(d => [d.xb, d.hover && d.hover.M]) }, { name: 'Roll motors', short: 'roll', color: C.s3, pts: sz.sweep.map(d => [d.xb, d.hover && d.hover.R]) }] }));
 const bx = sec.querySelector('#bx'), bt = sec.querySelector('#bt');
 const showB = () => { const d = sz.sweep[+bx.value]; bt.innerHTML = `<div class="tile"><b>${d.xb} mm</b><span>battery position</span></div><div class="tile"><b>${d.cg} mm</b><span>balance point</span></div><div class="tile"><b>${d.margin}%</b><span>stability margin ${d.margin >= 5 ? '✓' : '✕ unstable or too little'}</span></div><div class="tile"><b>${d.hover ? pct(d.hover_worst) : 'cannot hover'}</b><span>hardest-working fan ${d.hover && d.hover_worst <= .6 ? '✓' : '✕'}</span></div>`; };
@@ -70,18 +71,18 @@ bx.addEventListener('input', showB); showB();
 // ---- flight dynamics
 const ts = (r, k) => r.t.map((t, i) => [t, r[k][i]]);
 const fs = add(`<section id="flight"><h2>Flight dynamics (JSBSim)</h2><p>Level flight at 18 m/s. At 0.5 s the tail is kicked 2° nose-up for 0.2 s. A line that leaves the chart has departed controlled flight.</p>
-<div class="tiles"><div class="tile"><b>${fl.today.mode.replace('diverges: ', '')}</b><span>today's layout, hands off: pitch error ${fl.today.mode.startsWith('div') ? 'grows' : 'oscillates'}</span></div><div class="tile"><b>${fl.sized.mode.replace('oscillates at ', '')}</b><span>proposed layout: a slow, stable pitch oscillation</span></div><div class="tile"><b>${fl.sized.free.trim.tail_deg}°</b><span>tail angle the proposed layout needs to fly level: too much, see note</span></div></div>
-<div class="grid2"><div class="card" id="f1"><h3>Pitch after the kick</h3></div><div class="card" id="f2"><h3>Proposed layout: 5° pitch-up command</h3></div></div>
-<div class="note">Today's layout departs even with a pitch gyro driving the tail at full servo speed. The proposed layout is stable, but it trims with ${Math.abs(fl.sized.free.trim.tail_deg)}° of tail, which costs drag and control range. Next loop: set the wing at an angle to the body so the tail trims near zero.</div></section>`);
+<div class="tiles"><div class="tile"><b>${fl.today.mode.replace('diverges: ', '')}</b><span>first layout, hands off: pitch error ${fl.today.mode.startsWith('div') ? 'grows' : 'oscillates'}</span></div><div class="tile"><b>${fl.sized.mode.replace('oscillates at ', '')}</b><span>as drawn now: a slow, stable pitch oscillation</span></div><div class="tile"><b>${fl.sized.free.trim.tail_deg}°</b><span>tail angle needed to fly level at 18 m/s: too much, see note</span></div></div>
+<div class="grid2"><div class="card" id="f1"><h3>Pitch after the kick</h3></div><div class="card" id="f2"><h3>As drawn now: 5° pitch-up command</h3></div></div>
+<div class="note">The first layout departed even with a pitch gyro driving the tail at full servo speed. The aircraft as drawn is stable, but it needs ${Math.abs(fl.sized.free.trim.tail_deg)}° of tail to fly level at 18 m/s, out of 25° available: the cambered wing section pitches the nose down and the tail, sitting in the wing's wake, is weak. This is the main open problem in forward flight.</div></section>`);
 fs.querySelector('#f1').append(lineChart({ xLabel: 'time, s', yLabel: 'pitch change, degrees', yMin: -20, yMax: 40, yFmt: v => v + '°',
-  series: [{ name: 'Today, hands off', short: 'today', color: C.s1, pts: ts(fl.today.free, 'pitch') }, { name: 'Today, with pitch gyro', short: 'today + gyro', color: C.s2, pts: ts(fl.today.damped, 'pitch') }, { name: 'Proposed, hands off', short: 'proposed', color: C.s3, pts: ts(fl.sized.free, 'pitch') }] }));
-fs.querySelector('#f2').append(lineChart({ xLabel: 'time, s', yLabel: 'degrees', yMin: -25, yMax: 15, yFmt: v => v + '°',
+  series: [{ name: 'First layout, hands off', short: 'first', color: C.s1, pts: ts(fl.today.free, 'pitch') }, { name: 'First layout, with pitch gyro', short: 'first + gyro', color: C.s2, pts: ts(fl.today.damped, 'pitch') }, { name: 'As drawn now, hands off', short: 'now', color: C.s3, pts: ts(fl.sized.free, 'pitch') }] }));
+fs.querySelector('#f2').append(lineChart({ xLabel: 'time, s', yLabel: 'degrees', yMin: -30, yMax: 15, yFmt: v => v + '°',
   series: [{ name: 'Pitch change', short: 'pitch', color: C.s1, pts: ts(fl.sized.step, 'pitch') }, { name: 'Tail angle', short: 'tail', color: C.s2, pts: ts(fl.sized.step, 'tail') }] }));
 
 // ---- fans
 const fsec = add(`<section id="fans"><h2>Fans (blade-element model)</h2><p>Thrust of each printed fan against speed, and the point where the EMAX 2306 motor settles. "Expected" is ${Math.round(fans.main.real_factor * 100)}% of the ideal figure, to allow for tip gap, stator and surface losses.</p><div class="grid2" id="fg"></div>
 <div class="note">Reliable only near each fan's design speed. It cannot yet be used to choose a better diameter or blade angle: off-design it gives nonsense. The thrust stand decides.</div></section>`);
-for (const k of ['lift', 'main']) { const f = fans[k], L = f.at_current_limit, c = el(`<div class="card"><h3>${f.label}</h3><div class="tiles"><div class="tile"><b>${L.expected_g} g</b><span>expected at ${L.amps} A (${Math.round(L.throttle * 100)}% throttle). Assumed before: ${f.assumed_g} g</span></div><div class="tile"><b>${L.rpm.toLocaleString()}</b><span>rpm · jet ${L.jet_m_s} m/s · ${L.watts} W</span></div></div></div>`);
+for (const k of ['lift', 'main']) { const f = fans[k], L = f.at_current_limit, c = el(`<div class="card"><h3>${f.label}</h3><div class="tiles"><div class="tile"><b>${L.expected_g} g</b><span>expected at ${L.amps} A (${Math.round(L.throttle * 100)}% throttle). ${k === 'lift' ? 'Previous 120 mm fan: ' + fans.lift_old.at_current_limit.expected_g + ' g' : 'First guess: ' + f.assumed_g + ' g'}</span></div><div class="tile"><b>${L.rpm.toLocaleString()}</b><span>rpm · jet ${L.jet_m_s} m/s · ${L.watts} W</span></div></div></div>`);
   c.append(lineChart({ xLabel: 'fan speed, rpm', yLabel: 'thrust, g', yMin: 0, xFmt: v => (v / 1000) + 'k', mark: { x: Math.round(L.rpm / 1000) * 1000, label: 'motor limit' },
     series: [{ name: 'Ideal', color: C.s1, dash: true, pts: f.curve.map(p => [p.rpm, p.thrust_g]) }, { name: 'Expected', color: C.s2, pts: f.curve.map(p => [p.rpm, Math.round(p.thrust_g * f.real_factor)]) }] })); fsec.querySelector('#fg').append(c); }
 

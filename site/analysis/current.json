@@ -1,0 +1,65 @@
+{
+ "now": {
+  "mass": 1938,
+  "cg": -18.6,
+  "np": -36,
+  "margin": 7.2,
+  "hover_worst": 0.777,
+  "hover": {
+   "F": 0.777,
+   "M": 0.276,
+   "R": 0.777
+  },
+  "stall": 11.6,
+  "thrust_g": {
+   "lift": 1206.0,
+   "nozzle_down": 814,
+   "roll_pair": 1000.0
+  },
+  "ideal_equal_load": 0.642
+ },
+ "first": {
+  "mass": 1892,
+  "cg": -82.0,
+  "margin": -23.6,
+  "hover_worst": 0.736,
+  "stall": 13.5
+ },
+ "changes": [
+  [
+   "Lift fan",
+   "140 mm, 7 fine blades, moved 80 mm forward",
+   "more thrust within the motor's current limit; longer arm ahead of the balance point"
+  ],
+  [
+   "Wide centre body",
+   "70 mm longer at the front",
+   "room for the larger fan; costs stability, because a wide flat forebody lifts"
+  ],
+  [
+   "Wing and roll motors",
+   "75 mm aft, SD7062 section",
+   "moves the point where lift acts aft; lower stall speed"
+  ],
+  [
+   "Spar",
+   "30 mm aft, 600 mm long, crosses the main fan inlet",
+   "the fan duct blocks any position further aft"
+  ],
+  [
+   "Battery",
+   "68 mm forward, directly behind the lift fan",
+   "balance"
+  ],
+  [
+   "Speed controllers, flight controller, receiver",
+   "into the nose, under a lift-off canopy",
+   "the only move that made the as-drawn aircraft stable"
+  ],
+  [
+   "Tailplane",
+   "unchanged",
+   "it sits in the wing's wake: 40% more area moved the lift point 2 mm"
+  ]
+ ]
+}

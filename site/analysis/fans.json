@@ -237,7 +237,244 @@
   ]
  },
  "lift": {
-  "label": "Lift fan, 120 mm, 9 blades",
+  "label": "Lift fan, 140 mm, 7 blades",
+  "assumed_g": 1300,
+  "full_throttle": {
+   "rpm": 18520,
+   "thrust_g": 2540,
+   "amps": 51.1,
+   "watts": 739,
+   "jet_m_s": 36.5,
+   "blade_incidence_deg": 1.1,
+   "g_per_W": 3.44
+  },
+  "at_current_limit": {
+   "rpm": 15251,
+   "thrust_g": 1723,
+   "amps": 35.0,
+   "watts": 399,
+   "jet_m_s": 30.1,
+   "blade_incidence_deg": 1.1,
+   "g_per_W": 4.32,
+   "throttle": 0.76,
+   "expected_g": 1206
+  },
+  "real_factor": 0.7,
+  "throttle": [
+   {
+    "throttle": 0.4,
+    "rpm": 9068,
+    "thrust_g": 609,
+    "amps": 13.0,
+    "watts": 81,
+    "jet_m_s": 17.9,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 7.5
+   },
+   {
+    "throttle": 0.5,
+    "rpm": 10934,
+    "thrust_g": 885,
+    "amps": 18.5,
+    "watts": 142,
+    "jet_m_s": 21.6,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 6.21
+   },
+   {
+    "throttle": 0.6,
+    "rpm": 12667,
+    "thrust_g": 1188,
+    "amps": 24.4,
+    "watts": 224,
+    "jet_m_s": 25.0,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 5.31
+   },
+   {
+    "throttle": 0.7,
+    "rpm": 14280,
+    "thrust_g": 1510,
+    "amps": 30.8,
+    "watts": 325,
+    "jet_m_s": 28.2,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 4.65
+   },
+   {
+    "throttle": 0.8,
+    "rpm": 15787,
+    "thrust_g": 1846,
+    "amps": 37.4,
+    "watts": 445,
+    "jet_m_s": 31.1,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 4.15
+   },
+   {
+    "throttle": 0.9,
+    "rpm": 17197,
+    "thrust_g": 2190,
+    "amps": 44.2,
+    "watts": 583,
+    "jet_m_s": 33.9,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 3.75
+   },
+   {
+    "throttle": 1.0,
+    "rpm": 18520,
+    "thrust_g": 2540,
+    "amps": 51.1,
+    "watts": 739,
+    "jet_m_s": 36.5,
+    "blade_incidence_deg": 1.1,
+    "g_per_W": 3.44
+   }
+  ],
+  "curve": [
+   {
+    "rpm": 4000,
+    "thrust_g": 118,
+    "shaft_W": 5,
+    "amps": 3.3
+   },
+   {
+    "rpm": 5000,
+    "thrust_g": 185,
+    "shaft_W": 11,
+    "amps": 4.6
+   },
+   {
+    "rpm": 6000,
+    "thrust_g": 267,
+    "shaft_W": 19,
+    "amps": 6.3
+   },
+   {
+    "rpm": 7000,
+    "thrust_g": 363,
+    "shaft_W": 29,
+    "amps": 8.2
+   },
+   {
+    "rpm": 8000,
+    "thrust_g": 474,
+    "shaft_W": 44,
+    "amps": 10.3
+   },
+   {
+    "rpm": 9000,
+    "thrust_g": 600,
+    "shaft_W": 63,
+    "amps": 12.8
+   },
+   {
+    "rpm": 10000,
+    "thrust_g": 741,
+    "shaft_W": 86,
+    "amps": 15.6
+   },
+   {
+    "rpm": 11000,
+    "thrust_g": 896,
+    "shaft_W": 114,
+    "amps": 18.7
+   },
+   {
+    "rpm": 12000,
+    "thrust_g": 1066,
+    "shaft_W": 148,
+    "amps": 22.0
+   },
+   {
+    "rpm": 13000,
+    "thrust_g": 1252,
+    "shaft_W": 189,
+    "amps": 25.7
+   },
+   {
+    "rpm": 14000,
+    "thrust_g": 1452,
+    "shaft_W": 236,
+    "amps": 29.6
+   },
+   {
+    "rpm": 15000,
+    "thrust_g": 1666,
+    "shaft_W": 290,
+    "amps": 33.8
+   },
+   {
+    "rpm": 16000,
+    "thrust_g": 1896,
+    "shaft_W": 352,
+    "amps": 38.4
+   },
+   {
+    "rpm": 17000,
+    "thrust_g": 2140,
+    "shaft_W": 422,
+    "amps": 43.2
+   },
+   {
+    "rpm": 18000,
+    "thrust_g": 2399,
+    "shaft_W": 501,
+    "amps": 48.3
+   },
+   {
+    "rpm": 19000,
+    "thrust_g": 2673,
+    "shaft_W": 589,
+    "amps": 53.7
+   },
+   {
+    "rpm": 20000,
+    "thrust_g": 2962,
+    "shaft_W": 687,
+    "amps": 59.4
+   },
+   {
+    "rpm": 21000,
+    "thrust_g": 3266,
+    "shaft_W": 795,
+    "amps": 65.4
+   },
+   {
+    "rpm": 22000,
+    "thrust_g": 3584,
+    "shaft_W": 914,
+    "amps": 71.6
+   },
+   {
+    "rpm": 23000,
+    "thrust_g": 3918,
+    "shaft_W": 1045,
+    "amps": 78.2
+   },
+   {
+    "rpm": 24000,
+    "thrust_g": 4266,
+    "shaft_W": 1187,
+    "amps": 85.1
+   },
+   {
+    "rpm": 25000,
+    "thrust_g": 4629,
+    "shaft_W": 1342,
+    "amps": 92.2
+   },
+   {
+    "rpm": 26000,
+    "thrust_g": 5006,
+    "shaft_W": 1509,
+    "amps": 99.7
+   }
+  ]
+ },
+ "lift_old": {
+  "label": "Previous lift fan, 120 mm, 9 blades",
   "assumed_g": 1300,
   "full_throttle": {
    "rpm": 17487,
