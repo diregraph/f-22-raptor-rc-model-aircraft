@@ -18,8 +18,8 @@ const qmul = (a, b) => [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a
 const qnorm = q => { const n = Math.hypot(...q); return q.map(c => c / n); };
 
 export const AERO = {
-  wingS: 0.22, wingX: -0.115, wingZ: 0.20,      // wing + lifting body area (m^2), aerodynamic centre station, half-span arm
-  tailS: 0.032, tailX: -0.42, tailZ: 0.18,
+  wingS: 0.19, wingX: -0.105, wingZ: 0.17,      // wing + lifting body area (m^2), aerodynamic centre station, half-span arm
+  tailS: 0.028, tailX: -0.42, tailZ: 0.17,
   finS: 0.035, finX: -0.35, sideS: 0.04,
   CLa: 3.2, alphaStall: 0.27, CD0: 0.04, kInduced: 7.3,
   downwash: 0.45, pitchSpeed: 34,                // tail sees less incidence behind the wing; propeller thrust fades to zero at this airspeed
@@ -72,11 +72,12 @@ export function createSim(batteryX = D.battery.xDefault) {
 
     // ---- mixer: main motor carries its share while it points down; the roll pair takes over as it swings aft
     let Fv = (inp.altHold ? m * (G + 4 * eVy + 2 * s.iVy) / clamp(att.up, 0.6, 1) : inp.thr * (F.max + M.max)) * hoverW;
-    const fans = sstep(0, 0.15, hoverW), idle = 0.6 * fans, sinT = Math.sin(s.tilt * DEG);
+    const fans = sstep(0, 0.15, hoverW), sinT = Math.sin(s.tilt * DEG);
     const fwd = (1 - sstep(30, 80, s.tilt)) * (inp.altHold ? 0.78 : inp.thr) * M.max;
     const aF = F.r[0], aM = M.r[0], aR = L.r[0], zArm = R.r[2] - L.r[2];
     let tF = 0, tM = 0, c = 0;
     for (let k = 0; k < 4; k++) {
+      const idle = 0.125 * Fv * fans;                              // the roll pair carries a quarter of the lift
       const want = Math.max(0, ((Fv - 2 * idle) * aF + 2 * idle * aR - u[2]) / (aF - aM));
       tM = clamp(Math.max(sinT > 0.3 ? want / sinT : 0, fwd), 0, M.max);
       const tMv = tM * sinT, S = Fv - tMv, Mo = u[2] - tMv * aM;

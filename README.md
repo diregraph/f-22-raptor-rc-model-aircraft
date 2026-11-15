@@ -8,11 +8,12 @@ sized around parts on hand.
 - `site/js/spec.js` — single source of truth: dimensions, parts, masses,
   thrusters, joints. A later simulator should read this file.
 - `site/js/sim.js` — first-pass flight physics and flight-controller model (also runs in Node).
-- `cad/build.py` — parametric CAD (CadQuery) for the printable PETG test-frame parts.
-  `python3 cad/build.py` writes print-ready STL + STEP to `cad/`, copies them to
-  `site/cad/` for download, and writes assembly-position meshes to `site/models/`
-  that the twin displays. It also checks every part against the tubes, the servos
-  and each other for clashes.
+- `cad/build.py` — parametric CAD (CadQuery) for every printed part: the F-35B-shaped
+  LW-PLA airframe and all PETG structure. `python3 cad/build.py` writes print-pose STL
+  and STEP to `cad/`, copies the STLs plus a manifest to `site/cad/` (the twin loads
+  them and offers them for download), and checks every part for clashes against the
+  tubes, servos, propeller discs, battery and each other. Then run
+  `python3 tools/sync-mass.py` to copy the mass estimates into the spec.
 - `tools/sim-test.mjs` — headless flight checks: `npm test`.
 - `docs/build-plan.md` — 14-day build plan. `docs/source-video.md` — reference build.
 

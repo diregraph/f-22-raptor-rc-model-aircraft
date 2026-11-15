@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { RoomEnvironment } from '../vendor/RoomEnvironment.js';
 import { STLLoader } from '../vendor/STLLoader.js';
-import { D, PARTS, PART, GROUPS, MATERIALS, STEPS, THRUSTERS, JOINTS, WIRING, CAD, PRINT_PETG, massProps, hoverTrim } from './spec.js';
+import { D, PARTS, PART, GROUPS, MATERIALS, STEPS, THRUSTERS, JOINTS, WIRING, CAD, PRINT_PETG, PRINT_LW, massProps, hoverTrim } from './spec.js';
 import { createSim } from './sim.js';
 import { buildModel } from './build.js';
 
@@ -36,9 +36,17 @@ const ground = new THREE.Group(); ground.position.y = D.groundY; scene.add(groun
   const g1 = new THREE.GridHelper(3000, 30, 0x3d566e, 0x22313f); g1.material.transparent = true; g1.material.opacity = 0.55; ground.add(g1);
   const g2 = new THREE.GridHelper(3000, 150, 0x1a2633, 0x1a2633); g2.material.transparent = true; g2.material.opacity = 0.35; g2.position.y = -0.2; ground.add(g2); }
 
-async function loadCad() {   // real CAD meshes for the parts that have them; the twin still works if a file is missing
+let MANIFEST = {};
+async function loadCad() {   // every printed part comes from the CAD build; if a file is missing the twin falls back to a stand-in shape
   const out = {}, L = new STLLoader();
-  await Promise.all(Object.keys(CAD).map(async id => { try { const r = await fetch(`models/${id}.stl`); if (r.ok) out[id] = L.parse(await r.arrayBuffer()); } catch { /* fall back to stand-in */ } }));
+  try { MANIFEST = await (await fetch('cad/manifest.json')).json(); } catch { return out; }
+  await Promise.all(Object.entries(MANIFEST).map(async ([id, c]) => {
+    try {
+      const r = await fetch(`cad/${c.file}.stl`); if (!r.ok) return;
+      const m = new THREE.Matrix4().fromArray(c.matrix), geo = L.parse(await r.arrayBuffer()).applyMatrix4(m);   // print pose -> assembly pose
+      out[id] = { geo, material: c.material, axis: new THREE.Vector3(0, 0, 1).transformDirection(m) };          // layer lines follow the real print direction
+    } catch { /* stand-in */ }
+  }));
   return out;
 }
 const model = buildModel(await loadCad()); scene.add(model.root);
@@ -91,8 +99,8 @@ function apply() {
     const up = new THREE.Vector3(0, 1, 0), k = 0.26;
     const mDir = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion().multiplyQuaternions(joints.tiltG.quaternion, joints.yawG.quaternion));
     arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, hov ? trim.F * k : 0);
-    arrows.L.set(new THREE.Vector3(D.sparX, 44, -D.rollZ), up, hov ? trim.L * k + 20 : 0);
-    arrows.R.set(new THREE.Vector3(D.sparX, 44, D.rollZ), up, hov ? trim.R * k + 20 : 0);
+    arrows.L.set(new THREE.Vector3(D.sparX, 44, -D.rollZ), up, hov ? trim.L * k : 0);
+    arrows.R.set(new THREE.Vector3(D.sparX, 44, D.rollZ), up, hov ? trim.R * k : 0);
     arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, (hov ? trim.M : mp.mass * 0.35) * k);
     arrows.W.set(cg.clone(), new THREE.Vector3(0, -1, 0), 60);
   }
@@ -101,14 +109,14 @@ function apply() {
 
 // ---------- HUD
 function hud() {
-  const lift = THRUSTERS[0].maxG + THRUSTERS[1].maxG, all = lift + THRUSTERS[2].maxG + THRUSTERS[3].maxG;
-  const tw = lift / mp.mass, thr = Math.max(trim.F / THRUSTERS[0].maxG, trim.M / THRUSTERS[1].maxG);
-  const cls = v => v >= 1.5 ? 'ok' : v >= 1.3 ? 'warn' : 'bad';
+  const all = THRUSTERS.reduce((a, t) => a + t.maxG, 0);
+  const tw = all / mp.mass, thr = Math.max(trim.F / THRUSTERS[0].maxG, trim.M / THRUSTERS[1].maxG, trim.L / THRUSTERS[2].maxG);
+  const cls = v => v >= 1.8 ? 'ok' : v >= 1.5 ? 'warn' : 'bad';
   $('#hud').innerHTML = [
     ['Weight', `${Math.round(mp.mass)} g`, ''],
     ['Balance point', `${Math.round(mp.cg[0])} mm`, ''],
-    ['Front / main lift', `${Math.round(trim.split * 100)} / ${Math.round((1 - trim.split) * 100)}%`, ''],
-    ['Thrust-to-weight', `${tw.toFixed(2)} (est.)`, cls(tw)],
+    ['Lift share F / M / roll pair', `${Math.round(100 * trim.F / mp.mass)} / ${Math.round(100 * trim.M * Math.sin(rad(Math.max(state.tilt, 45))) / mp.mass)} / ${Math.round(200 * trim.L / mp.mass)}%`, ''],
+    ['Thrust-to-weight, 4 motors', `${tw.toFixed(2)} (est.)`, cls(tw)],
     state.tilt >= 45 ? ['Hover throttle', `${Math.round(thr * 100)}% (est.)`, thr < 0.7 ? 'ok' : thr < 0.8 ? 'warn' : 'bad'] : ['Mode', 'wing-borne', ''],
   ].map(([k, v, c]) => `<span class="chip ${c}">${k}<b>${v}</b></span>`).join('');
 }
@@ -135,8 +143,9 @@ $('#search').addEventListener('input', e => buildTree(e.target.value));
 
 // ---------- inspector
 function cadBlock(p) {
-  const c = CAD[p.id]; if (!c) return '';
-  return `<div class="blk"><h4>Printable file</h4><p>${c.print}</p><div class="acts"><a class="tog" href="cad/${c.file}.stl" download>Download STL</a><a class="tog plain" href="cad/${c.file}.step" download>STEP</a></div><p style="margin-top:8px;font-size:12px;color:var(--mute)">${PRINT_PETG}</p></div>`;
+  const c = MANIFEST[p.id]; if (!c) return '';
+  return `<div class="blk"><h4>Printable file</h4><p>${CAD[p.id] || ''}</p><dl class="kv" style="margin:8px 0 0"><dt>On the bed</dt><dd>${c.bed.map(v => Math.round(v)).join(' x ')} mm</dd></dl>
+    <div class="acts"><a class="tog" href="cad/${c.file}.stl" download>Download STL</a></div><p style="margin-top:8px;font-size:12px;color:var(--mute)">${c.material === 'LW-PLA' ? PRINT_LW : c.material === 'PETG' ? PRINT_PETG : 'Clear PETG, vase mode.'} STEP files are in the repository under cad/step.</p></div>`;
 }
 function wireBlock(p) {
   const rows = WIRING.filter(w => w[0] === p.id || w[1] === p.id); if (!rows.length) return '';
@@ -149,9 +158,9 @@ function inspector() {
     el.innerHTML = `<h2 style="margin-bottom:8px">Overview</h2><h3>Snap-together F-35B</h3>
       <p style="color:#cfd9e3;font-size:13px">Two aluminium tubes form the backbone. Every other part snaps, slides or twists onto them. Tap any part to see what it is, what it is made of and how it locks on.</p>
       <div class="legend">${Object.entries(MATERIALS).map(([k, v]) => `<div><i style="background:${v.color}"></i><span><b>${k}</b> · ${sum(k)} g<br>${v.blurb}</span></div>`).join('')}</div>
-      <div class="blk"><h4>Fasteners</h4><p>12 x M3 screws hold the four motors. Everything else is a C-clip, slide rail, bayonet or snap latch, so a crashed part swaps in under a minute.</p></div>
+      <div class="blk"><h4>Fasteners</h4><p>16 x M3 screws hold the four motors and the servos use their own screws. Everything else slides on the tubes, clips up from below, or is held by a 3 mm skewer pin.</p></div>
       <div class="blk"><h4>Printing</h4><p>${printed.length} printed parts, all within a 220 x 220 x 250 mm bed. LW-PLA ${sum('LW-PLA')} g, PETG ${sum('PETG')} g.</p></div>
-      <div class="blk"><h4>Printable now</h4><p>${Object.keys(CAD).length} PETG test-frame parts have real CAD: tap one for its STL. The rest are still layout shapes.</p></div>
+      <div class="blk"><h4>Printable now</h4><p>All ${Object.keys(MANIFEST).length} printed parts are real CAD: tap one for its STL and print notes.</p></div>
       <div class="blk"><h4>Estimates</h4><p>Weights and thrust are design estimates. Replace them with scale readings as parts are made.</p></div>`;
     return;
   }
@@ -185,7 +194,7 @@ function focus(id) {
   flyTo(c, c.clone().addScaledVector(dir, r / Math.tan(rad(camera.fov / 2)) * 1.25));
 }
 function homeView(anim = true) {
-  const portrait = innerWidth / innerHeight < 0.9, dist = portrait ? 3400 : 2050;
+  const portrait = innerWidth / innerHeight < 0.9, dist = portrait ? 3800 : 2050;
   const pos = HOME_TARGET.clone().add(new THREE.Vector3(0.62, 0.46, 0.64).normalize().multiplyScalar(dist));
   if (anim) flyTo(HOME_TARGET.clone(), pos); else { controls.target.copy(HOME_TARGET); camera.position.copy(pos); }
 }

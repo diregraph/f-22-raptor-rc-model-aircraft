@@ -171,36 +171,66 @@ printing. **Intern B** = foam, assembly, test rigs.
 3. **Test frame:** the same four motors at the same spacing on a wooden cross.
    Crash it, not the jet.
 
-## 8a. Printable test-frame parts (PETG)
+## 8a. Printable parts
 
-Files are in `cad/stl/` (print orientation) and `cad/step/`. Regenerate with
-`python3 cad/build.py`. Masses are estimates at 4 walls, 40% infill.
+Every printed part has real CAD. `python3 cad/build.py` regenerates them and checks
+each part against the tubes, servos, propeller discs, battery and every other part
+for clashes. Print-pose STL files are in `cad/stl/`, STEP in `cad/step/`.
+Masses are estimates: PETG at 4 walls / 40% infill; LW-PLA as a single 0.5 mm
+foamed wall with 4% infill.
 
-| File | Qty | Bed footprint mm | Est. g | Orientation |
-|---|---|---|---|---|
-| `spar_carrier` | 1 | 26 x 204 | 24 | Flat on its base |
-| `fan_spider` | 1 | 114 x 198 | 32 | Flat, clips up |
-| `tilt_bearing_left` | 1 | 41 x 31 | 8 | Floor on the bed |
-| `tilt_bearing_right` | 1 | 28 x 27 | 7 | Base on the bed |
-| `tilt_yoke` | 1 | 35 x 140 | 20 | Upside down on its flat top |
-| `motor_cradle` | 1 | 41 x 43 | 7 | On its side |
-| `roll_pod_left`, `roll_pod_right` | 1 each | 32 x 60 | 9 | Motor pad on the bed |
+| File | Material | Size on bed, mm (x, y, height) | Est. g |
+|---|---|---|---|
+| `spar_carrier` | PETG | 26 x 204 x 25 | 24 |
+| `fan_spider` | PETG | 114 x 198 x 24 | 32 |
+| `tilt_bearing_left` | PETG | 41 x 31 x 22 | 8 |
+| `tilt_bearing_right` | PETG | 28 x 27 x 20 | 7 |
+| `tilt_yoke` | PETG | 35 x 140 x 28 | 20 |
+| `motor_cradle` | PETG | 41 x 43 x 32 | 6 |
+| `roll_pod_right` | PETG | 32 x 60 x 24 | 9 |
+| `roll_pod_left` | PETG | 32 x 60 x 24 | 9 |
+| `skid_front` | PETG | 90 x 200 x 30 | 14 |
+| `skid_rear` | PETG | 90 x 200 x 30 | 14 |
+| `battery_tray` | PETG | 142 x 50 x 10 | 14 |
+| `fc_sled` | PETG | 88 x 36 x 11 | 7 |
+| `nose_plug` | PETG | 74 x 138 x 11 | 17 |
+| `hatch_latch` | PETG | 6 x 30 x 13 | 1 |
+| `canopy` | PETG-clear | 158 x 68 x 48 | 13 |
+| `nose` | LW-PLA | 86 x 160 x 220 | 54 |
+| `fan_bay` | LW-PLA | 84 x 216 x 200 | 87 |
+| `centre_section` | LW-PLA | 88 x 216 x 200 | 96 |
+| `hatch` | LW-PLA | 195 x 167 x 40 | 50 |
+| `aft_bridge` | LW-PLA | 84 x 216 x 90 | 40 |
+| `tail_boom_right` | LW-PLA | 50 x 24 x 170 | 11 |
+| `tail_boom_left` | LW-PLA | 50 x 24 x 170 | 11 |
+| `wing_inner_right` | LW-PLA | 305 x 27 x 116 | 36 |
+| `wing_inner_left` | LW-PLA | 305 x 27 x 116 | 36 |
+| `wing_outer_right` | LW-PLA | 198 x 22 x 111 | 18 |
+| `wing_outer_left` | LW-PLA | 198 x 22 x 111 | 18 |
+| `stabilator_right` | LW-PLA | 150 x 35 x 140 | 12 |
+| `stabilator_left` | LW-PLA | 150 x 35 x 140 | 12 |
+| `fin_right` | LW-PLA | 202 x 157 x 9 | 15 |
+| `fin_left` | LW-PLA | 202 x 157 x 9 | 15 |
 
-Print first, in this order: one clip test (cut the end off `tilt_bearing_right` in
-the slicer), then `tilt_bearing_right`, `tilt_bearing_left`, `motor_cradle`,
-`tilt_yoke`, `fan_spider`, `spar_carrier`, pods.
+**LW-PLA slicing.** The shell files are solid bodies. Slice with 1 wall, 4% gyroid
+infill, 3 bottom layers and 0 top layers so they print hollow. The inner wing
+panels have a 305 mm root chord: place them diagonally on the 220 mm bed.
+
+**PETG first.** Print one clip test, then the tilt mount, fan spider, spar carrier
+and roll pods: with the three tubes that is a flyable test frame before any shell
+exists.
 
 Check on the first prints, then adjust the parameters at the top of `cad/build.py`:
 
 - **Clip grip.** `CLIP_ID` 8.2 mm for an 8.0 mm tube. Measure your tube first.
-- **Servo pocket.** MG90S body 22.8 x 12.2 mm with 0.4 mm clearance.
-- **Horn recess.** Sized for the stock single-arm horn (`HORN_*`). Horns vary:
-  measure yours.
-- **Motor screws.** 4 x M3 on a 16 mm square. Pad thickness is 4 mm at the screws,
-  so use M3 x 6 or M3 x 7 and check they do not bottom out in the motor.
+- **Shell bores.** `BORE` 8.5 mm: LW-PLA shells must slide on the tubes freely.
+- **Servo pockets.** MG90S body 22.8 x 12.2 mm with 0.4 mm clearance.
+- **Horn recesses.** Sized for a typical single-arm horn (`HORN_*`): measure yours.
+- **Motor screws.** 4 x M3 on a 16 mm square, 4 mm pad: use M3 x 6 or 7.
 
-Hardware not printed: 2 mm pin or screw per roll pod (drill the spar end 2 mm),
-servo screws supplied with the servos, zip ties as a second lock on each clip.
+Hardware not printed: three 8 mm tubes (two 637 mm, one 772 mm), 3 mm bamboo
+skewers (nose pins, wing alignment pins), 3 mm steel wire (tail pivots), 2 mm pin
+per roll pod, servo screws, zip ties as a second lock on each clip.
 
 ## 9. Safety
 
