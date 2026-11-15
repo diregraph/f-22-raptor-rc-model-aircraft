@@ -185,7 +185,7 @@ HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, 81.0
 CAV = dict(x0=-160.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay
 HATCH = dict(x0=-164.0, x1=24.0, z=84.0)
 WING = dict(root_z=108.0, bury=5.0, mid_z=219.0, tip_z=WING_TIP_Z, root_le=10.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
-STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=250.0, root_le=-335.0, root_c=150.0, tip_c=50.0, sweep=34.0)
+STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=208.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
 FIN = dict(root_le=-262.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
 SKID_X, GROUND_Y = (10.0, -150.0), -85.0
 BATT_X = -52.0

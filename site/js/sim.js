@@ -19,7 +19,7 @@ const qnorm = q => { const n = Math.hypot(...q); return q.map(c => c / n); };
 
 export const AERO = {
   wingS: 0.19, wingX: -0.105, wingZ: 0.17,      // wing + lifting body area (m^2), aerodynamic centre station, half-span arm
-  tailS: 0.028, tailX: -0.42, tailZ: 0.17,
+  tailS: 0.022, tailX: -0.41, tailZ: 0.15,
   finS: 0.035, finX: -0.35, sideS: 0.04,
   CLa: 3.2, alphaStall: 0.27, CD0: 0.04, kInduced: 7.3,
   downwash: 0.45, pitchSpeed: 34,                // tail sees less incidence behind the wing; propeller thrust fades to zero at this airspeed
