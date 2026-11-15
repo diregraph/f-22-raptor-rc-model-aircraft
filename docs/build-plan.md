@@ -181,7 +181,7 @@ foamed wall with 4% infill.
 
 | File | Material | Size on bed, mm (x, y, height) | Est. g |
 |---|---|---|---|
-| `spar_carrier` | PETG | 26 x 204 x 25 | 24 |
+| `spar_carrier` | PETG | 30 x 204 x 25 | 15 |
 | `fan_spider` | PETG | 114 x 198 x 24 | 32 |
 | `tilt_bearing_left` | PETG | 41 x 31 x 22 | 8 |
 | `tilt_bearing_right` | PETG | 28 x 27 x 20 | 7 |
@@ -195,26 +195,27 @@ foamed wall with 4% infill.
 | `fc_sled` | PETG | 88 x 36 x 11 | 7 |
 | `nose_plug` | PETG | 74 x 138 x 11 | 17 |
 | `hatch_latch` | PETG | 6 x 30 x 13 | 1 |
-| `canopy` | PETG-clear | 158 x 68 x 48 | 13 |
-| `nose` | LW-PLA | 86 x 160 x 220 | 54 |
-| `fan_bay` | LW-PLA | 84 x 216 x 200 | 87 |
-| `centre_section` | LW-PLA | 88 x 216 x 200 | 96 |
-| `hatch` | LW-PLA | 195 x 167 x 40 | 50 |
-| `aft_bridge` | LW-PLA | 84 x 216 x 90 | 40 |
+| `canopy` | PETG-clear | 180 x 68 x 42 | 14 |
+| `nose` | LW-PLA | 86 x 160 x 150 | 56 |
+| `nose_cone` | LW-PLA | 65 x 111 x 128 | 17 |
+| `fan_bay` | LW-PLA | 84 x 216 x 231 | 90 |
+| `centre_section` | LW-PLA | 88 x 216 x 200 | 95 |
+| `hatch` | LW-PLA | 197 x 167 x 40 | 50 |
+| `aft_bridge` | LW-PLA | 84 x 216 x 90 | 41 |
 | `tail_boom_right` | LW-PLA | 50 x 24 x 170 | 11 |
 | `tail_boom_left` | LW-PLA | 50 x 24 x 170 | 11 |
-| `wing_inner_right` | LW-PLA | 305 x 27 x 116 | 36 |
-| `wing_inner_left` | LW-PLA | 305 x 27 x 116 | 36 |
-| `wing_outer_right` | LW-PLA | 198 x 22 x 111 | 18 |
-| `wing_outer_left` | LW-PLA | 198 x 22 x 111 | 18 |
-| `stabilator_right` | LW-PLA | 150 x 35 x 140 | 12 |
-| `stabilator_left` | LW-PLA | 150 x 35 x 140 | 12 |
+| `wing_inner_right` | LW-PLA | 304 x 27 x 123 | 38 |
+| `wing_inner_left` | LW-PLA | 304 x 27 x 123 | 38 |
+| `wing_outer_right` | LW-PLA | 198 x 22 x 119 | 20 |
+| `wing_outer_left` | LW-PLA | 198 x 22 x 119 | 20 |
+| `stabilator_right` | LW-PLA | 160 x 36 x 107 | 11 |
+| `stabilator_left` | LW-PLA | 160 x 36 x 107 | 11 |
 | `fin_right` | LW-PLA | 202 x 157 x 9 | 15 |
 | `fin_left` | LW-PLA | 202 x 157 x 9 | 15 |
 
 **LW-PLA slicing.** The shell files are solid bodies. Slice with 1 wall, 4% gyroid
 infill, 3 bottom layers and 0 top layers so they print hollow. The inner wing
-panels have a 305 mm root chord: place them diagonally on the 220 mm bed.
+panels have a 304 mm root chord: place them diagonally on the 220 mm bed.
 
 **PETG first.** Print one clip test, then the tilt mount, fan spider, spar carrier
 and roll pods: with the three tubes that is a flyable test frame before any shell
@@ -228,8 +229,8 @@ Check on the first prints, then adjust the parameters at the top of `cad/build.p
 - **Horn recesses.** Sized for a typical single-arm horn (`HORN_*`): measure yours.
 - **Motor screws.** 4 x M3 on a 16 mm square, 4 mm pad: use M3 x 6 or 7.
 
-Hardware not printed: three 8 mm tubes (two 637 mm, one 772 mm), 3 mm bamboo
-skewers (nose pins, wing alignment pins), 3 mm steel wire (tail pivots), 2 mm pin
+Hardware not printed: three 8 mm tubes (two 637 mm, one 802 mm), 3 mm bamboo
+skewers (nose pins, nose-cone dowels, wing alignment pins), 3 mm steel wire (tail pivots), 2 mm pin
 per roll pod, servo screws, zip ties as a second lock on each clip.
 
 ## 9. Safety

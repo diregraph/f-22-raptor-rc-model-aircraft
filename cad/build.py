@@ -18,8 +18,8 @@ CLIP_OD = 13.6
 CLIP_SLOT = 6.9       # mouth of the C-clip: tube must spring it open by ~1.1 mm
 SLIDE_ID = 8.35       # bore a tube slides through
 LZ = 92.0             # longeron centre-line, +/- Z
-FAN_X, PIVOT_X, SPAR_X, SPAR_Y = 130.0, -300.0, -185.0, -9.0
-WING_TIP_Z = 330.0
+FAN_X, PIVOT_X, SPAR_X, SPAR_Y = 130.0, -300.0, -130.0, -9.0
+WING_TIP_Z = 345.0
 ROLL_Z = WING_TIP_Z + 45.0
 M3 = 3.4              # clearance hole
 MOTOR_PITCH = 16.0    # EMAX ECO II 2306: 16 x 16 mm M3 pattern
@@ -76,13 +76,15 @@ def motor_holes(axis, a0, a1, c1, c2, cbore=None):
 
 # ---------------------------------------------------------------- parts
 def spar_carrier():
-    x0, x1, yb = SPAR_X - 13, SPAR_X + 13, -19.5
-    body = box(SPAR_X - 7, SPAR_X + 7, yb, -13.6, -LZ, LZ)                      # tie beam under the spar
-    cut = cyl("z", SLIDE_ID / 2, -LZ - 20, LZ + 20, SPAR_X, SPAR_Y)
+    """A pair of blocks, one per longeron. Each clips up onto its longeron and the spar slides through it;
+    the spar itself ties the two together. A notch under the bore carries the roll-motor wires."""
+    x0, x1, yb = SPAR_X - 15, SPAR_X + 15, -19.5
+    body, cut = None, cyl("z", SLIDE_ID / 2, -LZ - 20, LZ + 20, SPAR_X, SPAR_Y)
     for s in (-1, 1):
         a, c = clip(x0, x1, s * LZ, yb)
-        body = body.union(a).union(box(x0, x1, yb, -3.0, s * LZ - 10, s * LZ + 10))   # spar block
-        cut = cut.union(c)
+        blk = a.union(box(x0, x1, yb, -3.0, s * LZ - 10, s * LZ + 10))
+        body = blk if body is None else body.union(blk)
+        cut = cut.union(c).union(box(SPAR_X - 4, SPAR_X + 4, yb - 1, -15.5, s * LZ - 11, s * LZ + 11))
     return body.cut(cut)
 
 def fan_spider():
@@ -182,11 +184,11 @@ BORE = 8.5                    # tube bore in foamed shells
 X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 230.0, 30.0, -170.0, -260.0, -215.0, -430.0
 TUBE_FRONT, TUBE_REAR = 212.0, -425.0
 HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, 81.0
-CAV = dict(x0=-160.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay
-HATCH = dict(x0=-164.0, x1=24.0, z=84.0)
-WING = dict(root_z=108.0, bury=5.0, mid_z=219.0, tip_z=WING_TIP_Z, root_le=10.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
-STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=208.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
-FIN = dict(root_le=-262.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
+CAV = dict(x0=-162.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay (the spar crosses it)
+HATCH = dict(x0=-166.0, x1=24.0, z=84.0)
+WING = dict(root_z=108.0, bury=5.0, mid_z=226.0, tip_z=WING_TIP_Z, root_le=70.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
+STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=217.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
+FIN = dict(root_le=-218.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
 SKID_X, GROUND_Y = (10.0, -150.0), -85.0
 BATT_X = -52.0
 STAB_SERVO_X = -362.0
@@ -195,8 +197,10 @@ STAB_SERVO_X = -362.0
 #        x     chine  top   bot   y_top  y_bot  y_chine
 MID = [(230.0, 108.0, 88.0, 78.0, 38.0, -46.0, 0.0), (130.0, 108.0, 90.0, 80.0, 38.0, -46.0, 0.0), (30.0, 108.0, 90.0, 80.0, 36.0, -46.0, 0.0),
        (-170.0, 108.0, 88.0, 76.0, 30.0, -42.0, 0.0), (-260.0, 108.0, 98.0, 72.0, 25.0, -37.0, 0.0), (-430.0, 106.0, 101.0, 88.0, 15.0, -21.0, -2.0)]
-NOSE = [(230.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0), (290.0, 70.0, 36.0, 42.0, 37.0, -42.0, 0.0), (340.0, 56.0, 26.0, 32.0, 30.0, -36.0, -1.0),
-        (385.0, 40.0, 16.0, 22.0, 20.0, -27.0, -2.0), (420.0, 24.0, 8.0, 12.0, 9.0, -17.0, -3.0), (442.0, 9.0, 3.0, 4.0, 2.0, -9.0, -4.0), (450.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0)]
+NOSE = [(230.0, 80.0, 44.0, 50.0, 40.0, -46.0, 0.0), (300.0, 72.0, 36.0, 44.0, 38.0, -43.0, 0.0), (370.0, 58.0, 27.0, 34.0, 31.0, -37.0, -1.0),
+        (430.0, 42.0, 17.0, 23.0, 21.0, -28.0, -2.0), (472.0, 26.0, 9.0, 13.0, 10.0, -18.0, -3.0), (498.0, 10.0, 3.0, 4.5, 3.0, -10.0, -4.0), (508.0, 2.0, 0.8, 1.0, -2.5, -5.5, -4.0)]
+X_CONE = 380.0                # the nose is split here so each half fits the printer height
+CHEEK_X = 262.0               # forward reach of the intake lips
 
 def interp(tab, x, col):
     t = sorted(tab)
@@ -228,7 +232,14 @@ def body_master():
     body = loft([hexwire(*s) for s in MID])
     hump = [(24.0, 64.0, 46.0, 50.0), (-60.0, 60.0, 42.0, 50.0), (-170.0, 50.0, 34.0, 42.0), (-214.0, 40.0, 26.0, 31.0)]   # engine spine behind the lift fan
     hw = [wire([(x, top, tw), (x, 20.0, w), (x, 20.0, -w), (x, top, -tw)]) for x, w, tw, top in hump]
-    return body.union(loft(hw))
+    body = body.union(loft(hw))
+    # intake lips: the body sides run forward of the intake face, swept so the outboard edge leads
+    ext = loft([hexwire(X_NOSE - 1, *MID[0][1:]), hexwire(CHEEK_X, *MID[0][1:])])
+    for sg in (-1, 1):
+        tri = [(X_NOSE - 1, -sg * 82.0), (X_NOSE - 1, -sg * 109.0), (CHEEK_X, -sg * 109.0)]
+        wedge = cq.Workplane("XY").polyline(tri).close().extrude(140).translate((0, 0, -70))
+        body = body.union(ext.intersect(wedge))
+    return body
 
 def nose_solid():
     return loft([hexwire(*s) for s in NOSE])
@@ -249,7 +260,7 @@ def wing_panel(z0, z1, side=1, grow=0.0):
 def wing_cuts(side):
     lo, hi = sorted((side * 60.0, side * (WING_TIP_Z + 5)))
     c = cyl("z", BORE / 2, lo, hi, SPAR_X, SPAR_Y)
-    c = c.union(box(SPAR_X - 3, SPAR_X + 3, -22.0, SPAR_Y - 3.5, lo, hi))                 # wire slot under the spar
+    c = c.union(box(SPAR_X - 4, SPAR_X + 4, -24.0, -15.2, lo, hi))                        # wire slot under the spar
     zm = WING["mid_z"]; xp = wing_le(zm) - 0.22 * wing_c(zm)
     a, b = sorted((side * (zm - 22), side * (zm + 22)))
     return c.union(cyl("z", 1.7, a, b, xp, WING["y"]))                                    # 3 mm bamboo-skewer alignment pin
@@ -282,7 +293,7 @@ def fin(side, grow=0.0):
 def canopy_solid():
     ws = []
     for i in range(13):
-        s = i / 12; x = 242 + 158 * s; k = math.sin(math.pi * s ** 0.72)
+        s = i / 12; x = 246 + 180 * s; k = math.sin(math.pi * s ** 0.72)
         cw, ch = max(1.2, 34 * k ** 0.5), max(1.2, 27 * k ** 0.65)
         yb = interp(NOSE, x, 4) - 14
         pts = [(x, yb + 14 + ch * math.sin(a) ** 0.9, cw * math.cos(a)) for a in [math.pi * j / 16 for j in range(17)]]
@@ -316,8 +327,9 @@ def fuselage_cuts():
         lo, hi = sorted((s * 82.0, s * 109.0)); c = c.union(box(222.0, 232.0, -40.0, -3.0, lo, hi))   # intake mouths
         for dx in (-50, 50):                                                                     # fan spider: clips + arms
             c = c.union(clip_pocket(FAN_X + dx, 8.2, s, yb)).union(bar((FAN_X, 0), (FAN_X + dx, s * (LZ - 2)), 11.0, yb, -11.0))
-        c = c.union(clip_pocket(SPAR_X, 14.0, s, yb))                                            # spar carrier
-        lo, hi = sorted((s * (LZ - 11.5), s * (LZ + 11.5))); c = c.union(box(SPAR_X - 14, SPAR_X + 14, yb, -2.4, lo, hi))
+        c = c.union(clip_pocket(SPAR_X, 15.6, s, yb))                                            # spar carrier block
+        lo, hi = sorted((s * (LZ - 11.5), s * (LZ + 11.5))); c = c.union(box(SPAR_X - 15.6, SPAR_X + 15.6, yb, -2.4, lo, hi))
+        lo, hi = sorted((s * 78.0, s * 110.0)); c = c.union(box(SPAR_X - 4, SPAR_X + 4, CAV["floor"], -15.2, lo, hi))   # roll-motor wires under the spar
         lo, hi = sorted((s * 70.0, s * (LZ + 8.0)))                                              # tilt bearings
         c = c.union(box(PIVOT_X - (27.5 if s < 0 else 15), PIVOT_X + 15.5, yb, 11.5, lo, hi))
         for xs in SKID_X: c = c.union(clip_pocket(xs, 6.0, s, yb))
@@ -328,7 +340,6 @@ def fuselage_cuts():
         lo, hi = sorted((s * 56.0, s * 86.0)); c = c.union(box(X_NOTCH - 2, CAV["x0"] + 2, -19.0, -9.0, lo, hi))  # wire run to the tail
         c = c.union(wing_panel(WING["root_z"] - WING["bury"] - 0.4, WING["mid_z"], s, grow=0.35))  # wing root socket
         c = c.union(fin(s, grow=0.3))
-    c = c.union(box(SPAR_X - 14, SPAR_X + 14, yb, -12.6, -LZ, LZ))                               # spar carrier tie beam
     c = c.union(box(CAV["x1"] - 2, FAN_X - FAN_R + 6, -19.0, -11.0, -9, 9))                      # wire run to the fan motor
     return c
 
@@ -338,11 +349,17 @@ def fuselage_all():
     return _cache["f"]
 
 def slab(x0, x1, z0=-200, z1=200, y0=-100, y1=100): return box(x0, x1, y0, y1, z0, z1)
-def fanbay(): return fuselage_all().intersect(slab(X_FAN0, X_NOSE))
+def fanbay(): return fuselage_all().intersect(slab(X_FAN0, CHEEK_X + 1))
 def tray(): return fuselage_all().intersect(slab(X_TRAY0, X_FAN0))
 def aft_bridge(): return fuselage_all().intersect(slab(X_BRIDGE0, X_TRAY0))
 def boom(side): return fuselage_all().intersect(slab(X_AFT, X_BRIDGE0, *sorted((side * 1.0, side * 200.0))))
-def nose(): return nose_solid()
+def dowels():   # two 3 mm bamboo-skewer dowels across the nose split
+    c = None
+    for sg in (-1, 1):
+        d = cyl("x", 1.7, X_CONE - 14, X_CONE + 14, 0.0, sg * 22.0); c = d if c is None else c.union(d)
+    return c
+def nose(): return nose_solid().intersect(slab(X_NOSE - 1, X_CONE)).cut(dowels())
+def nose_cone(): return nose_solid().intersect(slab(X_CONE, 600)).cut(dowels())
 
 def hatch():
     h = body_master().intersect(box(HATCH["x0"] + 0.4, HATCH["x1"] - 0.4, CAV["top"] + 0.2, 80, -HATCH["z"] + 0.4, HATCH["z"] - 0.4))
@@ -411,6 +428,7 @@ PARTS = {
     "hatch_latch": (hatch_latch, "hatchLatch", (0, 0, 0), ((0, 1, 0), 90), "PETG"),
     "canopy": (canopy_solid, "canopy", (0, 0, 0), None, "PETG-clear"),
     "nose": (nose, "nose", (0, 0, 0), ROT_UP, "LW-PLA"),
+    "nose_cone": (nose_cone, "noseCone", (0, 0, 0), ROT_UP, "LW-PLA"),
     "fan_bay": (fanbay, "fanbay", (0, 0, 0), ROT_UP, "LW-PLA"),
     "centre_section": (tray, "tray", (0, 0, 0), ROT_UP, "LW-PLA"),
     "hatch": (hatch, "hatch", (0, 0, 0), ((1, 0, 0), 180), "LW-PLA"),
@@ -437,6 +455,7 @@ def envelopes():
         "lift propeller disc": cyl("y", 77.0, 5.0, 14.0, FAN_X, 0),
         "main propeller, hover": cyl("y", 77.0, -62.0, -52.0, PIVOT_X, 0),
         "main propeller, forward": cyl("x", 77.0, PIVOT_X - 62.0, PIVOT_X - 52.0, 0, 0),
+        "speed controllers": box(CAV["x0"] + 0.5, CAV["x0"] + 25.5, CAV["floor"] + 0.2, -3.0, -70, -24).union(box(CAV["x0"] + 0.5, CAV["x0"] + 25.5, CAV["floor"] + 0.2, -3.0, 24, 70)),
         "battery": box(BATT_X - 67.5, BATT_X + 67.5, CAV["floor"] + 2.5, CAV["floor"] + 32.5, -21.5, 21.5),
     }
 

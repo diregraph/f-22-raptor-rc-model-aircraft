@@ -23,7 +23,7 @@ scene.environmentIntensity = 0.42;
 const camera = new THREE.PerspectiveCamera(32, 1, 10, 30000);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 150; controls.maxDistance = 6000;
-const HOME_TARGET = new THREE.Vector3(-40, -10, 0);
+const HOME_TARGET = new THREE.Vector3(-10, -10, 0);
 let dirty = 3; controls.addEventListener('change', () => { dirty = Math.max(dirty, 2); });
 
 const sun = new THREE.DirectionalLight(0xfff4e6, 2.4); sun.position.set(420, 1100, 520); sun.castShadow = true;

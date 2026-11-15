@@ -267,6 +267,7 @@ export function buildModel(cad = {}) {
       rings.push(fRing(x, w, top, bot, 0, 4.6 - 2.3 * t));
     }
     const tub = []; for (let i = 0; i <= 8; i++) { const s = i / 8, k = Math.sin(Math.PI * s ** 0.85); tub.push(fRing(244 + 134 * s, Math.max(1, 31 * k ** 0.55), Math.max(1, 9 * k ** 0.7), 1, 27 + 6 * k ** 0.5 - 4 * s, 2.1, 24)); }
+    add('noseCone', mesh(loft([fRing(380, 56, 28, 34, 0, 3), fRing(500, 8, 3, 8, -4, 2.4)]), MAT.lw('x')), [400, 0, 0]);
     add('nose', grp(mesh(loft(rings), MAT.lw('x')), mesh(loft(tub), MAT.dark()), mesh(box(10, 14, 16, 300, 38, 0), MAT.dark()), mesh(box(3, 20, 18, 292, 40, 0), MAT.dark())), [260, 0, 0]);
     const pm = MAT.petg('x');
     add('noseRing', grp(mesh(loft([fRing(D.xNoseJoin - 6, NW - 8, T - 6, T - 6, 0, 4.6), fRing(D.xNoseJoin + 6, NW - 8, T - 6, T - 6, 0, 4.6)]), pm),
@@ -276,7 +277,7 @@ export function buildModel(cad = {}) {
       const s = i / 14, x = 236 + 150 * s, k = Math.sin(Math.PI * s ** 0.85);
       cr.push(fRing(x, Math.max(1, 37 * k ** 0.55), Math.max(1, 27 * k ** 0.7), 2, 24 + 9 * k ** 0.5 - 4 * s, 2.1, 32));
     }
-    add('canopy', mesh(loft(cr), MAT.canopy()), [260, 150, 0]);
+    add('canopy', mesh(loft(cr), MAT.canopy()), [200, 190, 0]);
   }
   // --- fan bay
   { const m = MAT.lw('y');
@@ -395,27 +396,27 @@ export function buildModel(cad = {}) {
       g.add(mesh(cylX(1.1, 28, -160, 13, 92, 8), MAT.tin()), mesh(cylZ(1.1, 28, -150, 9.5, 20, 8), MAT.tin()));
       add('rx', g, [0, 130, 40]); }
     add('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 68), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 68, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 68)), [0, 60, 60]);
-    // speed controllers stacked in pairs at the back of the bay, motor leads facing aft
-    for (const [id, y, s] of [['escL', -14.5, -1], ['escF', -4.5, -1], ['escR', -14.5, 1], ['escM', -4.5, 1]]) {
-      const e = esc(); e.rotation.y = Math.PI; e.position.set(-134, y, s * 55); add(id, e, [0, y > -10 ? 150 : 95, s * 40]);
+    // speed controllers lie across the bay behind the spar, stacked in pairs, motor leads toward the centre
+    for (const [id, y, s] of [['escL', -17, -1], ['escF', -8, -1], ['escR', -17, 1], ['escM', -8, 1]]) {
+      const e = esc(); e.rotation.y = -s * Math.PI / 2; e.position.set(-149, y, s * 47); add(id, e, [0, y > -10 ? 150 : 95, s * 40]);
     }
     // wiring loom
-    { const h = grp(), R = 0xc81e1e, K = 0x101010, bus = [-121, -16, 0], sx = D.sparX;
-      const pw = (pts) => { h.add(tube(pts, 1.9, R, [0, 0, 2.6]), tube(pts, 1.9, K, [0, 0, -2.6])); };
-      pw([[-150, 0, 0], [-138, -9, 0], bus]); h.add(mesh(rbox(16, 8.2, 16, 1.5, -154, 1, 0), MAT.yellow()));
-      for (const s of [-1, 1]) { pw([bus, [-114, -17, s * 28], [-108, -15.5, s * 48], [-107, -14.5, s * 55]]); pw([bus, [-112, -11, s * 30], [-107, -6, s * 48], [-107, -4.5, s * 55]]); }
+    { const h = grp(), R = 0xc81e1e, K = 0x101010, bus = [-150, -6, 0], sx = D.sparX, RZ = D.rollZ;
+      const pw = (pts) => { h.add(tube(pts, 1.9, R, [2.6, 0, 0]), tube(pts, 1.9, K, [-2.6, 0, 0])); };
+      h.add(mesh(rbox(16, 8.2, 16, 1.5, -154, 2, 0), MAT.yellow())); pw([[-152, 2, 0], [-151, -2, 0], bus]);
+      for (const s of [-1, 1]) for (const y of [-17, -8]) pw([bus, [-150, 6, s * 30], [-150, 7, s * 70], [-149, y + 3, s * 77], [-149, y, s * 78]]);   // power pairs, over the stacks
       const three = (pts, axis) => [-2.4, 0, 2.4].forEach(o => h.add(tube(pts, 1.15, K, axis === 'z' ? [0, 0, o] : axis === 'x' ? [o, 0, 0] : [0, o, 0])));
-      three([[-161, -4.5, -55], [-168, 2, -70], [-120, 8, -76], [-20, 6, -74], [14, -8, -40], [22, -15, -4], [60, -15, 0], [112, -15, -6], [124, -11, -9]], 'z');   // front motor
-      three([[-161, -4.5, 55], [-172, -10, 66], [-210, -13, 72], [-250, -8, 74], [-278, -4, 62], [-293, -3, 30]], 'y');                                           // main motor
-      for (const s of [-1, 1]) three([[-161, -14.5, s * 55], [-172, -15, s * 66], [sx + 6, -16, s * 80], [sx, -18, s * 108], [sx, -18, s * 250], [sx, -17, s * (D.rollZ - 44)], [sx + 1, -8, s * (D.rollZ - 12)], [sx, 6, s * (D.rollZ - 8)]], 'x');   // roll motors, in the slot under the spar
+      three([[-149, -8, -11.5], [-140, 0, -18], [-128, 4, -30], [-20, 6, -30], [14, -8, -20], [22, -15, -4], [60, -15, 0], [112, -15, -6], [124, -11, -9]], 'z');   // front motor: over the spar, along the battery
+      three([[-149, -8, 11.5], [-158, -10, 30], [-166, -14, 62], [-190, -14, 70], [-225, -8, 76], [-272, -4, 62], [-293, -3, 30]], 'y');                            // main motor: out through the rear wall
+      for (const s of [-1, 1]) three([[-149, -17, s * 11.5], [-140, -18, s * 7], [sx - 1, -17.6, s * 12], [sx, -17.6, s * 60], [sx, -17.6, s * 112], [sx, -17.6, s * 250], [sx, -17, s * (RZ - 46)], [sx + 1, -9, s * (RZ - 13)], [sx, 6, s * (RZ - 8)]], 'x');   // roll motors: under the spar
       const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
-      lead([[-308, -9, -76], [-285, -10, -80], [-215, -14, -72], [-165, -14, -70], [-120, -10, -76], [-78, -9, -70]]);                                            // tilt servo
-      lead([[-321, -11, 0], [-300, -14, -30], [-268, -10, -66], [-215, -15, -70], [-165, -15, -68], [-118, -11, -75], [-70, -9, -69]]);                            // yaw servo
-      for (const s of [-1, 1]) lead([[-383, -22, s * 96], [-340, -12, s * 80], [-262, -10, s * 78], [-215, -13, s * 72], [-166, -12, s * 68], [-120, 4, s * 72], [-90, 2, s * 50 - 16], [-62, -6, -62 + (s > 0 ? 4 : 0)]]);   // tail servos
+      lead([[-308, -9, -76], [-285, -10, -80], [-215, -14, -72], [-170, -13, -72], [-160, 5, -75], [-128, 6, -76], [-100, -4, -76], [-78, -9, -70]]);          // tilt servo
+      lead([[-321, -11, 0], [-300, -14, -30], [-268, -10, -66], [-215, -15, -70], [-170, -14, -70], [-159, 7, -73], [-126, 8, -75], [-98, -3, -75], [-70, -9, -69]]);   // yaw servo
+      for (const s of [-1, 1]) lead([[-383, -22, s * 96], [-340, -12, s * 80], [-262, -10, s * 78], [-215, -13, s * 72], [-170, -12, s * 74], [-160, 9, s * 74], [-126, 10, s * 60 - 14], [-90, 6, s * 40 - 30], [-62, -6, -62 + (s > 0 ? 4 : 0)]]);   // tail servos
       const sig = (pts, c = 0xeeeeee) => h.add(tube(pts, 0.6, c));
-      for (const s of [-1, 1]) for (const y of [-14.5, -4.5]) sig([[-157, y + 2, s * 55], [-150, 6, s * 40], [-110, 9, s > 0 ? 20 : -60], [-76, -8, -68 + (y > -10 ? 2 : 0)]]);   // throttle signals
+      for (const s of [-1, 1]) for (const y of [-17, -8]) sig([[-140, y + 2, s * 24], [-132, 3, s * 30 - 14], [-110, 5, s > 0 ? -20 : -50], [-76, -8, -68 + (y > -10 ? 2 : 0)]]);   // throttle signals
       sig([[-27, -9, 55], [-25, 14, 28], [-36, 15, -28], [-44, -8, -43]], 0xf0c020);                                  // receiver PPM
-      sig([[-111, -13, 68], [-116, -15, 36], [-120, -16, 6]], R); sig([[-77, -13, 68], [-70, 13, 36], [-64, 14, -20], [-60, -8, -43]], R);   // regulator
+      sig([[-111, -13, 68], [-126, 2, 40], [-146, -2, 6]], R); sig([[-77, -13, 68], [-70, 13, 36], [-64, 14, -20], [-60, -8, -43]], R);   // regulator
       sig([[-107, -8, -57], [-96, -5, -50], [-70, -7, -43]], 0x2e9e4f);                                               // gyro
       add('harness', h, [0, 250, 0]); }
   }
@@ -432,6 +433,6 @@ export function buildModel(cad = {}) {
     add(id, g, [0, -260, 0]);
   }
 
-  const shells = ['nose', 'canopy', 'fanbay', 'tray', 'hatch', 'aftBridge', 'boomL', 'boomR', 'wingInL', 'wingInR', 'wingOutL', 'wingOutR', 'stabL', 'stabR', 'finL', 'finR'];
+  const shells = ['nose', 'noseCone', 'canopy', 'fanbay', 'tray', 'hatch', 'aftBridge', 'boomL', 'boomR', 'wingInL', 'wingInR', 'wingOutL', 'wingOutR', 'stabL', 'stabR', 'finL', 'finR'];
   return { root, parts, movers, props, joints: { tiltG, yawG, stabs, battG }, shells };   // stabs = [right, left]
 }
