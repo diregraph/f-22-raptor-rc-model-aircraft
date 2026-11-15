@@ -9,7 +9,12 @@ S = dict(root_z=.110, tip_z=.217, root_le=.328, root_c=.160, tip_c=.062, sweep=3
 F = dict(root_le=.218, root_c=.165, tip_c=.062, h=.155, sweep=42, cant=25, y=.095, z0=.013)
 BODY = dict(le=-.230, te=.260, half_w=.108)   # the flat centre body between the wing roots carries lift too
 
-def airplane(wing_af="naca2408", incidence=0.0, tail_deflect=0.0):
+def airplane(wing_af="naca2408", incidence=0.0, tail_deflect=0.0, tail_scale=1.0, wing_scale=1.0, cg_x=CG_X, wing_dx=0.0):
+    """tail_scale: tailplane area factor (chord and span grow by its square root, root leading edge fixed).
+    wing_scale: wing chord factor (the trailing edge moves aft, the leading edge and span stay)."""
+    W = dict(globals()["W"]); S = dict(globals()["S"]); k = tail_scale ** 0.5
+    W["root_c"] *= wing_scale; W["tip_c"] *= wing_scale; W["root_le"] += wing_dx       # wing_dx: metres the whole wing moves aft
+    S.update(root_c=S["root_c"] * k, tip_c=S["tip_c"] * k, tip_z=S["root_z"] + (S["tip_z"] - S["root_z"]) * k)
     af, sym = asb.Airfoil(wing_af), asb.Airfoil("naca0008")
     le_tip = W["root_le"] + (W["tip_z"] - W["root_z"]) * tan(W["sweep"])
     wing = asb.Wing(name="wing", symmetric=True, xsecs=[
@@ -26,7 +31,7 @@ def airplane(wing_af="naca2408", incidence=0.0, tail_deflect=0.0):
         asb.WingXSec(xyz_le=[F["root_le"], F["y"], F["z0"]], chord=F["root_c"], airfoil=sym),
         asb.WingXSec(xyz_le=[F["root_le"] + F["h"] * tan(F["sweep"]), F["y"] + F["h"] * np.sin(c), F["z0"] + F["h"] * np.cos(c)], chord=F["tip_c"], airfoil=sym)])
     s_ref = 2 * (W["root_c"] + W["tip_c"]) / 2 * (W["tip_z"] - W["root_z"]) + W["root_c"] * 2 * W["root_z"]     # exposed wing + the body strip between the roots (the usual reference area)
-    return asb.Airplane(name="F-35B model", xyz_ref=[CG_X, 0, 0], wings=[wing, tail, fin], s_ref=s_ref, c_ref=0.24, b_ref=2 * W["tip_z"])
+    return asb.Airplane(name="F-35B model", xyz_ref=[cg_x, 0, 0], wings=[wing, tail, fin], s_ref=s_ref, c_ref=0.24, b_ref=2 * W["tip_z"])
 
 def vlm(ap, alpha, v=18.0):
     return asb.VortexLatticeMethod(ap, asb.OperatingPoint(velocity=v, alpha=alpha), spanwise_resolution=6, chordwise_resolution=6).run()

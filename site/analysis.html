@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>F-35B model · engineering analysis</title>
+<meta name="description" content="Simulation results for the F-35B VTOL model: sizing trade, flight dynamics, fan model and structures.">
+<link rel="icon" href="favicon.svg">
+<style>
+:root { --bg: #0b1118; --card: #0e151e; --line: rgba(160,190,220,.16); --ink: #e8eef4; --mute: #94a3b3; --grid: rgba(160,190,220,.12);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --good: #0ca30c; --warn: #fab219; --crit: #d03b3b; }
+* { box-sizing: border-box; } body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1080px; margin: 0 auto; padding: 20px 16px 80px; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+h1 { font-size: 22px; margin: 0; } h2 { font-size: 18px; margin: 44px 0 4px; } h3 { font-size: 14px; margin: 0 0 2px; }
+p { margin: 6px 0; max-width: 70ch; } .mute { color: var(--mute); } a { color: #7db4f5; }
+nav a { display: inline-block; margin-right: 12px; font-size: 13px; }
+.btn { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--ink); text-decoration: none; font-size: 13px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 12px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; } .tile b { display: block; font-size: 22px; font-weight: 600; } .tile span { font-size: 12.5px; color: var(--mute); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; } th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; } th { color: var(--mute); font-weight: 500; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.st { white-space: nowrap; } .st i { font-style: normal; font-weight: 700; margin-right: 4px; } .st.good i { color: var(--good); } .st.warn i { color: var(--warn); } .st.crit i { color: var(--crit); }
+.chart { position: relative; } .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--mute); margin: 4px 0 2px; } .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.tip { position: absolute; pointer-events: none; background: #1a2430; border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12.5px; white-space: nowrap; display: none; z-index: 3; }
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+details { margin-top: 6px; font-size: 13px; } summary { cursor: pointer; color: var(--mute); } .scroll { max-height: 220px; overflow: auto; }
+.note { border-left: 3px solid var(--warn); padding: 4px 10px; margin: 10px 0; color: var(--mute); font-size: 13.5px; }
+input[type=range] { width: 100%; accent-color: var(--s1); } canvas { width: 100%; height: auto; border-radius: 6px; image-rendering: pixelated; background: #0b1118; }
+</style></head><body><main>
+<header><div><h1>Engineering analysis</h1><div class="mute">F-35B VTOL model · simulations, not measurements · nothing printed yet</div></div>
+<div><a class="btn" href="index.html">← 3D model</a> <a class="btn" href="nozzle.html">Nozzle</a></div></header>
+<nav><a href="#score">Scorecard</a><a href="#trade">The central trade</a><a href="#flight">Flight dynamics</a><a href="#fans">Fans</a><a href="#struct">Structure</a><a href="#method">Methods and limits</a></nav>
+<div id="app" class="mute" style="margin-top:30px">Loading results…</div>
+</main><script type="module" src="js/analysis.js"></script></body></html>
