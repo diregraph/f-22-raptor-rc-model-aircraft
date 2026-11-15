@@ -94,12 +94,12 @@
   "frame": "base",
   "note": "Rear flange on the bed. The motor plate bridges 34 mm.",
   "bed": [
-   134.5,
-   109.6,
+   97.6,
+   97.6,
    100.0
   ],
   "solids": 1,
-  "mass": 81.6,
+  "mass": 76.3,
   "matrix": [
    0.0,
    1.0,
@@ -114,8 +114,8 @@
    0.0,
    0,
    0.0,
-   -18.47186,
-   5.98125,
+   -0.0,
+   -0.0,
    1
   ]
  },
@@ -152,14 +152,14 @@
  "nozzle_segment_1": {
   "id": "seg1",
   "frame": "j1",
-  "note": "Gear end on the bed.",
+  "note": "Bearing-1 flange on the bed, supports on. The sleeve behind the flange must be smooth: the drive ring turns on it.",
   "bed": [
-   96.3,
-   142.4,
-   91.9
+   96.9,
+   106.0,
+   91.2
   ],
   "solids": 1,
-  "mass": 39.1,
+  "mass": 40.2,
   "matrix": [
    0.0,
    -1.0,
@@ -174,22 +174,22 @@
    0.0,
    0,
    -0.0,
-   -0.54284,
-   17.4593,
+   1.1855,
+   -1.3,
    1
   ]
  },
  "nozzle_segment_2": {
   "id": "seg2",
   "frame": "j2",
-  "note": "Lay the gear-end bearing face on the bed: rotate 50 degrees in the slicer.",
+  "note": "Lay the upstream bearing face on the bed: rotate 50 degrees in the slicer. Supports on.",
   "bed": [
-   171.8,
-   142.5,
-   87.3
+   170.5,
+   103.4,
+   82.0
   ],
   "solids": 1,
-  "mass": 48.0,
+  "mass": 39.9,
   "matrix": [
    1.0,
    0.0,
@@ -204,22 +204,22 @@
    0.0,
    0,
    110.0,
-   -40.3719,
-   18.55063,
+   -39.60585,
+   -0.0,
    1
   ]
  },
  "nozzle_segment_3": {
   "id": "seg3",
   "frame": "j3",
-  "note": "Exit on the bed, supports under the gear.",
+  "note": "Exit on the bed, supports under the flange.",
   "bed": [
-   89.0,
-   106.4,
-   89.9
+   82.2,
+   103.4,
+   89.2
   ],
   "solids": 1,
-  "mass": 28.0,
+  "mass": 20.7,
   "matrix": [
    0.0,
    1.0,
@@ -234,22 +234,22 @@
    0.0,
    0,
    218.0,
-   -4.12837,
-   0.52242,
+   -1.47357,
+   -0.0,
    1
   ]
  },
  "bearing_collar_half": {
   "id": "collar",
   "frame": "base",
-  "note": "Flat. Print 4 (bearings 2 and 3).",
+  "note": "Flat. Print 4 (bearings 2 and 3). The two bumps carry the cords over the collar.",
   "bed": [
    10.4,
-   110.6,
-   55.2
+   108.6,
+   54.8
   ],
   "solids": 1,
-  "mass": 5.8,
+  "mass": 4.8,
   "matrix": [
    1.0,
    0.0,
@@ -265,7 +265,7 @@
    0,
    0.0,
    0.15,
-   0.0,
+   -0.0,
    1
   ]
  },
@@ -275,11 +275,11 @@
   "note": "Flat. Print 2 (bearing 1).",
   "bed": [
    10.4,
-   100.4,
-   50.0
+   98.4,
+   49.1
   ],
   "solids": 1,
-  "mass": 5.2,
+  "mass": 4.1,
   "matrix": [
    1.0,
    0.0,
@@ -299,17 +299,17 @@
    1
   ]
  },
- "servo_pinion": {
-  "id": "pinion",
-  "frame": "base",
-  "note": "Flat, horn recess down. Print 3. The stock servo horn presses into the recess; the horn screw goes through the centre.",
+ "nozzle_drive_ring": {
+  "id": "driveRing",
+  "frame": "ring",
+  "note": "Flat. Slip it over segment 1 from the front before the nozzle goes on the duct.",
   "bed": [
-   54.9,
-   55.0,
-   5.4
+   101.8,
+   101.8,
+   6.6
   ],
   "solids": 1,
-  "mass": 7.3,
+  "mass": 6.0,
   "matrix": [
    0.0,
    -1.0,
@@ -323,9 +323,39 @@
    0.0,
    0.0,
    0,
-   5.9,
-   78.75,
+   5.7,
    0.0,
+   0.0,
+   1
+  ]
+ },
+ "servo_cord_drum": {
+  "id": "servoDrum",
+  "frame": "base",
+  "note": "Flat, horn recess up. Print 2. The stock servo horn presses into the recess; the horn screw goes through the centre.",
+  "bed": [
+   56.8,
+   56.8,
+   6.0
+  ],
+  "solids": 1,
+  "mass": 10.1,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   -0.0,
+   -0.0,
+   -0.0,
    1
   ]
  }

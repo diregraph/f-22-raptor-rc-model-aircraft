@@ -25,18 +25,20 @@ So the kit is one printed 80 mm fan for a motor you own, plus the nozzle.
 | Part | Qty | Est. g | Notes |
 |---|---|---|---|
 | `edf_impeller` | 1 + spares | 36 | 7 blades, clamps on the motor's M5 shaft with the propeller nut |
-| `edf_duct` | 1 | 83 | Shroud, 45 degree bellmouth, 5 straightening vanes, motor plate, first bearing flange, servo bracket |
+| `edf_duct` | 1 | 76 | Shroud, 45 degree bellmouth, 5 straightening vanes, motor plate, first bearing flange |
 | `edf_tail_cone` | 1 | 8 | Push fit behind the motor plate |
-| `nozzle_segment_1/2/3` | 1 each | 42 / 55 / 31 | Each carries a gear sector and, for 1 and 2, the next servo bracket |
-| `bearing_collar_half` | 4 | 6 | Clamp bearings 2 and 3; zip tie in the groove |
-| `bearing_collar_half_j1` | 2 | 5 | Clamp bearing 1 |
-| `servo_pinion` | 3 | 7 | 42 teeth against 84: the servo turns twice the joint angle |
+| `nozzle_segment_1/2/3` | 1 each | 40 / 40 / 21 | Plain tubes with a flange each end. Segment 1 also has a sleeve for the drive ring, four cord posts and a cord band; segment 2 has two cord posts |
+| `bearing_collar_half` | 4 | 5 | Clamp bearings 2 and 3; zip tie in the middle groove. Also cord pulleys |
+| `bearing_collar_half_j1` | 2 | 4 | Clamp bearing 1. Also servo 1's pulley |
+| `nozzle_drive_ring` | 1 | 6 | Free ring behind bearing 1, turned by servo 2 |
+| `servo_cord_drum` | 2 | 10 | 55 mm cord drum on each servo horn |
+| `cord_fairlead_right/left` (in `cad/build.py`) | 1 each | 2 | Hard strip in the rear face of the body where the cords turn the corner |
 
-Bought: 1 x EMAX 2306 (owned), 3 x MG90S, 6 zip ties, 4 x M3 x 6 screws, grease.
+Bought: 1 x EMAX 2306 (owned), 2 x MG90S (owned), about 3 m of 0.5 mm braided fishing
+line, 6 zip ties, 4 x M3 x 6 screws, grease. Optional: offcuts of PTFE tube (the 2 mm
+bore printer kind) to line the fairlead holes.
 
-Printed mass is about 310 g; with motor and servos about 385 g. The open-propeller
-tilt mount it would replace weighs about 110 g with its motor. **That is 275 g more,
-all of it at the tail.**
+Printed mass is about 275 g; with motor and servos about 340 g.
 
 ## How the nozzle works
 
@@ -45,20 +47,66 @@ Three bearings in series. Bearing 1 is square to the duct. Bearings 2 and 3 are 
 bends the jet by `4 * asin(sin(40) * sin(b / 2))`. Bearing 1 then turns the whole bend
 to point straight down, and a little either side of that to swing the jet for yaw.
 
-| Deflection | Bearing 1 | Bearings 2 / 3 | Largest servo angle from centre |
-|---|---|---|---|
-| 0 (straight aft) | -90 | 0 / 0 | 82 |
-| 45 | -104 | 35 / -35 | 12 |
-| 90 (straight down) | -120 | 73 / -73 | 64 |
-| 100 (braking) | -124 | 82 / -82 | 82 |
+| Deflection | Bearing 1 | Bearings 2 / 3 | Servo 1 | Servo 2 |
+|---|---|---|---|---|
+| 0 (straight aft) | -90 | 0 / 0 | +26 | -44 |
+| 45 | -104 | 35 / -35 | +2 | 0 |
+| 90 (straight down) | -120 | 73 / -73 | -26 | +44 |
+| 100 (braking) | -124 | 82 / -82 | -33 | +54 |
 
-With 2:1 gearing every servo stays inside +/-85 degrees, so ordinary 180 degree servos
-work. The reference build needed multi-turn servos because its bearings are canted
-less; the steeper cant here is what makes cheap servos possible, at the cost of a
-longer nozzle (218 mm).
+Servo angles are from each servo's centre, with no yaw. Full yaw adds up to 37 degrees
+to both. The largest swing anywhere is +/-81 degrees, inside an ordinary servo's +/-85.
+
+## Flush drive: cords, not gears
+
+The first version had a servo and a 52 mm gear standing on each bearing, about 180 mm
+across. That cannot be made flush: an ordinary servo turns about 170 degrees and each
+bearing about 80, so the gear on the servo must be half the size of the ring it drives.
+
+Now nothing rides on the nozzle. It is 109 mm across at its widest ring, against a
+102 mm nacelle.
+
+![Cord routing](../site/img/nozzle-cords.svg)
+
+| Who | Pulls | Through | Result |
+|---|---|---|---|
+| Servo 1 (right side of the body) | Bearing-1 collar, which is keyed to segment 1 | 2 cords: one over the top of the collar, one under | Rolls the whole nozzle about the duct axis: aims the bend down, swings it for yaw |
+| Servo 2 (left side) | A free ring just behind bearing 1 | 2 cords, same pattern | Turns the ring |
+| The ring | Bearing-2 collar, keyed to segment 2 | 2 cords crossing the short side of segment 1, through 4 posts | Bends the jet |
+| Segment 1 (a band on its long side) | Bearing-3 collar, keyed to segment 3 | 2 cords through the bumps on the bearing-2 collar and 2 posts on segment 2 | Bearing 3 turns equal and opposite to bearing 2. No servo |
+
+Three facts make this work:
+
+1. **Bearings 2 and 3 always turn by equal and opposite angles.** So one can drive the
+   other. Seen from segment 2, segment 1 and segment 3 turn the same way by the same
+   amount; a cord loop between two pulleys of the same radius (53.4 mm) enforces that.
+2. **A collar is a free ring until it is keyed.** Each collar now has a notch that
+   catches a rib behind the flange of the part downstream of it, so it turns with that
+   part and can serve as its pulley.
+3. **The ring's position is a + 1.07 x b** (bearing-1 angle plus 1.07 times bearing-2
+   angle; 1.07 is the ratio of the two pulley radii). The flight controller works that
+   out; it is one line in `servoAngles()`.
+
+Each servo stands on edge in a pocket beside the fan duct, open to the belly, with its
+55 mm drum already on it. The cords leave the drum top and bottom, run aft inside the
+body, and turn the corner at a PETG fairlead strip in the body's rear face.
+
+**Stringing it** (do this on the bench, nozzle off the aircraft, before fitting):
+
+1. Every bearing turns freely by hand with the collar zip-tied. Fix that first.
+2. Slave loop: nozzle straight. Knot one cord through the hole at each end of the band
+   on segment 1, lead each through its bump on the bearing-2 collar and its post on
+   segment 2, half a turn round the bearing-3 collar's front groove, and knot in a slit.
+   Turn bearing 2 by hand: bearing 3 must mirror it over the whole 82 degrees.
+3. Ring to bearing 2: same idea, from the ring's rear groove through the posts on
+   segment 1 to the bearing-2 collar's front groove.
+4. Fit the nozzle. Centre both servos. String servo 1 to the bearing-1 collar and
+   servo 2 to the ring's front groove with the nozzle at 45 degrees (both servos are
+   near centre there).
+5. Take up slack with the knots. Cords should be snug, not guitar-string tight.
 
 The same `solve()` function goes into the flight controller: two inputs (deflection,
-yaw), three servo outputs.
+yaw), two servo outputs.
 
 ## Test plan (the gate before any airframe change)
 
@@ -90,11 +138,14 @@ yaw), three servo outputs.
 - **Thrust may fall short.** Printed fans are usually less efficient than moulded ones.
 - **Weight at the tail** moves the balance point aft. The battery can no longer slide to
   compensate, so integration will need the nozzle as short and thin as tests allow.
-- **Size.** With servos and gears the nozzle is about 180 mm across. The gap between
-  the tail booms is 168 mm. Integration needs either a narrower drive (cord and drum
-  in place of gears) or servos placed only above and below.
-- **Not checked:** clashes are checked with the nozzle straight only, not through its
-  travel.
+- **Cord drive is the least proven part.** It has been drawn and checked for clashes,
+  not strung. Open questions for the bench: friction where each cord turns 90 degrees
+  at the fairlead (an MG90S should leave roughly 2.5 kg cm at the bearing after that
+  loss; the gears gave about 4); stretch and backlash in about 3 m of line; whether the
+  cords stay in 1.4 mm grooves where they cross from one pulley to the next at an angle.
+  Likely first fixes: PTFE-lined fairleads, deeper grooves, a spring in each cord pair.
+- **A cord failure bends or straightens the nozzle uncommanded.** In the hover that is
+  a pitch upset the lift fan cannot fully correct. Fly it tethered first.
 
 ## Integrated into the airframe (drawn ahead of the thrust test)
 
@@ -110,11 +161,14 @@ fails, the aft fuselage goes back to the open-propeller version in git history.
 - **Nozzle between the booms.** Checked by script in 15 poses (deflection 0 to 100
   degrees, yaw left, centre and right): no clash with booms, fins, tailplanes or ground.
   The yaw swing is tapered from 20 to 8 degrees past 90 degrees deflection to keep that
-  true. The servos and gears stand above the tail and are visible.
+  true. The nozzle is flush: 82 mm half-width at its widest, inside the 84 mm gap.
+- **Nozzle servos inside the body.** Two pockets in the aft bridge, one each side of the
+  fan duct, open to the belly. The nacelle grew from 94 to 102 mm so the first bearing
+  ring sits flush with it.
 - **Taller skids.** The nozzle hangs 140 mm below the datum when it points down, so the
   ground line moved from 85 to 150 mm below the datum.
-- **Tilt mount deleted:** two bearings, yoke, cradle and two servos gone; three nozzle
-  servos, three pinions and three collars added.
+- **Tilt mount deleted:** two bearings, yoke, cradle and two servos gone; two nozzle
+  servos, two drums, a drive ring and three collars added.
 - **Speed controllers** now stand on edge against the bay side walls, because the bay
   lost its rear 26 mm to the inlet.
 - **Controller behaviour.** With the nozzle straight, nothing aft of the balance point
@@ -133,10 +187,10 @@ LW-PLA body. Test it on the thrust stand the same way as the main fan.
 
 | Quantity | Value |
 |---|---|
-| All-up weight | about 1,920 g (was 1,575 g with open propellers) |
-| Balance point | 89 mm behind the datum (was 70 mm) |
-| Usable thrust / weight | about 1.57 |
-| Hover load: lift fan / main fan / each roll motor | 58% / 68% / 68% of estimated maximum |
+| All-up weight | about 1,890 g (was 1,575 g with open propellers) |
+| Balance point | 82 mm behind the datum (was 70 mm) |
+| Usable thrust / weight | about 1.60 |
+| Hover load: lift fan / main fan / each roll motor | 60% / 64% / 64% of estimated maximum |
 
 These margins are thin and rest on three unmeasured thrust figures (1,300 g lift fan,
 850 g main fan, 500 g per roll motor) and a guessed 15% nozzle loss.

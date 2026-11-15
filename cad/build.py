@@ -185,7 +185,12 @@ W_ = lambda solid: cq.Workplane("XY").newObject([solid])
 BORE = 8.5                    # tube bore in foamed shells
 X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 230.0, 30.0, -170.0, -260.0, -258.0, -430.0
 X_J1, Y_AX = -272.0, 2.0           # first nozzle bearing and the main fan axis (cad/propulsion.py kit frame origin)
-NAC_R, DUCT_R = 47.0, 43.1          # engine nacelle and the bore the fan duct slides into
+NAC_R, DUCT_R = 51.0, 43.1          # engine nacelle (flush with the nozzle's bearing rings) and the bore the fan duct slides into
+# nozzle servos: buried either side of the fan duct, shaft pointing inboard, each turning a cord drum that stands on edge
+NZ = {"xs": -222.0, "yc": -6.5, "zd": 53.0, "drum_r": 27.5, "drum_t": 6.0, "fair_t": 3.8}
+NZ["zc"] = NZ["zd"] + NZ["drum_t"] / 2 - HORN_T + SV_HORN_PLANE     # servo body centre: the horn sits in the drum's outboard face
+NZ["xc"] = NZ["xs"] + SV_SHAFT_OFF                                  # servo body is forward of its shaft
+NZ["cord_y"] = (NZ["yc"] + NZ["drum_r"], NZ["yc"] - NZ["drum_r"])   # the two cords leave the drum top and bottom, heading aft
 PLENUM = (-176.0, -140.0, 58.0)     # x range and half width of the main fan's air inlet, open above and below
 LIFT_HOLE_R = 62.4                  # bore for the lift-fan shroud ring
 TUBE_FRONT, TUBE_REAR = 212.0, -425.0
@@ -329,6 +334,30 @@ def clip_pocket(x, half, s, yb):
     lo, hi = sorted((s * (LZ - 8.0), s * (LZ + 8.0)))
     return box(x - half, x + half, yb - 2, 8.6, lo, hi)
 
+def zbox(x0, x1, y0, y1, s, z0, z1):   # box on side s (+1 right, -1 left) between |z| = z0 and z1
+    lo, hi = sorted((s * z0, s * z1)); return box(x0, x1, y0, y1, lo, hi)
+
+def nozzle_servo_cut(s, yb):
+    """Pocket for one nozzle servo and its cord drum, open to the belly: the servo goes in from below with the drum already on it."""
+    xs, yc, zd, zc, xc, t = NZ["xs"], NZ["yc"], NZ["zd"], NZ["zc"], NZ["xc"], NZ["drum_t"]
+    w, l, r = SV_W + SV_FIT, SV_L + SV_FIT, NZ["drum_r"] + 2.6
+    c = zbox(xc - l / 2, xc + l / 2, yb, yc + w / 2, s, zc - SV_HALF_H - 0.3, zc + SV_HALF_H + 0.3)         # servo body
+    c = c.union(zbox(xc - SV_EAR_SPAN / 2 - 0.3, xc + SV_EAR_SPAN / 2 + 0.3, yb, yc + w / 2, s, zc - SV_EAR_UNDER - 2.8, zc - SV_EAR_UNDER + 0.3))   # ears
+    c = c.union(zbox(xs - 6.5, xs + 6.5, yb, yc + 6.5, s, zd + t / 2, zc - SV_HALF_H))                     # output boss and shaft
+    lo, hi = sorted((s * (zd - t / 2 - 0.5), s * (zd + t / 2 + 0.5)))
+    c = c.union(cyl("z", r, lo, hi, xs, yc)).union(box(xs - r, xs + r, yb, yc, lo, hi))                    # drum slot
+    c = c.union(cyl("x", 1.7, X_NOTCH - 1, xs, NZ["cord_y"][0], s * zd))                                   # upper cord bore
+    c = c.union(zbox(X_NOTCH - 1, xs, yb, NZ["cord_y"][1] + 1.7, s, zd - 1.7, zd + 1.7))                   # lower cord groove, open to the belly
+    return c.union(zbox(X_NOTCH - 1, X_NOTCH + NZ["fair_t"] + 0.2, -70, 70, s, zd - 4.5, zd + 4.5))        # seat for the hard fairlead strip
+
+def cord_fairlead(s):
+    """PETG strip glued into the rear face of the body: the two cords of one servo turn the corner here, not on soft LW-PLA."""
+    f = body_master().intersect(zbox(X_NOTCH, X_NOTCH + NZ["fair_t"], -70, 70, s, NZ["zd"] - 4.3, NZ["zd"] + 4.3))
+    for y in NZ["cord_y"]:
+        f = f.cut(cyl("x", 1.1, X_NOTCH - 1, X_NOTCH + 6, y, s * NZ["zd"]))
+        f = f.cut(cq.Workplane("YZ").center(-s * NZ["zd"], y).circle(2.6).workplane(offset=1.6).circle(1.1).loft().translate((X_NOTCH - 0.01, 0, 0)))   # flared mouth on the nozzle side
+    return f
+
 def fuselage_cuts():
     yb = -60.0
     c = longeron_bores().union(cyl("y", FAN_R, -70, 70, FAN_X, 0))                               # lift-fan duct, sized for the shroud ring
@@ -356,6 +385,7 @@ def fuselage_cuts():
         c = c.union(box(sx - 11.8, sx + 11.8, yb, -7.5, lo, hi)).union(box(sx - 16.8, sx + 16.8, yb, interp(MID, STAB_SERVO_X, 5) + 2.6, lo, hi))
         lo, hi = sorted((s * 80.0, s * 112.0)); c = c.union(cyl("z", 1.65, lo, hi, STAB["pivot_x"], STAB["y"]))   # tail pivot wire
         lo, hi = sorted((s * 56.0, s * 86.0)); c = c.union(box(X_NOTCH - 2, CAV["x0"] + 2, -19.0, -9.0, lo, hi))  # wire run to the tail
+        c = c.union(nozzle_servo_cut(s, yb))
         c = c.union(wing_panel(WING["root_z"] - WING["bury"] - 0.4, WING["mid_z"], s, grow=0.35))  # wing root socket
         c = c.union(fin(s, grow=0.3))
     c = c.union(box(CAV["x1"] - 2, FAN_X - FAN_R + 6, -19.0, -11.0, -9, 9))                      # wire run to the fan motor
@@ -438,6 +468,8 @@ PARTS = {
     "skid_rear": (lambda: skid(SKID_X[1]), "skidR", (0, 0, 0), ROT_UP, "PETG"),
     "battery_tray": (battery_tray, "batteryTray", (BATT_X, 0, 0), None, "PETG"),
     "fc_sled": (fc_sled, "fcSled", (0, 0, 0), None, "PETG"),
+    "cord_fairlead_right": (lambda: cord_fairlead(1), "fairleadR", (0, 0, 0), ROT_UP, "PETG"),
+    "cord_fairlead_left": (lambda: cord_fairlead(-1), "fairleadL", (0, 0, 0), ROT_UP, "PETG"),
     "nose_plug": (nose_ring, "noseRing", (0, 0, 0), ROT_UP, "PETG"),
     "hatch_latch": (hatch_latch, "hatchLatch", (0, 0, 0), ((0, 1, 0), 90), "PETG"),
     "canopy": (canopy_solid, "canopy", (0, 0, 0), None, "PETG-clear"),
@@ -459,6 +491,9 @@ PARTS = {
     "fin_left": (lambda: fin(-1), "finL", (0, 0, 0), ((1, 0, 0), -(90 - FIN["cant"])), "LW-PLA"),
 }
 
+def nozzle_servo_env(s):
+    return zbox(NZ["xc"] - SV_L / 2, NZ["xc"] + SV_L / 2, NZ["yc"] - SV_W / 2, NZ["yc"] + SV_W / 2, s, NZ["zc"] - SV_HALF_H, NZ["zc"] + SV_HALF_H)
+
 def envelopes():
     return {
         "longerons": cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, -LZ).union(cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, LZ)),
@@ -469,6 +504,8 @@ def envelopes():
         "roll propeller discs": cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, -ROLL_Z).union(cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, ROLL_Z)),
         "roll motor bodies": cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, -ROLL_Z).union(cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, ROLL_Z)),
         "speed controllers": box(-128.5, -29.5, -18.5, 7.5, -79.8, -72.0).union(box(-128.5, -29.5, -18.5, 7.5, 72.0, 79.8)),
+        "nozzle servos": nozzle_servo_env(1).union(nozzle_servo_env(-1)),
+        "cord drums": cyl("z", NZ["drum_r"] + 1.4, NZ["zd"] - 3, NZ["zd"] + 3, NZ["xs"], NZ["yc"]).union(cyl("z", NZ["drum_r"] + 1.4, -NZ["zd"] - 3, -NZ["zd"] + 3, NZ["xs"], NZ["yc"])),
         "battery": box(BATT_X - 67.5, BATT_X + 67.5, CAV["floor"] + 2.5, CAV["floor"] + 32.5, -21.5, 21.5),
     }
 

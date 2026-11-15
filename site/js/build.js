@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from '../vendor/BufferGeometryUtils.js';
 import { D, PART } from './spec.js';
+import { makeDrive } from './cords.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rad = d => d * Math.PI / 180;
@@ -340,11 +341,11 @@ export function buildModel(cad = {}) {
   }
   // --- main fan and three-bearing swivel nozzle. The kit frame is turned to face aft and set on the nacelle axis.
   const kitRoot = new THREE.Group(); kitRoot.position.set(D.nozzle.xJ1, D.nozzle.yAx, 0); kitRoot.rotation.y = Math.PI; root.add(kitRoot);
-  const K = cad.__kit || { alpha: 40, joints: [0, 58, 162], clock: [150, 112, 100], servoR: 78.75, gearRatio: 2 };
+  const K = cad.__kit || { alpha: 40, joints: [0, 58, 162] };
   const a2 = rad(K.alpha), [kx1, kx2, kx3] = K.joints, ax = new THREE.Vector3(1, 0, 0);
   const sub = (parent, x) => { const g = new THREE.Group(); g.position.set(x, 0, 0); parent.add(g); return g; };
   const g1 = sub(kitRoot, kx1), g2 = sub(g1, kx2 - kx1), g3 = sub(g2, kx3 - kx2);
-  const nozzle = { g1, g2, g3, pinions: [], ratio: K.gearRatio, n2: new THREE.Vector3(Math.cos(a2), Math.sin(a2), 0), n3: new THREE.Vector3(Math.cos(a2), -Math.sin(a2), 0) };
+  const nozzle = { g1, g2, g3, n2: new THREE.Vector3(Math.cos(a2), Math.sin(a2), 0), n3: new THREE.Vector3(Math.cos(a2), -Math.sin(a2), 0) };
   { const px = new THREE.Vector3(1, 0, 0), kp = () => MAT.petg(px);
     add('edfDuct', kitMesh('edfDuct', kp()), [70, 0, 0], kitRoot);
     add('tailCone', kitMesh('tailCone', kp()), [60, -110, 0], kitRoot);
@@ -352,16 +353,20 @@ export function buildModel(cad = {}) {
     const mo = motor(); mo.rotation.z = Math.PI / 2; mo.position.set(-44, 0, 0); add('motorM', mo, [-70, 0, 0], kitRoot);
     const seg = (id, parent, x, ex) => { const m = kitMesh(id, kp()); m.position.set(-x, 0, 0); return add(id, m, ex, parent); };
     seg('seg1', g1, kx1, [0, 0, 0]); seg('seg2', g2, kx2, [70, 0, 0]); seg('seg3', g3, kx3, [140, 0, 0]);
-    const frames = [sub(kitRoot, kx1), sub(g1, kx2 - kx1), sub(g2, kx3 - kx2)]; frames[1].rotation.z = a2; frames[2].rotation.z = -a2;
+    const frames = [sub(g1, 0), sub(g2, 0), sub(g3, 0)]; frames[1].rotation.z = a2; frames[2].rotation.z = -a2;   // each collar is keyed to the part downstream of it
     frames.forEach((f, j) => {
       const c = grp(); for (const half of [0, 1]) { const h = kitMesh(j ? 'collar' : 'collarJ1', MAT.dark()); h.rotation.x = half * Math.PI; c.add(h); }
       add('collar' + (j + 1), c, [0, 110, 0], f);
-      const clock = new THREE.Group(); clock.rotation.x = rad(K.clock[j]); f.add(clock);
-      const pv = new THREE.Group(); pv.position.set(0, K.servoR, 0); clock.add(pv);
-      const pm = kitMesh('pinion', MAT.white()); pm.position.set(0, -K.servoR, 0); add('pinion' + (j + 1), grp(pm), [45, 0, 0], pv); nozzle.pinions.push(pv);
-      const sv = servo(true); sv.rotation.order = 'ZYX'; sv.rotation.z = -Math.PI / 2; sv.rotation.y = Math.PI / 2; sv.position.set(-16.2, K.servoR, 5.9);   // shaft along +X on the pinion axis, body tangential
-      add('nzServo' + (j + 1), grp(sv), [-70, 0, 0], clock);
     });
+    nozzle.ring = sub(kitRoot, 0); add('driveRing', kitMesh('driveRing', MAT.white()), [30, -120, 0], nozzle.ring);
+    if (K.drive) {   // two servos buried in the body, a cord drum on each, and the cords to the nozzle
+      const tmp = new THREE.Group();
+      nozzle.drive = makeDrive(kitRoot, K, {
+        drumMesh: i => add('drum' + (i + 1), kitMesh('servoDrum', MAT.white()), [0, -150, 0], tmp),
+        servoMesh: (i, side) => { const sv = servo(true); sv.rotation.x = -side * Math.PI / 2; return add('nzServo' + (i + 1), grp(sv), [0, -100, 0], tmp); },
+      });
+    }
+    for (const [id, sd] of [['fairleadR', 1], ['fairleadL', -1]]) add(id, mesh(box(4, 60, 9, -256, -7, sd * 53), MAT.petg()), [-60, 0, 0]);
   }
   // --- tail
   const stabs = [];
@@ -424,10 +429,9 @@ export function buildModel(cad = {}) {
       three([[-80, -5.5, 76], [-100, 9, 74], [-134, 10, 70], [-146, 16, 56], [-166, 26, 34], [-180, 22, 22], [-200, 14, 14], [-214, 8, 10]], 'y');   // main fan motor: over the rear controller, through the inlet, into the duct
       for (const s of [-1, 1]) three([[-132, -5.5, s * 76], [-133, -13, s * 77], [sx, -17.6, s * 84], [sx, -17.6, s * 112], [sx, -17.6, s * (RZ - 30)], [sx + 6, -22, s * (RZ - 12)], [D.rollX - 8, -29, s * (RZ - 5)]], 'x');   // roll motors: under the spar to the mounts
       const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
-      lead([[-262, -52, -36], [-256, -30, -62], [-250, -14, -72], [-178, -14, -72], [-140, -6, -70], [-128, 6, -66], [-100, -4, -66], [-78, -9, -68]]);              // nozzle servo 1
-      lead([[-292, 44, -20], [-270, 40, -40], [-256, 4, -70], [-178, -11, -70], [-140, -4, -68], [-126, 8, -64], [-98, -3, -64], [-70, -9, -67]]);                     // nozzle servo 2
-      lead([[-300, 46, 18], [-272, 42, 44], [-256, 2, 70], [-178, -12, 70], [-140, -2, 66], [-126, 10, 40], [-100, 8, -20], [-66, -8, -64]]);                         // nozzle servo 3
-      for (const s of [-1, 1]) lead([[-383, -22, s * 96], [-340, -12, s * 80], [-262, -10, s * 78], [-178, -16, s * 74], [-140, -8, s * 70], [-126, 12, s * 50 - 14], [-90, 8, s * 30 - 30], [-62, -6, -62 + (s > 0 ? 4 : 0)]]);   // tail servos
+      lead([[-204, -8, 74], [-190, -14, 74], [-178, -12, 70], [-140, -2, 66], [-126, 10, 40], [-100, 8, -20], [-66, -8, -64]]);                                  // nozzle servo 1 (right side of the body)
+      lead([[-204, -8, -74], [-190, -14, -74], [-178, -14, -72], [-140, -6, -70], [-128, 6, -66], [-100, -4, -66], [-78, -9, -68]]);                            // nozzle servo 2 (left side)
+      for (const s of [-1, 1]) lead([[-383, -22, s * 96], [-340, -14, s * 92], [-262, -13, s * 88], [-178, -16, s * 74], [-140, -8, s * 70], [-126, 12, s * 50 - 14], [-90, 8, s * 30 - 30], [-62, -6, -62 + (s > 0 ? 4 : 0)]]);   // tail servos
       const sig = (pts, c = 0xeeeeee) => h.add(tube(pts, 0.6, c));
       sig([[-78, -3, -72], [-76, -6, -70], [-74, -8, -68]]); sig([[-80, -3, -72], [-80, -6, -70], [-76, -8, -68]]);                                   // left pair of throttle signals
       for (const x of [-28, -80]) sig([[x, -3, 72], [x + 4, 13, 40], [-60, 14, -20], [-72, -8, -66]]);                                              // right pair, over the battery

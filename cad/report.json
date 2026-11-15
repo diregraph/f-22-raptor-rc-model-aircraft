@@ -231,6 +231,64 @@
    1
   ]
  },
+ "cord_fairlead_right": {
+  "twin_id": "fairleadR",
+  "material": "PETG",
+  "bed_mm": [
+   62.4,
+   8.6,
+   3.8
+  ],
+  "solids": 1,
+  "mass_est_g": 1.6,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   -258.0,
+   -6.09758,
+   53.0,
+   1
+  ]
+ },
+ "cord_fairlead_left": {
+  "twin_id": "fairleadL",
+  "material": "PETG",
+  "bed_mm": [
+   62.4,
+   8.6,
+   3.8
+  ],
+  "solids": 1,
+  "mass_est_g": 1.6,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   -258.0,
+   -6.09758,
+   -53.0,
+   1
+  ]
+ },
  "nose_plug": {
   "twin_id": "noseRing",
   "material": "PETG",
@@ -467,12 +525,12 @@
   "twin_id": "aftBridge",
   "material": "LW-PLA",
   "bed_mm": [
-   94.0,
+   102.0,
    216.0,
    90.0
   ],
   "solids": 1,
-  "mass_est_g": 50.7,
+  "mass_est_g": 55.7,
   "matrix": [
    0.0,
    -1.0,

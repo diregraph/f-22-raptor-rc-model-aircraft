@@ -8,7 +8,13 @@
 //   joint 3  turns about an axis canted ALPHA the other way
 // Turning joints 2 and 3 by equal and opposite angles (+b, -b) bends the flow by 4*asin(sin(ALPHA)*sin(b/2)); joint 1 then
 // rotates that bend to point straight down and adds the small left/right swing used for yaw.
-export const NOZZLE = { alpha: 40, bore: 80, gearRatio: 2, servoTravel: 170, maxDeflection: 100, maxYaw: 20 };
+// Drive: no servo rides on the nozzle. Two servos in the body each turn a cord drum.
+//   servo 1 -> the bearing-1 collar, which is keyed to segment 1: it sets joint 1 (angle a)
+//   servo 2 -> a free ring just behind bearing 1; cords from that ring cross to the bearing-2 collar, so the ring sits at a + k*b
+//   joint 3 is not driven at all: a cord loop from segment 1 to the bearing-3 collar makes it mirror joint 2
+// cord: radius of the cord centre on each pulley, mm (cad/propulsion.py prints the same numbers)
+export const NOZZLE = { alpha: 40, bore: 80, servoTravel: 170, maxDeflection: 100, maxYaw: 20, cord: { band1: 48.3, ring: 50.0, collar: 53.4, drum: 27.5 } };
+export const ringRatio = () => NOZZLE.cord.collar / NOZZLE.cord.ring;            // k: ring degrees per degree of joint 2
 const RAD = Math.PI / 180;
 
 const rot = (ax, t) => {   // Rodrigues rotation matrix about unit axis ax
@@ -26,7 +32,7 @@ export function exitDirection(a, b, c, alpha = NOZZLE.alpha) {
 }
 export const bendFor = (b, alpha = NOZZLE.alpha) => 4 * Math.asin(Math.sin(alpha * RAD) * Math.sin(b * RAD / 2)) / RAD;
 
-// past 90 degrees the servo hardware nears the tail booms, so the yaw swing is tapered from 20 to 8 degrees
+// past 90 degrees the yaw swing is tapered from 20 to 8 degrees: it keeps the nozzle clear of the tail booms and the ring inside the servo's travel
 export const yawLimit = d => NOZZLE.maxYaw - Math.max(0, d - 90) * 1.2;
 
 // inverse: wanted deflection (0 = straight aft, 90 = straight down) and yaw swing -> the three joint angles
@@ -39,12 +45,18 @@ export function solve(deflection, yaw = 0, alpha = NOZZLE.alpha) {
   const a = az - Math.min(Math.max(yaw, -yl), yl);                               // joint 1 turns it back to straight down, then adds the yaw swing
   return { a, b, c: -b };
 }
-// joint angle -> servo angle (degrees from the servo's own centre), given where each joint sits at servo centre
+// what the two cord pulleys do: the bearing-1 collar follows joint 1, the drive ring leads it by k times joint 2
+export const pulleys = j => ({ band: j.a, ring: j.a + ringRatio() * j.b });
+// joint angles -> servo angles (degrees from each servo's own centre)
 export function servoAngles(j, centre = jointCentres()) {
-  return { s1: (j.a - centre.a) * NOZZLE.gearRatio, s2: (j.b - centre.b) * NOZZLE.gearRatio, s3: (j.c - centre.c) * NOZZLE.gearRatio };
+  const p = pulleys(j), c = NOZZLE.cord;
+  return { s1: (p.band - centre.band) * c.band1 / c.drum, s2: (p.ring - centre.ring) * c.ring / c.drum };
 }
-export function jointCentres() {   // mid-travel of each joint over the whole working range
-  const full = solve(NOZZLE.maxDeflection, 0), a0 = solve(0, 0).a;
-  const aMin = Math.min(a0, full.a) - NOZZLE.maxYaw, aMax = Math.max(a0, full.a) + NOZZLE.maxYaw;
-  return { a: (aMin + aMax) / 2, b: full.b / 2, c: full.c / 2, aRange: aMax - aMin, bRange: full.b };   // c is negative: joint 3 mirrors joint 2
+export function jointCentres() {   // mid-travel of each pulley over every pose the mixer can ask for
+  let band = [1e9, -1e9], ring = [1e9, -1e9];
+  for (let d = 0; d <= NOZZLE.maxDeflection; d += 1) for (const y of [-1, 0, 1]) {
+    const p = pulleys(solve(d, y * yawLimit(d)));
+    band = [Math.min(band[0], p.band), Math.max(band[1], p.band)]; ring = [Math.min(ring[0], p.ring), Math.max(ring[1], p.ring)];
+  }
+  return { band: (band[0] + band[1]) / 2, ring: (ring[0] + ring[1]) / 2, bandRange: band[1] - band[0], ringRange: ring[1] - ring[0], bRange: solve(NOZZLE.maxDeflection, 0).b };
 }

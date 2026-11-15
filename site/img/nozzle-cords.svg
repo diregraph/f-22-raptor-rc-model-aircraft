@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 430" font-family="system-ui, sans-serif" font-size="13">
+  <title>Cord drive of the flush swivel nozzle, side view</title>
+  <rect width="900" height="430" fill="#ffffff"/>
+  <text x="20" y="26" font-size="16" font-weight="600" fill="#1c2733">Flush nozzle: who pulls what (side view, nozzle straight)</text>
+  <!-- body -->
+  <rect x="20" y="70" width="212" height="240" rx="10" fill="#e6ebf0" stroke="#8a97a5"/>
+  <text x="30" y="90" fill="#465564">Aft body (LW-PLA)</text>
+  <rect x="226" y="84" width="8" height="212" fill="#8a97a5"/><text x="150" y="326" fill="#465564">fairlead strips</text><path d="M214 316 L230 300" stroke="#465564" fill="none"/>
+  <circle cx="120" cy="140" r="30" fill="#fff" stroke="#1c2733" stroke-width="2"/><rect x="62" y="130" width="46" height="22" fill="#3b2a22"/><text x="52" y="124" fill="#1c2733">Servo 1 + drum</text>
+  <circle cx="120" cy="240" r="30" fill="#fff" stroke="#1c2733" stroke-width="2"/><rect x="62" y="230" width="46" height="22" fill="#3b2a22"/><text x="52" y="290" fill="#1c2733">Servo 2 + drum</text>
+  <!-- duct stub and segments -->
+  <rect x="232" y="116" width="28" height="148" fill="#c9d1d9" stroke="#8a97a5"/>
+  <polygon points="268,116 352,116 452,264 268,264" fill="#fbd3b0" stroke="#f47216"/>
+  <polygon points="364,116 636,116 536,264 464,264" fill="#fde3c4" stroke="#f9a03f"/>
+  <polygon points="648,116 760,124 760,256 548,264" fill="#fbd3b0" stroke="#f47216"/>
+  <text x="290" y="196" fill="#8a3f00">Segment 1</text><text x="462" y="196" fill="#8a3f00">Segment 2</text><text x="640" y="196" fill="#8a3f00">Segment 3</text>
+  <!-- collars -->
+  <rect x="256" y="106" width="12" height="168" rx="2" fill="#2b2e33"/>
+  <polygon points="346,108 360,108 462,272 448,272" fill="#2b2e33"/>
+  <polygon points="640,108 654,108 552,272 538,272" fill="#2b2e33"/>
+  <rect x="272" y="108" width="10" height="164" rx="2" fill="#fff" stroke="#1c2733" stroke-width="1.5"/>
+  <!-- seg 1 slave band -->
+  <path d="M440 272 L420 244" stroke="#0b7a3b" stroke-width="5" stroke-linecap="round"/>
+  <!-- cords: servo 1 -->
+  <g fill="none" stroke="#c98a00" stroke-width="2.2">
+    <path d="M120 110 L230 100 L262 106"/><path d="M120 170 L230 284 L262 274"/>
+  </g>
+  <!-- cords: servo 2 to ring -->
+  <g fill="none" stroke="#1565c0" stroke-width="2.2">
+    <path d="M120 210 L230 92 L277 107"/><path d="M120 270 L230 292 L277 273"/>
+    <path d="M280 106 C300 96, 330 96, 352 107" stroke-dasharray="6 4"/>
+  </g>
+  <!-- slave loop -->
+  <path d="M432 262 C460 286, 510 286, 546 273" fill="none" stroke="#0b7a3b" stroke-width="2.2" stroke-dasharray="6 4"/>
+  <!-- callouts -->
+  <g fill="#1c2733">
+    <text x="236" y="60">Bearing-1 collar</text><text x="236" y="76" fill="#465564" font-size="12">keyed to segment 1</text><path d="M262 80 L262 104" stroke="#1c2733"/>
+    <text x="296" y="356">Drive ring (free)</text><path d="M277 274 L300 342" stroke="#1c2733" fill="none"/>
+    <text x="372" y="60">Bearing-2 collar</text><text x="372" y="76" fill="#465564" font-size="12">keyed to segment 2</text><path d="M360 80 L356 106" stroke="#1c2733"/>
+    <text x="640" y="60">Bearing-3 collar</text><text x="640" y="76" fill="#465564" font-size="12">keyed to segment 3</text><path d="M650 80 L648 106" stroke="#1c2733"/>
+    <text x="392" y="312" fill="#0b7a3b">band fixed to segment 1</text><path d="M430 268 L440 300" stroke="#0b7a3b" fill="none"/>
+  </g>
+  <!-- legend -->
+  <g font-size="12.5" fill="#1c2733">
+    <path d="M30 384 h34" stroke="#c98a00" stroke-width="2.2"/><text x="72" y="388">Servo 1 turns the bearing-1 collar: the whole nozzle rolls about the duct axis (aims the bend, swings for yaw)</text>
+    <path d="M30 402 h34" stroke="#1565c0" stroke-width="2.2"/><text x="72" y="406">Servo 2 turns the free ring; its second cord pair (dashed) crosses the short side and turns bearing 2 (bends the jet)</text>
+    <path d="M30 420 h34" stroke="#0b7a3b" stroke-width="2.2" stroke-dasharray="6 4"/><text x="72" y="424">No servo: a loop from segment 1 across segment 2 makes bearing 3 turn equal and opposite to bearing 2</text>
+  </g>
+</svg>
