@@ -24,5 +24,5 @@ export default { fetch(req) {
   if (req.headers.get('if-none-match') === f.e) return new Response(null, { status: 304, headers: h });
   return new Response(dec(f.b), { headers: h });
 } };`;
-mkdirSync('dist', { recursive: true }); writeFileSync('dist/worker.js', src);
+mkdirSync('cf-inline/src', { recursive: true }); writeFileSync('cf-inline/src/worker.js', src);
 console.log(Object.keys(files).length, 'files,', (src.length / 1024).toFixed(0), 'KB');

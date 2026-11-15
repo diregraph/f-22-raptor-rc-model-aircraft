@@ -1,3 +1,5 @@
 node_modules
 .wrangler
+.cloudflare
 dist
+cf-inline/src

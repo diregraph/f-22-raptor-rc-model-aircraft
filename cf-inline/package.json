@@ -1,0 +1,7 @@
+{
+  "name": "f35b-vtol-twin-inline",
+  "private": true,
+  "type": "module",
+  "scripts": { "deploy": "node ../scripts/build-inline-worker.mjs && cf deploy" },
+  "devDependencies": { "cf": "1.0.0-beta.32", "wrangler": "^4" }
+}

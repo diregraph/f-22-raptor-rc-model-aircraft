@@ -1,6 +1,0 @@
-{
-  // Cloudflare Workers static-assets deployment: `npx wrangler deploy`
-  "name": "f35b-vtol-twin",
-  "compatibility_date": "2026-11-01",
-  "assets": { "directory": "./site" }
-}

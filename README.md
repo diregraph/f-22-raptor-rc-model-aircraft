@@ -12,5 +12,8 @@ sized around parts on hand.
 Run locally: `npm run dev`, open http://localhost:8765.
 Live: https://f35b-vtol-twin.nuwanrx.workers.dev
 
-Deploy to Cloudflare: `npx wrangler deploy` (config in `wrangler.jsonc`).
-Fallback when asset upload is unavailable: `node scripts/build-inline-worker.mjs && npx wrangler deploy -c wrangler.inline.jsonc`.
+Deploy to Cloudflare with the `cf` CLI: `npx cf deploy site` (assets-only Worker).
+
+Fallback where the asset-upload step is blocked (for example behind a proxy that
+rewrites the Authorization header): `npm run deploy:inline`. It inlines `site/`
+into one Worker script (`cf-inline/`) and deploys that with `cf deploy`.
