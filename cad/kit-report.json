@@ -1,0 +1,272 @@
+{
+ "edf_impeller": {
+  "id": "impeller",
+  "frame": "base",
+  "note": "Spinner down, supports under the blade tips only. PETG or PLA+, 0.12 mm layers, 5 walls, 100% infill. Balance it before running.",
+  "bed": [
+   79.4,
+   80.0,
+   51.0
+  ],
+  "solids": 1,
+  "mass": 35.5,
+  "matrix": [
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   -1.0,
+   0.0,
+   0.0,
+   0,
+   -46.0,
+   0.30364,
+   0.0,
+   1
+  ]
+ },
+ "edf_duct": {
+  "id": "duct",
+  "frame": "base",
+  "note": "Rear flange on the bed. The motor plate bridges 34 mm.",
+  "bed": [
+   103.6,
+   141.4,
+   100.0
+  ],
+  "solids": 1,
+  "mass": 83.2,
+  "matrix": [
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   -1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   -0.0,
+   18.9085,
+   1
+  ]
+ },
+ "edf_tail_cone": {
+  "id": "tailCone",
+  "frame": "base",
+  "note": "Open end on the bed. Push fit; take it off to reach the motor screws.",
+  "bed": [
+   34.0,
+   34.0,
+   36.0
+  ],
+  "solids": 1,
+  "mass": 8.1,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   -20.0,
+   -0.0,
+   -0.0,
+   1
+  ]
+ },
+ "nozzle_segment_1": {
+  "id": "seg1",
+  "frame": "j1",
+  "note": "Gear end on the bed.",
+  "bed": [
+   101.3,
+   140.5,
+   91.9
+  ],
+  "solids": 1,
+  "mass": 42.4,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   -0.0,
+   -3.07331,
+   17.52412,
+   1
+  ]
+ },
+ "nozzle_segment_2": {
+  "id": "seg2",
+  "frame": "j2",
+  "note": "Lay the gear-end bearing face on the bed: rotate 50 degrees in the slicer.",
+  "bed": [
+   171.8,
+   142.5,
+   89.0
+  ],
+  "solids": 1,
+  "mass": 55.1,
+  "matrix": [
+   1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   0.0,
+   1.0,
+   0.0,
+   0,
+   110.0,
+   -40.3719,
+   18.55063,
+   1
+  ]
+ },
+ "nozzle_segment_3": {
+  "id": "seg3",
+  "frame": "j3",
+  "note": "Exit on the bed, supports under the gear.",
+  "bed": [
+   89.0,
+   106.4,
+   89.9
+  ],
+  "solids": 1,
+  "mass": 31.3,
+  "matrix": [
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   -1.0,
+   0.0,
+   0.0,
+   0,
+   218.0,
+   -4.12837,
+   0.52242,
+   1
+  ]
+ },
+ "bearing_collar_half": {
+  "id": "collar",
+  "frame": "base",
+  "note": "Flat. Print 4 (bearings 2 and 3).",
+  "bed": [
+   10.4,
+   110.6,
+   55.2
+  ],
+  "solids": 1,
+  "mass": 5.8,
+  "matrix": [
+   1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.15,
+   0.0,
+   1
+  ]
+ },
+ "bearing_collar_half_j1": {
+  "id": "collarJ1",
+  "frame": "base",
+  "note": "Flat. Print 2 (bearing 1).",
+  "bed": [
+   10.4,
+   100.4,
+   50.0
+  ],
+  "solids": 1,
+  "mass": 5.2,
+  "matrix": [
+   1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.15,
+   0.0,
+   1
+  ]
+ },
+ "servo_pinion": {
+  "id": "pinion",
+  "frame": "base",
+  "note": "Flat, horn recess down. Print 3. The stock servo horn presses into the recess; the horn screw goes through the centre.",
+  "bed": [
+   54.9,
+   55.0,
+   5.4
+  ],
+  "solids": 1,
+  "mass": 7.3,
+  "matrix": [
+   0.0,
+   -1.0,
+   -0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   1.0,
+   0.0,
+   0.0,
+   0,
+   5.9,
+   78.75,
+   0.0,
+   1
+  ]
+ }
+}

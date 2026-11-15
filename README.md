@@ -14,7 +14,11 @@ sized around parts on hand.
   them and offers them for download), and checks every part for clashes against the
   tubes, servos, propeller discs, battery and each other. Then run
   `python3 tools/sync-mass.py` to copy the mass estimates into the spec.
-- `tools/sim-test.mjs` — headless flight checks: `npm test`.
+- `cad/propulsion.py` — bench kit: a printed 80 mm ducted fan for the EMAX 2306 and a
+  three-bearing swivel nozzle on three MG90S servos. Interactive model at `/nozzle.html`;
+  joint maths in `site/js/nozzle.js`. Read `docs/ducted-propulsion.md` first: it is an
+  untested design with a thrust-stand gate before any airframe change.
+- `tools/sim-test.mjs`, `tools/nozzle-test.mjs` — headless flight and nozzle checks: `npm test`.
 - `docs/build-plan.md` — 14-day build plan. `docs/source-video.md` — reference build.
 
 Run locally: `npm run dev`, open http://localhost:8765.
