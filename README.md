@@ -10,7 +10,7 @@ sized around parts on hand.
 - `docs/build-plan.md` — 14-day build plan. `docs/source-video.md` — reference build.
 
 Run locally: `npm run dev`, open http://localhost:8765.
-Live: https://f35b-vtol-twin.nuwanrx.workers.dev
+Live: https://f35b.jitfabit.com
 
 Deploy to Cloudflare with the `cf` CLI: `npx cf deploy site` (assets-only Worker).
 
