@@ -2,7 +2,7 @@
 // simple wing/tail aerodynamics and a flight controller that mirrors the planned mixer.
 // Pure maths, no rendering: runs in the browser and in Node (see tools/sim-test.mjs).
 // SI units inside. Body axes match the twin: +X nose, +Y up, +Z right wing.
-import { D, THRUSTERS, massProps } from './spec.js';
+import { D, THRUSTERS, massProps, hoverTrim, nozzleExit } from './spec.js';
 
 const G = 9.81, RHO = 1.2, DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -31,7 +31,8 @@ export function createSim(batteryX = D.battery.xDefault) {
   const mp = massProps(batteryX), m = mp.mass / 1000, cg = mp.cg.map(c => c / 1000);
   const I = [mp.inertia.roll * 1e-9, mp.inertia.yaw * 1e-9, mp.inertia.pitch * 1e-9];
   const th = THRUSTERS.map(t => ({ id: t.id, r: sub(t.pos.map(c => c / 1000), cg), max: t.maxG / 1000 * G, spin: t.spin === 'CW' ? 1 : -1 }));
-  const [F, M, L, R] = th, rest = (mp.cg[1] - D.groundY) / 1000;
+  const [F, M, L, R] = th, rest = (mp.cg[1] - D.groundY) / 1000, rollShare = hoverTrim(mp, 90).rollShare;
+  const exitAt = d => { const e = nozzleExit(d); return { r: sub(e.pos.map(c => c / 1000), cg), eff: e.eff }; };   // where the jet leaves and how much thrust the bends cost
   const s = { t: 0, p: [0, rest, 0], v: [0, 0, 0], q: [0, 0, 0, 1], w: [0, 0, 0], T: [0, 0, 0, 0], tilt: 90, nozzle: 0, tailL: 0, tailR: 0,
     iVy: 0, iPitch: 0, iAtt: [0, 0, 0], onGround: true, att: { roll: 0, pitch: 0, heading: 0 }, alpha: 0, speed: 0, cmd: [0, 0, 0, 0], armed: false };
 
@@ -52,7 +53,7 @@ export function createSim(batteryX = D.battery.xDefault) {
   function step(dt, inp) {
     const att = attitude(s.q); s.att = att;
     const vb = qrot(qinv(s.q), s.v), V = Math.hypot(vb[0], vb[1]);
-    const wingW = sstep(12, 17, vb[0]), hoverW = 1 - wingW;          // 0 = fans carry the weight, 1 = wing-borne
+    const wingW = sstep(14, 19, vb[0]), hoverW = 1 - wingW;          // 0 = fans carry the weight, 1 = wing-borne
     s.speed = Math.hypot(...s.v); s.alpha = V > 1 ? Math.atan2(-vb[1], vb[0]) : 0; s.wingW = wingW;
     const armed = inp.armed !== false; s.armed = armed;
 
@@ -74,13 +75,13 @@ export function createSim(batteryX = D.battery.xDefault) {
     let Fv = (inp.altHold ? m * (G + 4 * eVy + 2 * s.iVy) / clamp(att.up, 0.6, 1) : inp.thr * (F.max + M.max)) * hoverW;
     const fans = sstep(0, 0.15, hoverW), sinT = Math.sin(s.tilt * DEG);
     const fwd = (1 - sstep(30, 80, s.tilt)) * (inp.altHold ? 0.78 : inp.thr) * M.max;
-    const aF = F.r[0], aM = M.r[0], aR = L.r[0], zArm = R.r[2] - L.r[2];
+    const ex = exitAt(s.tilt), aF = F.r[0], aM = ex.r[0], aR = L.r[0], zArm = R.r[2] - L.r[2];
     let tF = 0, tM = 0, c = 0;
     for (let k = 0; k < 4; k++) {
-      const idle = 0.125 * Fv * fans;                              // the roll pair carries a quarter of the lift
+      const idle = rollShare / 2 * Fv * fans;                      // the roll pair carries its share of the lift (from the static trim)
       const want = Math.max(0, ((Fv - 2 * idle) * aF + 2 * idle * aR - u[2]) / (aF - aM));
-      tM = clamp(Math.max(sinT > 0.3 ? want / sinT : 0, fwd), 0, M.max);
-      const tMv = tM * sinT, S = Fv - tMv, Mo = u[2] - tMv * aM;
+      tM = clamp(Math.max(sinT > 0.3 ? want / (sinT * ex.eff) : 0, fwd), 0, M.max);
+      const tMv = tM * sinT * ex.eff, S = Fv - tMv, Mo = u[2] - tMv * aM;
       tF = (Mo - S * aR) / (aF - aR); c = (S - tF) / 2;
       const over = Math.max(tF - F.max, 2 * (c - 0.8 * L.max), 0);
       if (over <= 0) break; Fv -= over * 1.4;
@@ -89,7 +90,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     const tL = (c + u[0] / zArm) * fans, tR = (c - u[0] / zArm) * fans; tF *= fans;
     const cmd = armed ? [clamp(tF, 0, F.max), clamp(tM, 0, M.max), clamp(tL, 0, L.max), clamp(tR, 0, R.max)] : [0, 0, 0, 0];
     s.cmd = cmd;
-    const nozzleD = clamp(Math.asin(clamp(u[1] / (M.r[0] * Math.max(s.T[1], 1.5)), -1, 1)) / DEG, -20, 20);
+    const nozzleD = clamp(Math.asin(clamp(u[1] / (-ex.r[0] * Math.max(s.T[1] * ex.eff, 1.5) * Math.max(sinT, 0.3)), -1, 1)) / DEG, -20, 20);   // yaw: swing the bent jet sideways
     const qbar = 0.5 * RHO * Math.max(V * V, 9);
     const dP = -2.5 * u[2] / (qbar * AERO.tailS * AERO.CLa * -AERO.tailX), dA = 2 * u[0] / (qbar * AERO.tailS * AERO.CLa * AERO.tailZ);
     const tailLD = clamp((dP + dA) / DEG, -25, 25), tailRD = clamp((dP - dA) / DEG, -25, 25);
@@ -97,16 +98,19 @@ export function createSim(batteryX = D.battery.xDefault) {
     // ---- actuators ---------------------------------------------------------
     const slew = (v, tgt, rate) => v + clamp(tgt - v, -rate * dt, rate * dt);
     for (let i = 0; i < 4; i++) s.T[i] += (cmd[i] - s.T[i]) * Math.min(1, dt / AERO.motorTau);
-    s.tilt = slew(s.tilt, clamp(inp.tilt, 0, 100), AERO.tiltRate); s.nozzle = slew(s.nozzle, nozzleD, AERO.nozzleRate);
+    // With the nozzle straight nothing aft of the balance point can hold the tail up, so until the wing is flying the
+    // controller keeps the nozzle at least partly down, whatever the pilot asks for.
+    const dMin = s.onGround ? 0 : 60 * (1 - sstep(8, 19, vb[0]));
+    s.tilt = slew(s.tilt, clamp(Math.max(inp.tilt, dMin), 0, 100), AERO.tiltRate); s.nozzle = slew(s.nozzle, nozzleD, AERO.nozzleRate);
     s.tailL = slew(s.tailL, tailLD, AERO.tailRate); s.tailR = slew(s.tailR, tailRD, AERO.tailRate);
 
     // ---- forces and torques in body axes ----------------------------------
     let Fb = [0, 0, 0], Tb = [0, 0, 0];
     const push = (f, r) => { Fb = add(Fb, f); Tb = add(Tb, cross(r, f)); };
     const ct = Math.cos(s.tilt * DEG), st = Math.sin(s.tilt * DEG), cn = Math.cos(s.nozzle * DEG), sn = Math.sin(s.nozzle * DEG);
-    const mDir = [ct * cn, st * cn, -sn];
-    const vAx = vb[0] * mDir[0] + vb[1] * mDir[1] + vb[2] * mDir[2], tMain = s.T[1] * clamp(1 - Math.max(vAx, 0) / AERO.pitchSpeed, 0, 1);
-    push([0, s.T[0], 0], F.r); push(mul(mDir, tMain), M.r); push([0, s.T[2], 0], L.r); push([0, s.T[3], 0], R.r);
+    const mDir = [ct, st * cn, st * sn];                           // a straight nozzle cannot push sideways
+    const vAx = vb[0] * mDir[0] + vb[1] * mDir[1] + vb[2] * mDir[2], jet = exitAt(s.tilt), tMain = s.T[1] * jet.eff * clamp(1 - Math.max(vAx, 0) / AERO.pitchSpeed, 0, 1);
+    push([0, s.T[0], 0], F.r); push(mul(mDir, tMain), jet.r); push([0, s.T[2], 0], L.r); push([0, s.T[3], 0], R.r);
     Tb = add(Tb, [0, AERO.kq * (F.spin * s.T[0] + L.spin * s.T[2] + R.spin * s.T[3]), 0]); Tb = add(Tb, mul(mDir, AERO.kq * M.spin * s.T[1]));
     const at = (r) => add(vb, cross(s.w, r));
     for (const sg of [-1, 1]) {

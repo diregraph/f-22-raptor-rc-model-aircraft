@@ -1,4 +1,64 @@
 {
+ "lift_fan_rotor": {
+  "id": "liftRotor",
+  "frame": "lift",
+  "note": "Spinner down, supports under the blade tips only. PETG or PLA+, 0.12 mm layers, 5 walls, 100% infill. Mirror image of the main fan: it turns the other way. Balance it before running.",
+  "bed": [
+   119.6,
+   120.0,
+   45.0
+  ],
+  "solids": 1,
+  "mass": 34.3,
+  "matrix": [
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   -1.0,
+   0.0,
+   0.0,
+   0,
+   -52.0,
+   0.212,
+   0.0,
+   1
+  ]
+ },
+ "lift_fan_ring": {
+  "id": "liftRing",
+  "frame": "lift",
+  "note": "Flared lip on the bed. 2 walls. Press it into the fan bay from the top.",
+  "bed": [
+   134.4,
+   134.4,
+   42.0
+  ],
+  "solids": 1,
+  "mass": 25.8,
+  "matrix": [
+   0.0,
+   1.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   -1.0,
+   0.0,
+   0.0,
+   0,
+   -56.0,
+   -0.0,
+   -0.0,
+   1
+  ]
+ },
  "edf_impeller": {
   "id": "impeller",
   "frame": "base",
@@ -34,12 +94,12 @@
   "frame": "base",
   "note": "Rear flange on the bed. The motor plate bridges 34 mm.",
   "bed": [
-   103.6,
-   141.4,
+   134.5,
+   109.6,
    100.0
   ],
   "solids": 1,
-  "mass": 83.2,
+  "mass": 81.6,
   "matrix": [
    0.0,
    1.0,
@@ -54,8 +114,8 @@
    0.0,
    0,
    0.0,
-   -0.0,
-   18.9085,
+   -18.47186,
+   5.98125,
    1
   ]
  },
@@ -94,12 +154,12 @@
   "frame": "j1",
   "note": "Gear end on the bed.",
   "bed": [
-   101.3,
-   140.5,
+   96.3,
+   142.4,
    91.9
   ],
   "solids": 1,
-  "mass": 42.4,
+  "mass": 39.1,
   "matrix": [
    0.0,
    -1.0,
@@ -114,8 +174,8 @@
    0.0,
    0,
    -0.0,
-   -3.07331,
-   17.52412,
+   -0.54284,
+   17.4593,
    1
   ]
  },
@@ -126,10 +186,10 @@
   "bed": [
    171.8,
    142.5,
-   89.0
+   87.3
   ],
   "solids": 1,
-  "mass": 55.1,
+  "mass": 48.0,
   "matrix": [
    1.0,
    0.0,
@@ -159,7 +219,7 @@
    89.9
   ],
   "solids": 1,
-  "mass": 31.3,
+  "mass": 28.0,
   "matrix": [
    0.0,
    1.0,

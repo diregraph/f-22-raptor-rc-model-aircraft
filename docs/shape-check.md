@@ -18,7 +18,7 @@ not used. Reference images are not stored in this repository.
 | Wing position | Root leading edge about 40% of length from the nose | 44% after correction (was 49%) | Corrected |
 | Nose length | Intake face about 29% of length from the nose | 28% after lengthening the nose to 278 mm (was 24%) | Corrected |
 | Roll control | Hidden roll ducts in the wings | Roll motors buried in the wings in 110 mm ducts; clean wing tips (were tip pods) | Corrected |
-| Lift fan and nozzle | Ducted lift fan with doors; swivel nozzle between the booms | Open fan hole, no doors; open propeller in a notch between the booms | Inherent to open propellers |
+| Lift fan and nozzle | Ducted lift fan with doors; swivel nozzle between the booms | Shrouded 120 mm lift fan, no doors; ducted 80 mm fan with a three-bearing swivel nozzle between the booms, servos visible above it | Corrected (untested hardware) |
 
 Second pass (same day): the wing was moved 60 mm forward and the nose lengthened by
 58 mm. Consequences of the wing move:

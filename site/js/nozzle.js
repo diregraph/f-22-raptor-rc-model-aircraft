@@ -26,13 +26,17 @@ export function exitDirection(a, b, c, alpha = NOZZLE.alpha) {
 }
 export const bendFor = (b, alpha = NOZZLE.alpha) => 4 * Math.asin(Math.sin(alpha * RAD) * Math.sin(b * RAD / 2)) / RAD;
 
+// past 90 degrees the servo hardware nears the tail booms, so the yaw swing is tapered from 20 to 8 degrees
+export const yawLimit = d => NOZZLE.maxYaw - Math.max(0, d - 90) * 1.2;
+
 // inverse: wanted deflection (0 = straight aft, 90 = straight down) and yaw swing -> the three joint angles
 export function solve(deflection, yaw = 0, alpha = NOZZLE.alpha) {
   const d = Math.min(Math.max(deflection, 0), NOZZLE.maxDeflection), sa = Math.sin(alpha * RAD);
   const b = 2 * Math.asin(Math.min(1, Math.sin(d * RAD / 4) / sa)) / RAD;        // joints 2 and 3 turn together
   const bz = Math.max(b, 0.5), e = exitDirection(0, bz, -bz, alpha);              // near straight, hold joint 1 at its limiting angle so it never jumps
   const az = Math.atan2(e[2], -e[1]) / RAD;                                        // where the bend points, measured from straight down toward +Z
-  const a = az - Math.min(Math.max(yaw, -NOZZLE.maxYaw), NOZZLE.maxYaw);          // joint 1 turns it back to straight down, then adds the yaw swing
+  const yl = yawLimit(d);
+  const a = az - Math.min(Math.max(yaw, -yl), yl);                               // joint 1 turns it back to straight down, then adds the yaw swing
   return { a, b, c: -b };
 }
 // joint angle -> servo angle (degrees from the servo's own centre), given where each joint sits at servo centre

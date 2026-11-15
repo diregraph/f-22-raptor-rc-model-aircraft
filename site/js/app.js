@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { OrbitControls } from '../vendor/OrbitControls.js';
 import { RoomEnvironment } from '../vendor/RoomEnvironment.js';
 import { STLLoader } from '../vendor/STLLoader.js';
-import { D, PARTS, PART, GROUPS, MATERIALS, STEPS, THRUSTERS, JOINTS, WIRING, CAD, PRINT_PETG, PRINT_LW, massProps, hoverTrim } from './spec.js';
+import { D, PARTS, PART, GROUPS, MATERIALS, STEPS, THRUSTERS, JOINTS, WIRING, CAD, PRINT_PETG, PRINT_LW, massProps, hoverTrim, nozzleExit } from './spec.js';
+import { solve as solveNozzle, exitDirection } from './nozzle.js';
 import { createSim } from './sim.js';
 import { buildModel } from './build.js';
 
@@ -47,10 +48,29 @@ async function loadCad() {   // every printed part comes from the CAD build; if 
       out[id] = { geo, material: c.material, axis: new THREE.Vector3(0, 0, 1).transformDirection(m) };          // layer lines follow the real print direction
     } catch { /* stand-in */ }
   }));
+  try {   // fan and nozzle parts live in their own kit frame; build.js places them
+    const kit = await (await fetch('cad/kit/kit.json')).json(), idMap = { duct: 'edfDuct' };
+    out.__kit = kit.geometry;
+    await Promise.all(Object.entries(kit.parts).map(async ([kid, c]) => {
+      const r = await fetch(`cad/kit/${c.file}.stl`); if (!r.ok) return;
+      const id = idMap[kid] || kid, entry = { geo: L.parse(await r.arrayBuffer()).applyMatrix4(new THREE.Matrix4().fromArray(c.matrix)), material: 'PETG' };
+      out[id] = entry;
+      const info = { file: 'kit/' + c.file, material: 'PETG', bed: c.bed, mass: c.mass, note: c.note };
+      for (const tid of id === 'collar' ? ['collar2', 'collar3'] : id === 'collarJ1' ? ['collar1'] : id === 'pinion' ? ['pinion1', 'pinion2', 'pinion3'] : [id]) MANIFEST[tid] = info;
+    }));
+  } catch { /* no kit: the fan and nozzle will be missing */ }
   return out;
 }
 const model = buildModel(await loadCad()); scene.add(model.root);
-const { parts, movers, props, joints, shells } = model;
+const { parts, movers, props, fans, joints, shells } = model;
+const NZ = joints.nozzle, XAX = new THREE.Vector3(1, 0, 0);
+function setNozzle(deflection, yaw) {   // three bearing angles from two commands
+  const j = solveNozzle(deflection, yaw);
+  NZ.g1.quaternion.setFromAxisAngle(XAX, rad(j.a)); NZ.g2.quaternion.setFromAxisAngle(NZ.n2, rad(j.b)); NZ.g3.quaternion.setFromAxisAngle(NZ.n3, rad(j.c));
+  [j.a, j.b, j.c].forEach((t, i) => { NZ.pinions[i].rotation.x = -rad(t) * NZ.ratio; });
+  const e = exitDirection(j.a, j.b, j.c);
+  return new THREE.Vector3(e[0], -e[1], e[2]);   // thrust direction in aircraft axes (the kit frame faces aft)
+}
 const partMats = new Map();
 parts.forEach((o, id) => { const ms = new Set(); o.traverse(c => { if (c.isMesh && c.material.emissive) ms.add(c.material); }); partMats.set(id, [...ms]); });
 const shellMats = shells.flatMap(id => { const a = []; parts.get(id).traverse(c => { if (c.isMesh) a.push(c.material); }); return a; });
@@ -80,7 +100,8 @@ function apply() {
     const id = o.userData.partId, t = state.explode + (asm && id && PART[id].step === state.step ? 0.42 : 0);
     o.position.copy(o.userData.home).addScaledVector(o.userData.ex, t);
   }
-  if (!state.sim) { joints.tiltG.rotation.z = rad(state.tilt); joints.yawG.rotation.y = rad(state.yaw); joints.stabs.forEach(s => s.rotation.z = rad(state.elev)); }
+  let mDir = null;
+  if (!state.sim) { mDir = setNozzle(state.tilt, state.yaw); joints.stabs.forEach(s => s.rotation.z = rad(state.elev)); }
   parts.forEach((o, id) => {
     o.visible = partVisible(id);
     const sel = id === state.selected, hov = id === state.hover, cur = asm && PART[id].step === state.step;
@@ -90,18 +111,17 @@ function apply() {
   const cutOn = state.cut < 468; clipPlane.constant = state.cut; renderer.clippingPlanes = cutOn ? [clipPlane] : [];
   ground.visible = state.explode < 0.03 || state.sim;
   // balance
-  mp = massProps(state.battX); trim = hoverTrim(mp, Math.max(state.tilt, 45));
+  mp = massProps(state.battX); trim = hoverTrim(mp, state.tilt);
   const hov = state.tilt >= 45, show = state.forces && state.explode < 0.03 && !asm;
   overlay.visible = show;
   cgRing.visible = !state.sim;
   if (show && !state.sim) {
     const cg = new THREE.Vector3(...mp.cg); cgBall.position.copy(cg); cgRing.position.set(cg.x, D.groundY + 0.6, cg.z);
-    const up = new THREE.Vector3(0, 1, 0), k = 0.26;
-    const mDir = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion().multiplyQuaternions(joints.tiltG.quaternion, joints.yawG.quaternion));
-    arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, hov ? trim.F * k : 0);
+    const up = new THREE.Vector3(0, 1, 0), k = 0.22, ex = nozzleExit(state.tilt);
+    arrows.F.set(new THREE.Vector3(D.fanX, 40, 0), up, hov ? trim.F * k : 0);
     arrows.L.set(new THREE.Vector3(D.rollX, 14, -D.rollZ), up, hov ? trim.L * k : 0);
     arrows.R.set(new THREE.Vector3(D.rollX, 14, D.rollZ), up, hov ? trim.R * k : 0);
-    arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, (hov ? trim.M : mp.mass * 0.35) * k);
+    arrows.M.set(new THREE.Vector3(...ex.pos), mDir || up, (hov ? trim.M * ex.eff : mp.mass * 0.3) * k);
     arrows.W.set(cg.clone(), new THREE.Vector3(0, -1, 0), 60);
   }
   hud(); syncUI(); dirty = Math.max(dirty, 2);
@@ -109,15 +129,15 @@ function apply() {
 
 // ---------- HUD
 function hud() {
-  const all = THRUSTERS.reduce((a, t) => a + t.maxG, 0);
-  const tw = all / mp.mass, thr = Math.max(trim.F / THRUSTERS[0].maxG, trim.M / THRUSTERS[1].maxG, trim.L / THRUSTERS[2].maxG);
+  const usable = THRUSTERS[0].maxG + THRUSTERS[1].maxG * nozzleExit(90).eff + THRUSTERS[2].maxG + THRUSTERS[3].maxG;
+  const tw = usable / mp.mass, thr = Math.max(trim.f, trim.fLift);
   const cls = v => v >= 1.8 ? 'ok' : v >= 1.5 ? 'warn' : 'bad';
   $('#hud').innerHTML = [
     ['Weight', `${Math.round(mp.mass)} g`, ''],
     ['Balance point', `${Math.round(mp.cg[0])} mm`, ''],
-    ['Lift share F / M / roll pair', `${Math.round(100 * trim.F / mp.mass)} / ${Math.round(100 * trim.M * Math.sin(rad(Math.max(state.tilt, 45))) / mp.mass)} / ${Math.round(200 * trim.L / mp.mass)}%`, ''],
-    ['Thrust-to-weight, 4 motors', `${tw.toFixed(2)} (est.)`, cls(tw)],
-    state.tilt >= 45 ? ['Hover throttle', `${Math.round(thr * 100)}% (est.)`, thr < 0.7 ? 'ok' : thr < 0.8 ? 'warn' : 'bad'] : ['Mode', 'wing-borne', ''],
+    ['Lift share: lift fan / nozzle / roll pair', `${Math.round(100 * trim.F / mp.mass)} / ${Math.round(100 * trim.Mv / mp.mass)} / ${Math.round(200 * trim.L / mp.mass)}%`, ''],
+    ['Thrust-to-weight', `${tw.toFixed(2)} (est.)`, cls(tw)],
+    state.tilt >= 45 ? ['Hover throttle', `${Math.round(thr * 100)}% (est.)`, thr < 0.65 ? 'ok' : thr < 0.75 ? 'warn' : 'bad'] : ['Mode', 'wing-borne', ''],
   ].map(([k, v, c]) => `<span class="chip ${c}">${k}<b>${v}</b></span>`).join('');
 }
 
@@ -144,7 +164,7 @@ $('#search').addEventListener('input', e => buildTree(e.target.value));
 // ---------- inspector
 function cadBlock(p) {
   const c = MANIFEST[p.id]; if (!c) return '';
-  return `<div class="blk"><h4>Printable file</h4><p>${CAD[p.id] || ''}</p><dl class="kv" style="margin:8px 0 0"><dt>On the bed</dt><dd>${c.bed.map(v => Math.round(v)).join(' x ')} mm</dd></dl>
+  return `<div class="blk"><h4>Printable file</h4><p>${CAD[p.id] || c.note || ''}</p><dl class="kv" style="margin:8px 0 0"><dt>On the bed</dt><dd>${c.bed.map(v => Math.round(v)).join(' x ')} mm</dd></dl>
     <div class="acts"><a class="tog" href="cad/${c.file}.stl" download>Download STL</a></div><p style="margin-top:8px;font-size:12px;color:var(--mute)">${c.material === 'LW-PLA' ? PRINT_LW : c.material === 'PETG' ? PRINT_PETG : 'Clear PETG, vase mode.'} STEP files are in the repository under cad/step.</p></div>`;
 }
 function wireBlock(p) {
@@ -271,7 +291,7 @@ const simGrid = new THREE.Mesh(new THREE.PlaneGeometry(600000, 600000).rotateX(-
 }));
 simGrid.position.y = D.groundY + 1; simGrid.visible = false; simGrid.renderOrder = -1; scene.add(simGrid);
 scene.add(sun.target);
-const SUN0 = sun.position.clone(), propOrder = ['propF', 'propM', 'propL', 'propR'];
+const SUN0 = sun.position.clone();
 function makePad(el) {
   const v = { x: 0, y: 0 }, knob = el.querySelector('i'); let id = null;
   const set = e => { const r = el.getBoundingClientRect(); let x = (e.clientX - r.left) / r.width * 2 - 1, y = -((e.clientY - r.top) / r.height * 2 - 1); const n = Math.hypot(x, y); if (n > 1) { x /= n; y /= n; } v.x = x; v.y = y; knob.style.transform = `translate(${x * 43}px,${-y * 43}px)`; };
@@ -301,16 +321,18 @@ function simFrame(dt, now) {
   const s = sim.s, q = new THREE.Quaternion(s.q[0], s.q[1], s.q[2], s.q[3]);
   const cgW = new THREE.Vector3(s.p[0] * 1000, D.groundY + s.p[1] * 1000, s.p[2] * 1000);
   model.root.quaternion.copy(q); model.root.position.copy(cgW).sub(new THREE.Vector3(...mp.cg).applyQuaternion(q));
-  joints.tiltG.rotation.z = rad(s.tilt); joints.yawG.rotation.y = rad(s.nozzle); joints.stabs[0].rotation.z = rad(s.tailR); joints.stabs[1].rotation.z = rad(s.tailL);
+  const mDir = setNozzle(s.tilt, s.nozzle); joints.stabs[0].rotation.z = rad(s.tailR); joints.stabs[1].rotation.z = rad(s.tailL);
   state.tilt = s.tilt;
-  propOrder.forEach((id, i) => { const p = parts.get(id), f = Math.sqrt(s.T[i] / sim.thrusters[i].max); p.rotateY(p.userData.dir * dt * 70 * f); p.userData.disc.material.opacity = 0.18 * Math.min(1, f * 1.6); });
+  const sp = i => Math.sqrt(Math.max(0, s.T[i]) / sim.thrusters[i].max);
+  fans.lift.rotation.x += dt * 60 * sp(0); fans.main.rotation.x -= dt * 80 * sp(1);
+  [['propL', 2], ['propR', 3]].forEach(([id, i]) => { const p = parts.get(id), f = sp(i); p.rotateY(p.userData.dir * dt * 70 * f); p.userData.disc.material.opacity = 0.18 * Math.min(1, f * 1.6); });
   // camera, light and ground follow the aircraft
   const d = cgW.clone().sub(controls.target); controls.target.add(d); camera.position.add(d);
   sun.position.copy(SUN0).add(cgW); sun.target.position.copy(cgW); ground.position.set(cgW.x, D.groundY, cgW.z); simGrid.position.x = cgW.x; simGrid.position.z = cgW.z;
   if (overlay.visible) {
-    const up = new THREE.Vector3(0, 1, 0), kL = 26, mDir = new THREE.Vector3(1, 0, 0).applyQuaternion(new THREE.Quaternion().multiplyQuaternions(joints.tiltG.quaternion, joints.yawG.quaternion));
-    arrows.F.set(new THREE.Vector3(D.fanX, 30, 0), up, s.T[0] * kL); arrows.L.set(new THREE.Vector3(D.rollX, 14, -D.rollZ), up, s.T[2] * kL); arrows.R.set(new THREE.Vector3(D.rollX, 14, D.rollZ), up, s.T[3] * kL);
-    arrows.M.set(new THREE.Vector3(D.pivotX, 0, 0).addScaledVector(mDir, 30), mDir, s.T[1] * kL);
+    const up = new THREE.Vector3(0, 1, 0), kL = 22;
+    arrows.F.set(new THREE.Vector3(D.fanX, 40, 0), up, s.T[0] * kL); arrows.L.set(new THREE.Vector3(D.rollX, 14, -D.rollZ), up, s.T[2] * kL); arrows.R.set(new THREE.Vector3(D.rollX, 14, D.rollZ), up, s.T[3] * kL);
+    arrows.M.set(new THREE.Vector3(...nozzleExit(s.tilt).pos), mDir, s.T[1] * nozzleExit(s.tilt).eff * kL);
     const cgB = new THREE.Vector3(...mp.cg); cgBall.position.copy(cgB); arrows.W.set(cgB, new THREE.Vector3(0, -1, 0).applyQuaternion(q.clone().invert()), 60);
   }
   if (now - simHudAt > 110) {
@@ -351,7 +373,10 @@ function frame(now) {
   else if (Math.abs(state.tilt - state.tiltTarget) > 0.2) { state.tilt += (state.tiltTarget - state.tilt) * Math.min(1, dt * 4); if (Math.abs(state.tilt - state.tiltTarget) <= 0.2) state.tilt = state.tiltTarget; apply(); }
   if (camAnim) { const k = Math.min(1, (now - camAnim.t0) / camAnim.ms), e = k * k * (3 - 2 * k); controls.target.lerpVectors(camAnim.a, camAnim.b, e); camera.position.lerpVectors(camAnim.pa, camAnim.pb, e); if (k >= 1) camAnim = null; }
   const hov = state.tilt >= 45;
-  if (!state.sim) props.forEach(p => { const on = state.spin && (hov || p === parts.get('propM')), d = p.userData.disc.material, tgt = on ? 0.16 : 0; if (on) { p.rotateY(p.userData.dir * dt * 38); dirty = Math.max(dirty, 1); } if (Math.abs(d.opacity - tgt) > 0.004) { d.opacity += (tgt - d.opacity) * 0.15; dirty = Math.max(dirty, 1); } else d.opacity = tgt; });
+  if (!state.sim) {
+    props.forEach(p => { const on = state.spin && hov, d = p.userData.disc.material, tgt = on ? 0.16 : 0; if (on) { p.rotateY(p.userData.dir * dt * 38); dirty = Math.max(dirty, 1); } if (Math.abs(d.opacity - tgt) > 0.004) { d.opacity += (tgt - d.opacity) * 0.15; dirty = Math.max(dirty, 1); } else d.opacity = tgt; });
+    if (state.spin) { if (hov) fans.lift.rotation.x += dt * 30; fans.main.rotation.x -= dt * 40; dirty = Math.max(dirty, 1); }
+  }
   if (camAnim) dirty = Math.max(dirty, 1);
   controls.update();
   if (dirty > 0) { renderer.render(scene, camera); dirty--; }

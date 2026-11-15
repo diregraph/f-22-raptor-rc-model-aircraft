@@ -96,12 +96,47 @@ yaw), three servo outputs.
 - **Not checked:** clashes are checked with the nozzle straight only, not through its
   travel.
 
-## If it passes: what changes on the aircraft
+## Integrated into the airframe (drawn ahead of the thrust test)
 
-- The aft bridge and tail booms are redrawn around a round engine nacelle.
-- The main fan breathes through an opening on the spine behind the lift fan, which is
-  where the real aircraft has its auxiliary inlet doors.
-- The tilt mount (two bearings, yoke, cradle, two servos) is deleted; three nozzle
-  servos replace two.
-- The flight controller's mixer uses `solve()` and the measured thrust-versus-deflection
-  curve.
+The twin and the CAD now show the aircraft with the ducted main fan and nozzle fitted.
+This was drawn before any measurement at the owner's request; if the thrust test
+fails, the aft fuselage goes back to the open-propeller version in git history.
+
+- **Engine nacelle.** A round nacelle on the aft bridge holds the fan duct, which slides
+  in from the rear.
+- **Air inlet.** The rear 36 mm of the centre section is open above and below, between
+  the bay and the fan. The dorsal opening is where the real aircraft has its auxiliary
+  inlet doors.
+- **Nozzle between the booms.** Checked by script in 15 poses (deflection 0 to 100
+  degrees, yaw left, centre and right): no clash with booms, fins, tailplanes or ground.
+  The yaw swing is tapered from 20 to 8 degrees past 90 degrees deflection to keep that
+  true. The servos and gears stand above the tail and are visible.
+- **Taller skids.** The nozzle hangs 140 mm below the datum when it points down, so the
+  ground line moved from 85 to 150 mm below the datum.
+- **Tilt mount deleted:** two bearings, yoke, cradle and two servos gone; three nozzle
+  servos, three pinions and three collars added.
+- **Speed controllers** now stand on edge against the bay side walls, because the bay
+  lost its rear 26 mm to the inlet.
+- **Controller behaviour.** With the nozzle straight, nothing aft of the balance point
+  can hold the tail up. The flight controller therefore keeps the nozzle at least 60
+  degrees down until the wing is flying, whatever the pilot asks for.
+
+### Lift fan
+
+`lift_fan_rotor` is a 120 mm, 9-blade rotor on the existing spider and motor, a mirror
+image of the main fan so the two torques oppose. It is sized by motor torque: about
+20 A in the hover at 13,500 rpm, an estimated 1.3 kg at 30 A. `lift_fan_ring` is a hard
+PETG shroud pressed into the fan bay so the 0.6 mm tip gap does not depend on the soft
+LW-PLA body. Test it on the thrust stand the same way as the main fan.
+
+### Estimated numbers for the integrated aircraft
+
+| Quantity | Value |
+|---|---|
+| All-up weight | about 1,920 g (was 1,575 g with open propellers) |
+| Balance point | 89 mm behind the datum (was 70 mm) |
+| Usable thrust / weight | about 1.57 |
+| Hover load: lift fan / main fan / each roll motor | 58% / 68% / 68% of estimated maximum |
+
+These margins are thin and rest on three unmeasured thrust figures (1,300 g lift fan,
+850 g main fan, 500 g per roll motor) and a guessed 15% nozzle loss.

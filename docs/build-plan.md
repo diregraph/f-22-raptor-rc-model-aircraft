@@ -93,7 +93,7 @@ Wing loading stays low, so forward flight is slow and forgiving.
 | 5 V 3 A regulator (UBEC) | 2 | Powers servos and ESP32 |
 | Propellers 6 in (6040 or 6045), clockwise + anticlockwise | 10 pairs | Main crash consumable |
 | Propellers 4 in, clockwise + anticlockwise | 6 pairs | Roll motors, buried in the wings |
-| MG90S servos | 7 | 4 spares + 3 for the nozzle demo |
+| MG90S servos | 6 | 3 for the nozzle + 3 spares (the 2 owned ones are spare too) |
 | XT60 connectors, 14 AWG silicone wire, heat-shrink | — | Power harness |
 | Low-voltage buzzer alarm for the battery | 2 | |
 | Second 4-cell 3300 mAh battery | 1 | Optional; doubles test time per day |
@@ -183,14 +183,10 @@ foamed wall with 4% infill.
 |---|---|---|---|
 | `spar_carrier` | PETG | 30 x 204 x 25 | 15 |
 | `fan_spider` | PETG | 114 x 198 x 24 | 32 |
-| `tilt_bearing_left` | PETG | 41 x 31 x 22 | 8 |
-| `tilt_bearing_right` | PETG | 28 x 27 x 20 | 7 |
-| `tilt_yoke` | PETG | 35 x 140 x 28 | 20 |
-| `motor_cradle` | PETG | 41 x 43 x 32 | 6 |
 | `roll_mount_right` | PETG | 45 x 32 x 28 | 5 |
 | `roll_mount_left` | PETG | 45 x 32 x 28 | 5 |
-| `skid_front` | PETG | 90 x 200 x 30 | 14 |
-| `skid_rear` | PETG | 90 x 200 x 30 | 14 |
+| `skid_front` | PETG | 155 x 200 x 30 | 18 |
+| `skid_rear` | PETG | 155 x 200 x 30 | 18 |
 | `battery_tray` | PETG | 142 x 50 x 10 | 14 |
 | `fc_sled` | PETG | 88 x 36 x 11 | 7 |
 | `nose_plug` | PETG | 74 x 138 x 11 | 17 |
@@ -198,12 +194,12 @@ foamed wall with 4% infill.
 | `canopy` | PETG-clear | 180 x 68 x 43 | 15 |
 | `nose` | LW-PLA | 86 x 160 x 150 | 58 |
 | `nose_cone` | LW-PLA | 65 x 111 x 128 | 18 |
-| `fan_bay` | LW-PLA | 84 x 216 x 231 | 86 |
-| `centre_section` | LW-PLA | 88 x 216 x 200 | 93 |
-| `hatch` | LW-PLA | 197 x 167 x 40 | 47 |
-| `aft_bridge` | LW-PLA | 84 x 216 x 90 | 41 |
+| `fan_bay` | LW-PLA | 84 x 216 x 231 | 107 |
+| `centre_section` | LW-PLA | 82 x 216 x 200 | 89 |
+| `hatch` | LW-PLA | 171 x 167 x 40 | 42 |
+| `aft_bridge` | LW-PLA | 94 x 216 x 90 | 51 |
 | `tail_boom_right` | LW-PLA | 48 x 24 x 170 | 11 |
-| `tail_boom_left` | LW-PLA | 48 x 24 x 170 | 10 |
+| `tail_boom_left` | LW-PLA | 48 x 24 x 170 | 11 |
 | `wing_inner_right` | LW-PLA | 304 x 27 x 77 | 28 |
 | `wing_inner_left` | LW-PLA | 304 x 27 x 77 | 28 |
 | `wing_outer_right` | LW-PLA | 238 x 24 x 165 | 22 |
@@ -212,14 +208,27 @@ foamed wall with 4% infill.
 | `stabilator_left` | LW-PLA | 160 x 36 x 107 | 11 |
 | `fin_right` | LW-PLA | 202 x 157 x 9 | 15 |
 | `fin_left` | LW-PLA | 202 x 157 x 9 | 15 |
+| `lift_fan_rotor` | PETG | 120 x 120 x 45 | 34 |
+| `lift_fan_ring` | PETG | 134 x 134 x 42 | 26 |
+| `edf_impeller` | PETG | 79 x 80 x 51 | 36 |
+| `edf_duct` | PETG | 134 x 110 x 100 | 82 |
+| `edf_tail_cone` | PETG | 34 x 34 x 36 | 8 |
+| `nozzle_segment_1` | PETG | 96 x 142 x 92 | 39 |
+| `nozzle_segment_2` | PETG | 172 x 142 x 87 | 48 |
+| `nozzle_segment_3` | PETG | 89 x 106 x 90 | 28 |
+| `bearing_collar_half` | PETG | 10 x 111 x 55 | 6 |
+| `bearing_collar_half_j1` | PETG | 10 x 100 x 50 | 5 |
+| `servo_pinion` | PETG | 55 x 55 x 5 | 7 |
+
+Print quantities above one: `bearing_collar_half` x 4, `bearing_collar_half_j1` x 2, `servo_pinion` x 3.
 
 **LW-PLA slicing.** The shell files are solid bodies. Slice with 1 wall, 4% gyroid
 infill, 3 bottom layers and 0 top layers so they print hollow. The inner wing
 panels have a 304 mm root chord: place them diagonally on the 220 mm bed.
 
-**PETG first.** Print one clip test, then the tilt mount, fan spider, spar carrier
-and roll-motor mounts: with the three tubes that is a flyable test frame before any shell
-exists.
+**PETG first.** Print one clip test, then the fan spider, spar carrier and roll-motor
+mounts, then the main fan and nozzle bench kit (`docs/ducted-propulsion.md`). The thrust
+test on that kit is the gate for everything else.
 
 Check on the first prints, then adjust the parameters at the top of `cad/build.py`:
 

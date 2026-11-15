@@ -11,22 +11,30 @@ export const D = {
   wing: { rootZ: 108, midZ: 180, tipZ: 345, rootLE: 70, rootC: 300, tipC: 95, sweep: 34, y: -9 },
   stab: { pivotX: -400, pivotY: -9, rootZ: 110, tipZ: 217, rootLE: -328, rootC: 160, tipC: 62, sweep: 34 },
   fin: { rootLE: -255, rootC: 170, tipC: 55, h: 150, sweep: 40, cant: 25, z: 96 },
-  groundY: -85,
+  groundY: -150,
+  nozzle: { xJ1: -272, yAx: 2, L: [58, 104, 56], loss90: 0.15 },   // main fan + swivel nozzle (cad/propulsion.py kit frame sits here, turned to face aft)
+  lift: { y0: -60 },
   battery: { xDefault: -52, xMin: -56, xMax: -52 },
 };
 
 // Thrust figures are ESTIMATES until measured on the kitchen-scale thrust stand.
+// where the main jet leaves the nozzle, and which way it pushes, for a given deflection (planar approximation of site/js/nozzle.js)
+export function nozzleExit(deflectionDeg) {
+  const d = deflectionDeg * Math.PI / 180, [l1, l2, l3] = D.nozzle.L;
+  return { pos: [D.nozzle.xJ1 - (l1 + l2 * Math.cos(d / 2) + l3 * Math.cos(d)), D.nozzle.yAx - (l2 * Math.sin(d / 2) + l3 * Math.sin(d)), 0],
+    eff: 1 - D.nozzle.loss90 * Math.min(deflectionDeg, 90) / 90 };
+}
 export const THRUSTERS = [
-  { id: 'F', name: 'Front lift', part: 'motorF', pos: [D.fanX, 10, 0], maxG: 1000, spin: 'CW', prop: '6 in' },
-  { id: 'M', name: 'Main (vectored)', part: 'motorM', pos: [D.pivotX, 0, 0], maxG: 1000, spin: 'CCW', prop: '6 in' },
+  { id: 'F', name: 'Lift fan', part: 'motorF', pos: [D.fanX, 10, 0], maxG: 1300, spin: 'CW', prop: '120 mm printed fan' },
+  { id: 'M', name: 'Main fan (swivel nozzle)', part: 'motorM', pos: nozzleExit(90).pos, maxG: 850, spin: 'CCW', prop: '80 mm printed fan' },
   { id: 'L', name: 'Roll left', part: 'motorL', pos: [D.rollX, D.rollPropY, -D.rollZ], maxG: 500, spin: 'CW', prop: '4 in' },
   { id: 'R', name: 'Roll right', part: 'motorR', pos: [D.rollX, D.rollPropY, D.rollZ], maxG: 500, spin: 'CCW', prop: '4 in' },
 ];
 
 export const JOINTS = {
-  tilt: { axis: 'Z', pivot: [D.pivotX, 0, 0], min: 0, max: 100, servo: 'MG90S', note: '0 = forward flight, 90 = hover, 100 = braking / backing up' },
-  yaw: { axis: 'local Y of tilt yoke', min: -20, max: 20, servo: 'MG90S', note: 'Swings the main thrust left/right. In hover this is yaw control.' },
-  stab: { axis: 'Z', pivot: [D.stab.pivotX, 0, 0], min: -25, max: 25, servo: '9 g', note: 'All-moving tails: together = pitch, opposite = roll.' },
+  tilt: { name: 'nozzle deflection', min: 0, max: 100, servo: '3 x MG90S', note: '0 = straight aft, 90 = straight down, 100 = braking. Solved into three bearing angles by site/js/nozzle.js.' },
+  yaw: { name: 'nozzle yaw swing', min: -20, max: 20, note: 'Bearing 1 swings the bent jet left or right. Only works when the nozzle is deflected.' },
+  stab: { axis: 'Z', pivot: [D.stab.pivotX, D.stab.pivotY, 0], min: -25, max: 25, servo: '9 g', note: 'All-moving tails: together = pitch, opposite = roll.' },
 };
 
 export const MATERIALS = {
@@ -36,19 +44,19 @@ export const MATERIALS = {
   'Bought': { color: '#4aa3ff', blurb: 'Off-the-shelf electronics and hardware.' },
 };
 
-export const GROUPS = ['Backbone', 'Airframe shells', 'Wings & tail', 'Propulsion', 'Vectoring mount', 'Electronics', 'Landing gear'];
+export const GROUPS = ['Backbone', 'Airframe shells', 'Wings & tail', 'Propulsion', 'Main fan & nozzle', 'Electronics', 'Landing gear'];
 
 export const STEPS = [
   { n: 1, title: 'Backbone', text: 'Lay out the two 637 mm longerons and the 676 mm spar. Nothing is fixed yet: the shells slide on first, then the PETG parts clip up from below and lock each shell in place.' },
-  { n: 2, title: 'Lift-fan mount', text: 'Bolt the front motor to the fan spider (4 x M3). With the fan bay on the tubes, snap the spider up onto both longerons through the four pockets in the bay floor.' },
-  { n: 3, title: 'Vectoring mount', text: 'Snap both tilt bearings onto the longerons. Fit the tilt servo to the left bearing, seat the yoke on its horn and stub axle. Yaw servo drops into the yoke; cradle seats on its horn. Bolt on the main motor.' },
+  { n: 2, title: 'Lift-fan mount', text: 'Bolt the lift-fan motor to the fan spider (4 x M3). With the fan bay on the tubes, snap the spider up onto both longerons through the four pockets in the bay floor.' },
+  { n: 3, title: 'Reserved', text: 'The old tilt mount was deleted when the swivel nozzle replaced it. Nothing to fit at this step.' },
   { n: 4, title: 'Centre section and skids', text: 'Slide the centre section onto the longerons behind the fan bay. Clip both skids up through the floor pockets: they lock it. Drop in the battery tray.' },
-  { n: 5, title: 'Electronics', text: 'Flight-controller sled on the left of the bay, receiver and regulator on the right, speed controllers stacked in pairs behind the spar. Plug in servos and motors. Bench-test with propellers OFF.' },
-  { n: 6, title: 'Body shells', text: 'Fan bay slides on from the front until the tubes bottom out. Aft bridge and the two tail booms slide on from the rear. Push the spar through the centre section, across the bay, and clip a carrier block up onto each longeron around it.' },
-  { n: 7, title: 'Tail', text: 'Tail servos drop into the boom pockets from below. Each stabilator turns on a 3 mm wire pushed through the boom. Fins seat in their sockets on the boom tops.' },
+  { n: 5, title: 'Electronics', text: 'Flight-controller sled on the left of the bay floor, receiver and regulator on the right, two speed controllers on edge against each side wall. Plug in servos and motors. Bench-test with the fans OFF their shafts.' },
+  { n: 6, title: 'Body shells and main fan', text: 'Fan bay slides on from the front; press the shroud ring into it. Aft bridge and tail booms slide on from the rear. Push the spar through and clip on its carrier blocks. Bolt the main motor into the fan duct and slide the duct into the nacelle from the rear.' },
+  { n: 7, title: 'Tail and nozzle', text: 'Tail servos, tailplanes and fins as before. Grease the bearing flanges, then build the nozzle outward: segment 1, collar, servo and pinion; segment 2; segment 3. Each bearing must turn freely by hand before its pinion goes on.' },
   { n: 8, title: 'Wings and roll motors', text: 'Slide each inner panel along the spar into its root socket, then the outer panel with its skewer pin. Pin each wing tip to the spar. Clip a roll-motor mount onto the spar inside each wing duct and pin it.' },
   { n: 9, title: 'Nose', text: 'Glue the nose cone to the nose section on its two skewer dowels, and the PETG plug into the back, once. Push the nose into the fan bay and drop the two skewer pins in from the top. Canopy is glued or taped on.' },
-  { n: 10, title: 'Fly-ready', text: 'Strap in the battery and slide it to set the balance. Fit the hatch: tongue in at the front, press down at the rear until the latch clicks. Propellers go on LAST.' },
+  { n: 10, title: 'Fly-ready', text: 'Strap in the battery. Fit the hatch: tongue in at the front, press down at the rear until the latch clicks. Both fan rotors and the roll propellers go on LAST.' },
 ];
 
 // [id, name, group, material, process, mass g, [x,y,z] station, step, lock, note]
@@ -63,11 +71,11 @@ const rows = [
   ['noseCone', 'Nose cone', 'Airframe shells', 'LW-PLA', 'Print', 18, [425, -6, 0], 9, 'Glued to the nose section; two 3 mm bamboo-skewer dowels line it up.', 'The nose is 278 mm long, taller than the printer, so it prints in two pieces. This tip is the first thing to hit the ground: keep spares.'],
   ['noseRing', 'Nose plug', 'Airframe shells', 'PETG', 'Print', 17, [224,  -6,  0], 9, 'Glued into the back of the nose. Plugs 12 mm into the fan bay.', 'A hard PETG collar so the soft nose seats the same way every time.'],
   ['canopy', 'Canopy', 'Airframe shells', 'PETG', 'Print', 15, [335, 45, 0], 9, 'Glued or taped to the nose.', 'Print in clear PETG, vase mode.'],
-  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 86, [135, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', '162 mm duct, 84 mm deep, for the 152 mm (6 in) propeller. The dark recesses at the front corners are the intakes.'],
-  ['tray', 'Centre tray', 'Airframe shells', 'LW-PLA', 'Print', 93, [-70,  -18,  0], 4, 'Slides onto both longerons; the skids and spar carrier blocks clip on through its floor and lock it.', 'Open-top bay for battery and electronics, with pockets in the floor for the skids.'],
-  ['hatch', 'Top hatch', 'Airframe shells', 'LW-PLA', 'Print', 47, [-70,  26,  0], 10, 'Front tongue under the fan bay, rear PETG latch. No tools.', 'Lift off for battery swaps. The dorsal spine stiffens it.'],
-  ['aftBridge', 'Aft bridge', 'Airframe shells', 'LW-PLA', 'Print', 41, [-210,  -6,  0], 6, 'Slides onto the longerons between the centre section and the booms.', 'U-shaped: the notch is the swing space for the main propeller. The spar passes through it.'],
-  ['boomL', 'Tail boom, left', 'Airframe shells', 'LW-PLA', 'Print', 10, [-345, 0, -96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
+  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 107, [135, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', 'Houses the lift fan: a 124 mm bore for the shroud ring. The dark recesses at the front corners are the intakes.'],
+  ['tray', 'Centre tray', 'Airframe shells', 'LW-PLA', 'Print', 89, [-70,  -18,  0], 4, 'Slides onto both longerons; the skids and spar carrier blocks clip on through its floor and lock it.', 'Open-top bay for battery and electronics. Its rear end is open above and below: that is the air inlet for the main fan.'],
+  ['hatch', 'Top hatch', 'Airframe shells', 'LW-PLA', 'Print', 42, [-70,  26,  0], 10, 'Front tongue under the fan bay, rear PETG latch. No tools.', 'Lift off for battery swaps. The dorsal spine stiffens it.'],
+  ['aftBridge', 'Aft bridge', 'Airframe shells', 'LW-PLA', 'Print', 51, [-210,  -6,  0], 6, 'Slides onto the longerons between the centre section and the booms.', 'The engine nacelle: the main fan duct slides into its bore from the rear.'],
+  ['boomL', 'Tail boom, left', 'Airframe shells', 'LW-PLA', 'Print', 11, [-345, 0, -96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
   ['boomR', 'Tail boom, right', 'Airframe shells', 'LW-PLA', 'Print', 11, [-345, 0, 96], 6, 'Slides onto the longeron from the rear; snap detent.', 'Houses a tail servo. Sockets for stabilator and fin.'],
   // ---- Wings & tail
   ['wingInL', 'Wing, inner left', 'Wings & tail', 'LW-PLA', 'Print', 28, [-80, -9, -142], 8, 'Slides along the spar; the root keys 5 mm into a socket in the body.', 'Print upright (span vertical), placed diagonally on the bed: the root chord is 304 mm.'],
@@ -80,9 +88,8 @@ const rows = [
   ['finL', 'Fin, left', 'Wings & tail', 'LW-PLA', 'Print', 15, [-320, 80, -125], 7, 'Root sits in a matching socket moulded into the boom top; glue or tape.', 'Fixed, canted 25 degrees. No rudder: yaw comes from the vectored motor.'],
   ['finR', 'Fin, right', 'Wings & tail', 'LW-PLA', 'Print', 15, [-320, 80, 125], 7, 'Root sits in a matching socket moulded into the boom top; glue or tape.', 'Fixed, canted 25 degrees.'],
   // ---- Propulsion
-  ['fanSpider', 'Lift-fan spider', 'Propulsion', 'PETG', 'Print', 32, [130, -12, 0], 2, 'Four C-clips onto the longerons.', 'X-brace that carries the front motor in the middle of the duct.'],
-  ['motorF', 'Front lift motor', 'Propulsion', 'Bought', 'Owned', 34, [130, 0, 0], 2, '4 x M3 screws into the spider pad.', 'EMAX ECO II 2306 1700KV. Spins clockwise.'],
-  ['propF', 'Front propeller, 6 in', 'Propulsion', 'Bought', 'Buy', 6, [130, 17, 0], 10, 'Motor nut. Fit last.', '6040 or 6045, clockwise. Main crash consumable.'],
+  ['fanSpider', 'Lift-fan spider', 'Propulsion', 'PETG', 'Print', 32, [130, -12, 0], 2, 'Four C-clips onto the longerons.', 'X-brace that carries the lift-fan motor in the middle of the duct; its four arms also straighten the flow a little.'],
+  ['motorF', 'Lift fan motor', 'Propulsion', 'Bought', 'Owned', 34, [130, 0, 0], 2, '4 x M3 screws into the spider pad.', 'EMAX ECO II 2306 1700KV. Spins clockwise, opposite to the main fan.'],
   ['podL', 'Roll motor mount, left', 'Propulsion', 'PETG', 'Print', 5, [-118, -22, -240], 8, 'Clips up onto the spar inside the wing duct; a 2 mm pin through clip and spar stops it sliding.', 'Hangs the motor just ahead of the spar so the propeller sits at the upper surface of the wing. Replaces the old wing-tip pod.'],
   ['podR', 'Roll motor mount, right', 'Propulsion', 'PETG', 'Print', 5, [-118, -22, 240], 8, 'Clips up onto the spar inside the wing duct; a 2 mm pin through clip and spar stops it sliding.', 'Hangs the motor just ahead of the spar so the propeller sits at the upper surface of the wing. Replaces the old wing-tip pod.'],
   ['motorL', 'Roll motor, left', 'Propulsion', 'Bought', 'Owned', 34, [-108, -14, -240], 8, '4 x M3 screws up through the mount pad.', 'EMAX ECO II 2306 1700KV, buried in the wing. Carries part of the weight in hover and speeds up or slows down to roll.'],
@@ -90,14 +97,24 @@ const rows = [
   ['propL', 'Roll propeller, left, 4 in', 'Propulsion', 'Bought', 'Buy', 4, [-108, 2, -240], 10, 'Motor nut. Fit last.', '4 in three-blade, turning in a 110 mm duct through the wing.'],
   ['propR', 'Roll propeller, right, 4 in', 'Propulsion', 'Bought', 'Buy', 4, [-108, 2, 240], 10, 'Motor nut. Fit last.', '4 in three-blade, turning in a 110 mm duct through the wing.'],
   // ---- Vectoring mount
-  ['bearingL', 'Tilt bearing, left', 'Vectoring mount', 'PETG', 'Print', 8, [-300, 0, -92], 3, 'C-clip onto the longeron.', 'Holds the tilt servo.'],
-  ['bearingR', 'Tilt bearing, right', 'Vectoring mount', 'PETG', 'Print', 7, [-300, 0, 92], 3, 'C-clip onto the longeron.', 'Plain bearing for the yoke stub axle.'],
-  ['tiltServo', 'Tilt servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-306, 0, -73], 3, 'Slides into the bearing plate window from inboard; two servo screws.', 'TowerPro MG90S (metal gears). Rotates the yoke 0 to 100 degrees.'],
-  ['yoke', 'Tilt yoke', 'Vectoring mount', 'PETG', 'Print', 20, [-300, 0, 12], 3, 'Stock servo horn sits in a recess on the left end; stub axle runs in the right bearing.', 'The thrust line passes through this axis, so the servo only fights friction, not thrust.'],
-  ['yawServo', 'Yaw servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-306, 2, 0], 3, 'Drops into the yoke frame from above; two servo screws.', 'TowerPro MG90S. Swings the motor 20 degrees each way.'],
-  ['cradle', 'Motor cradle', 'Vectoring mount', 'PETG', 'Print', 6, [-322, 0, 0], 3, 'Stock servo horn sits in a recess under the top arm; a printed pin pivots in the yoke stirrup.', 'C-bracket that wraps the yaw servo.'],
-  ['motorM', 'Main motor', 'Vectoring mount', 'Bought', 'Owned', 34, [-342, 0, 0], 3, '4 x M3 screws into the cradle.', 'EMAX ECO II 2306 1700KV. Spins anticlockwise to cancel the front motor torque.'],
-  ['propM', 'Main propeller, 6 in', 'Vectoring mount', 'Bought', 'Buy', 6, [-358, 0, 0], 10, 'Motor nut. Fit last.', '6040 or 6045, anticlockwise (pusher).'],
+  ['liftRotor', 'Lift fan rotor, 120 mm', 'Propulsion', 'PETG', 'Print', 34, [130, 8, 0], 10, 'Clamps on the motor shaft with the propeller nut. Fit last.', 'Nine blades, sized to hover at about 13,500 rpm and 20 A. Mirror image of the main fan so the two torques oppose.'],
+  ['liftRing', 'Lift fan shroud ring', 'Propulsion', 'PETG', 'Print', 26, [130, 17, 0], 6, 'Pressed into the fan bay from the top; its lip sits in a seat.', 'A hard, round surface 0.6 mm from the blade tips. The soft body alone could not hold that gap.'],
+  ['edfDuct', 'Main fan duct', 'Main fan & nozzle', 'PETG', 'Print', 82, [-225, 2, 0], 6, 'Slides into the nacelle from the rear until its flange meets the body.', 'Shroud, bellmouth, five straightening vanes, the motor plate, the first nozzle bearing and its servo bracket, in one print.'],
+  ['motorM', 'Main fan motor', 'Main fan & nozzle', 'Bought', 'Owned', 34, [-218, 2, 0], 6, '4 x M3 screws through the motor plate, reached with the tail cone off.', 'EMAX ECO II 2306 1700KV inside the duct. If the thrust test falls short this is the motor to swap for a higher-speed one.'],
+  ['impeller', 'Main fan rotor, 80 mm', 'Main fan & nozzle', 'PETG', 'Print', 36, [-188, 2, 0], 10, 'Clamps on the motor shaft with the propeller nut. Fit last.', 'Seven blades for about 18,000 rpm. Print spares and balance each one.'],
+  ['tailCone', 'Fan tail cone', 'Main fan & nozzle', 'PETG', 'Print', 8, [-262, 2, 0], 6, 'Push fit behind the motor plate.', 'Smooths the flow off the hub. Pull it off to reach the motor screws.'],
+  ['seg1', 'Nozzle segment 1', 'Main fan & nozzle', 'PETG', 'Print', 39, [-300, 2, 0], 7, 'Its flange sits against the duct flange; a two-piece collar clamps them.', 'Turns about the duct axis. Carries the servo for bearing 2.'],
+  ['seg2', 'Nozzle segment 2', 'Main fan & nozzle', 'PETG', 'Print', 48, [-380, 2, 0], 7, 'Collar at each end.', 'The wedge: both its ends are canted 40 degrees. Carries the servo for bearing 3.'],
+  ['seg3', 'Nozzle segment 3', 'Main fan & nozzle', 'PETG', 'Print', 28, [-462, 2, 0], 7, 'Collar to segment 2.', 'The exit, slightly narrowed to speed the jet up.'],
+  ['collar1', 'Bearing 1 collar (2 halves)', 'Main fan & nozzle', 'PETG', 'Print', 10, [-272, 2, 0], 7, 'Two halves around the flange pair, held by a zip tie in the groove.', 'Grease the flange faces. The collar must turn freely by hand before any servo is fitted.'],
+  ['collar2', 'Bearing 2 collar (2 halves)', 'Main fan & nozzle', 'PETG', 'Print', 12, [-330, 2, 0], 7, 'Two halves and a zip tie.', 'Canted 40 degrees.'],
+  ['collar3', 'Bearing 3 collar (2 halves)', 'Main fan & nozzle', 'PETG', 'Print', 12, [-434, 2, 0], 7, 'Two halves and a zip tie.', 'Canted 40 degrees the other way.'],
+  ['pinion1', 'Servo pinion 1', 'Main fan & nozzle', 'PETG', 'Print', 7, [-280, -66, 39], 7, 'The stock servo horn presses into a recess; horn screw through the centre.', '42 teeth on 84: the servo turns twice the bearing angle.'],
+  ['pinion2', 'Servo pinion 2', 'Main fan & nozzle', 'PETG', 'Print', 7, [-320, 60, 30], 7, 'Stock servo horn in a recess.', 'Rides on segment 1.'],
+  ['pinion3', 'Servo pinion 3', 'Main fan & nozzle', 'PETG', 'Print', 7, [-420, 60, 20], 7, 'Stock servo horn in a recess.', 'Rides on segment 2.'],
+  ['nzServo1', 'Nozzle servo 1', 'Main fan & nozzle', 'Bought', 'Buy', 14, [-255, -66, 39], 7, 'Drops into the bracket on the duct; two servo screws.', 'TowerPro MG90S. Turns the whole nozzle about the duct axis and swings it for yaw.'],
+  ['nzServo2', 'Nozzle servo 2', 'Main fan & nozzle', 'Bought', 'Buy', 14, [-310, 62, 28], 7, 'Bracket on segment 1.', 'TowerPro MG90S. Bearing 2.'],
+  ['nzServo3', 'Nozzle servo 3', 'Main fan & nozzle', 'Bought', 'Buy', 14, [-410, 62, 18], 7, 'Bracket on segment 2.', 'TowerPro MG90S. Bearing 3.'],
   // ---- Electronics
   ['battery', 'Battery, 4-cell 3300 mAh', 'Electronics', 'Bought', 'Owned', 370, [-52,  -3,  0], 10, 'Hook-and-loop strap on the tray.', 'Heaviest part. It sits against the front of the bay, just ahead of the spar, with only a few millimetres of slide.'],
   ['batteryTray', 'Battery tray', 'Electronics', 'PETG', 'Print', 14, [-52,  -19,  0], 4, 'Sits on the bay floor and slides fore and aft; hook-and-loop underneath.', 'Lets you shift the battery to trim balance without tools.'],
@@ -105,17 +122,17 @@ const rows = [
   ['esp32', 'ESP32 DevKit v1', 'Electronics', 'Bought', 'Owned', 10, [-52, -7, -55], 5, 'Pin headers into the sled socket.', 'Runs madflight. Reads the gyro and receiver, drives 4 motors and 4 servos.'],
   ['imu', 'Gyro board (MPU6050)', 'Electronics', 'Bought', 'Buy', 3, [-98, -8, -55], 5, 'Foam tape on the sled.', 'Sits close to the balance point so it feels rotation, not sideways shake.'],
   ['rx', 'Receiver FS-iA6B', 'Electronics', 'Bought', 'Owned', 15, [-52, -7, 55], 5, 'Snap clip.', 'Set to PPM output: one wire carries all channels.'],
-  ['ubec', '5 V regulator', 'Electronics', 'Bought', 'Buy', 12, [-95, -13, 68], 5, 'Snap clip.', 'Feeds servos and ESP32 from the flight battery.'],
-  ['escF', 'Speed controller, front', 'Electronics', 'Bought', 'Buy', 26, [-149, -8, -47], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
-  ['escM', 'Speed controller, main', 'Electronics', 'Bought', 'Buy', 26, [-149, -8, 47], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
-  ['escL', 'Speed controller, left roll', 'Electronics', 'Bought', 'Buy', 26, [-149, -17, -47], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
-  ['escR', 'Speed controller, right roll', 'Electronics', 'Bought', 'Buy', 26, [-149, -17, 47], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
-  ['harness', 'Wiring harness', 'Electronics', 'Bought', 'Solder', 45, [-110, -8, 0], 5, 'Plugs: XT60 to the battery, 3-pin leads to the ESP32 sled, bullet plugs to the motors.', 'Red and black 14 AWG power pair to each speed controller; three thin wires from each controller to its motor; servo and signal leads to the ESP32. Solder it once on the bench as one loom so it lifts out whole.'],
+  ['ubec', '5 V regulator', 'Electronics', 'Bought', 'Buy', 12, [-95, -13, 58], 5, 'Snap clip.', 'Feeds servos and ESP32 from the flight battery.'],
+  ['escF', 'Speed controller, front', 'Electronics', 'Bought', 'Buy', 26, [-53, -5, -76], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
+  ['escM', 'Speed controller, main', 'Electronics', 'Bought', 'Buy', 26, [-53, -5, 76], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
+  ['escL', 'Speed controller, left roll', 'Electronics', 'Bought', 'Buy', 26, [-105, -5, -76], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
+  ['escR', 'Speed controller, right roll', 'Electronics', 'Bought', 'Buy', 26, [-105, -5, 76], 5, 'Press-in clip.', '30 to 40 A, 4-cell rated.'],
+  ['harness', 'Wiring harness', 'Electronics', 'Bought', 'Solder', 45, [-120, -6, 0], 5, 'Plugs: XT60 to the battery, 3-pin leads to the ESP32 sled, bullet plugs to the motors.', 'Red and black 14 AWG power pair to each speed controller; three thin wires from each controller to its motor; servo and signal leads to the ESP32. Solder it once on the bench as one loom so it lifts out whole.'],
   ['stabServoL', 'Tail servo, left', 'Electronics', 'Bought', 'Owned', 10, [-362,  -20,  -96], 7, 'Drops into a pocket from under the boom; a clip holds it.', '9 g servo, shaft down. The horn and pushrod run under the tail so the fin root stays clear.'],
   ['stabServoR', 'Tail servo, right', 'Electronics', 'Bought', 'Owned', 10, [-362,  -20,  96], 7, 'Drops into a pocket from under the boom; a clip holds it.', '9 g servo, shaft down. The horn and pushrod run under the tail so the fin root stays clear.'],
   // ---- Landing gear
-  ['skidF', 'Front skid', 'Landing gear', 'PETG', 'Print', 14, [10,  -62,  0], 4, 'C-clips up onto both longerons through pockets in the body floor.', 'Keeps the main propeller 9 mm off the ground. Flexes on hard landings.'],
-  ['skidR', 'Rear skid', 'Landing gear', 'PETG', 'Print', 14, [-150,  -60,  0], 4, 'C-clips up onto both longerons through pockets in the body floor.', 'Flexes on hard landings; cheap to reprint.'],
+  ['skidF', 'Front skid', 'Landing gear', 'PETG', 'Print', 18, [10, -95, 0], 4, 'C-clips up onto both longerons through pockets in the body floor.', 'Tall, so the nozzle can point straight down on the ground with about 10 mm to spare.'],
+  ['skidR', 'Rear skid', 'Landing gear', 'PETG', 'Print', 18, [-150, -93, 0], 4, 'C-clips up onto both longerons through pockets in the body floor.', 'Tall, so the nozzle can point straight down on the ground with about 10 mm to spare.'],
 ];
 
 export const WIRING_G = 0; // wiring is now the 'harness' part
@@ -144,19 +161,15 @@ export function massProps(batteryX = D.battery.xDefault) {
   return { mass: m, cg, inertia: { roll: Ixx, yaw: Iyy, pitch: Izz } };
 }
 
-// Static hover trim: thrust each motor must make to hold a level hover.
-export function hoverTrim(mp, tiltDeg = 90, rollShare = 0.25) {   // the roll pair carries a quarter of the weight so no motor runs near its limit
-  const rollIdleG = mp.mass * rollShare / 2;
-  const [F, M, L] = THRUSTERS;
-  const s = Math.sin(tiltDeg * Math.PI / 180);
-  const W = mp.mass, xc = mp.cg[0];
-  const aF = F.pos[0] - xc, aM = M.pos[0] - xc, aR = L.pos[0] - xc;
-  // tF + tMv + 2r = W ; tF*aF + tMv*aM + 2r*aR = 0
-  const r = rollIdleG;
-  const tMv = (-(W - 2 * r) * aF - 2 * r * aR) / (aM - aF);
-  const tF = W - 2 * r - tMv;
-  const tM = tMv / Math.max(s, 0.5);
-  return { F: tF, M: tM, L: r, R: r, split: tF / (tF + tMv) };
+// Static hover trim. The roll pair and the main fan run at the same fraction f of their usable thrust; the lift fan
+// then takes whatever balances the pitching moment. Returns grams per motor (M = thrust the fan must make before nozzle loss).
+export function hoverTrim(mp, deflectionDeg = 90) {
+  const [F, M, L] = THRUSTERS, ex = nozzleExit(Math.max(deflectionDeg, 45)), W = mp.mass, xc = mp.cg[0];
+  const s = Math.max(Math.sin(Math.max(deflectionDeg, 45) * Math.PI / 180), 0.5);
+  const aF = F.pos[0] - xc, aM = ex.pos[0] - xc, aR = L.pos[0] - xc, mUse = M.maxG * ex.eff * s, rUse = 2 * L.maxG;
+  // per unit f: vertical = mUse + rUse + fF ; moment: fF*aF + mUse*aM + rUse*aR = 0
+  const fF = -(mUse * aM + rUse * aR) / aF, f = W / (mUse + rUse + fF);
+  return { F: fF * f, M: M.maxG * f, Mv: mUse * f, L: L.maxG * f, R: L.maxG * f, f, fLift: fF * f / F.maxG, rollShare: rUse * f / W };
 }
 
 // Print notes per twin part id. Geometry, file names and bed sizes come from cad/build.py via site/cad/manifest.json.
@@ -184,10 +197,10 @@ export const WIRING = [
   ['escL', 'motorL', '3 phase wires', '18 AWG x 3', 'runs along the spar'], ['escR', 'motorR', '3 phase wires', '18 AWG x 3', 'runs along the spar'],
   ['esp32', 'escF', 'Throttle signal', 'signal + ground', 'GPIO 32'], ['esp32', 'escM', 'Throttle signal', 'signal + ground', 'GPIO 33'],
   ['esp32', 'escL', 'Throttle signal', 'signal + ground', 'GPIO 25'], ['esp32', 'escR', 'Throttle signal', 'signal + ground', 'GPIO 26'],
-  ['esp32', 'tiltServo', 'Servo signal', '3-wire lead', 'GPIO 16'], ['esp32', 'yawServo', 'Servo signal', '3-wire lead', 'GPIO 17'],
+  ['esp32', 'nzServo1', 'Servo signal', '3-wire lead', 'GPIO 16'], ['esp32', 'nzServo2', 'Servo signal', '3-wire lead', 'GPIO 17'], ['esp32', 'nzServo3', 'Servo signal', '3-wire lead', 'GPIO 23'],
   ['esp32', 'stabServoL', 'Servo signal', '3-wire lead', 'GPIO 18'], ['esp32', 'stabServoR', 'Servo signal', '3-wire lead', 'GPIO 19'],
   ['rx', 'esp32', 'PPM (all channels)', '1 signal wire + 5 V + ground', 'GPIO 35 (input only)'],
   ['imu', 'esp32', 'I2C data / clock', '4 wires: 3.3 V, ground, SDA, SCL', 'SDA 21, SCL 22'],
   ['ubec', 'esp32', '5 V supply', 'red/black', 'VIN and GND'],
-  ['ubec', 'harness', '5 V servo rail', 'red/black to all four servo plugs', 'servos must not be fed from the ESP32 3.3 V pin'],
+  ['ubec', 'harness', '5 V servo rail', 'red/black to all five servo plugs', 'servos must not be fed from the ESP32 3.3 V pin'],
 ];

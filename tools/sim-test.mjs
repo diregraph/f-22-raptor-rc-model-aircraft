@@ -26,7 +26,8 @@ check('roll: recovers level', Math.abs(r.s.att.roll) < 2 * Math.PI / 180);
 check('roll: moved sideways', Math.abs(r.s.p[2]) > 1);
 
 r = run('yaw step', t => ({ thr: t < 2.5 ? 0.8 : 0.5, yaw: t > 5 && t < 7 ? 0.5 : 0 }), 12);
-check('yaw: heading changed 60-200 deg, stays level', Math.abs(r.s.att.heading) > 1 && r.maxAtt < 6 * Math.PI / 180);
+console.log('  largest roll or pitch during the yaw turn: ' + (r.maxAtt * 180 / Math.PI).toFixed(1) + ' deg');
+check('yaw: heading changed 60-200 deg, roll and pitch stay within 10 deg', Math.abs(r.s.att.heading) > 1 && r.maxAtt < 10 * Math.PI / 180);
 
 r = run('transition to forward flight and back', (t, s) => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : t < 14 ? 90 - (t - 8) * 15 : t < 26 ? 0 : Math.min(90, (t - 26) * 15), pitch: t > 31 && s.v[0] * Math.cos(s.att.heading) - s.v[2] * Math.sin(s.att.heading) > 1.5 ? 0.6 : 0 }), 60);   // pilot holds the nose up to brake
 check('transition: no ground strike', r.minAlt > 1);

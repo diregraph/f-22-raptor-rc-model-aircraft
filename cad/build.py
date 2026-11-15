@@ -183,15 +183,19 @@ import math
 TAN = lambda d: math.tan(math.radians(d))
 W_ = lambda solid: cq.Workplane("XY").newObject([solid])
 BORE = 8.5                    # tube bore in foamed shells
-X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 230.0, 30.0, -170.0, -260.0, -215.0, -430.0
+X_NOSE, X_FAN0, X_TRAY0, X_BRIDGE0, X_NOTCH, X_AFT = 230.0, 30.0, -170.0, -260.0, -258.0, -430.0
+X_J1, Y_AX = -272.0, 2.0           # first nozzle bearing and the main fan axis (cad/propulsion.py kit frame origin)
+NAC_R, DUCT_R = 47.0, 43.1          # engine nacelle and the bore the fan duct slides into
+PLENUM = (-176.0, -140.0, 58.0)     # x range and half width of the main fan's air inlet, open above and below
+LIFT_HOLE_R = 62.4                  # bore for the lift-fan shroud ring
 TUBE_FRONT, TUBE_REAR = 212.0, -425.0
-HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, 81.0
-CAV = dict(x0=-162.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay (the spar crosses it)
-HATCH = dict(x0=-166.0, x1=24.0, z=84.0)
+HALF_W, NOTCH_W, FAN_R = 108.0, 84.0, LIFT_HOLE_R
+CAV = dict(x0=-136.0, x1=20.0, z=80.0, floor=-21.0, top=14.0)      # electronics bay (the spar crosses it)
+HATCH = dict(x0=-140.0, x1=24.0, z=84.0)
 WING = dict(root_z=108.0, bury=5.0, mid_z=180.0, tip_z=WING_TIP_Z, root_le=70.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)
 STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=217.0, root_le=-328.0, root_c=160.0, tip_c=62.0, sweep=34.0)   # tail span = 63% of wing span, as on the real aircraft
 FIN = dict(root_le=-218.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
-SKID_X, GROUND_Y = (10.0, -150.0), -85.0
+SKID_X, GROUND_Y = (10.0, -150.0), -150.0     # tall skids: the nozzle hangs about 130 mm below the fan axis when it points down
 BATT_X = -52.0
 STAB_SERVO_X = -362.0
 
@@ -239,9 +243,10 @@ def foil(le, c, t, place, n=22):
 
 def body_master():
     body = loft([secwire(*s) for s in MID])
-    hump = [(24.0, 64.0, 46.0, 50.0), (-60.0, 60.0, 42.0, 50.0), (-170.0, 50.0, 34.0, 42.0), (-214.0, 40.0, 26.0, 31.0)]   # engine spine behind the lift fan
+    hump = [(24.0, 64.0, 46.0, 50.0), (-60.0, 60.0, 42.0, 50.0), (-139.0, 54.0, 38.0, 48.0)]   # engine spine behind the lift fan
     hw = [secwire(x, w, tw, w, top, 14.0, 20.0, 2.3) for x, w, tw, top in hump]
     body = body.union(loft(hw))
+    body = body.union(cyl("x", NAC_R, X_NOTCH, PLENUM[0], Y_AX, 0))                               # round engine nacelle around the main fan duct
     # intake lips: the body sides run forward of the intake face, swept so the outboard edge leads
     ext = loft([secwire(X_NOSE - 1, *MID[0][1:]), secwire(CHEEK_X, *MID[0][1:])])
     for sg in (-1, 1):
@@ -326,7 +331,10 @@ def clip_pocket(x, half, s, yb):
 
 def fuselage_cuts():
     yb = -60.0
-    c = longeron_bores().union(cyl("y", FAN_R, -70, 70, FAN_X, 0))                               # lift-fan duct
+    c = longeron_bores().union(cyl("y", FAN_R, -70, 70, FAN_X, 0))                               # lift-fan duct, sized for the shroud ring
+    c = c.union(cq.Workplane("XY").circle(FAN_R + 5.2).workplane(offset=-5.2).circle(FAN_R).loft().translate((FAN_X, 0, MID[1][4])))   # seat for the ring lip
+    c = c.union(cyl("x", DUCT_R, X_NOTCH - 1, PLENUM[0] + 1, Y_AX, 0))                              # main fan duct
+    c = c.union(box(PLENUM[0], PLENUM[1], -90, 90, -PLENUM[2], PLENUM[2]))                       # main fan inlet: open on the spine and the belly
     c = c.union(cyl("z", BORE / 2, -HALF_W - 5, HALF_W + 5, SPAR_X, SPAR_Y))                     # spar
     c = c.union(box(X_AFT - 5, X_NOTCH, -70, 70, -NOTCH_W, NOTCH_W))                             # main-propeller swing space
     c = c.union(box(CAV["x0"], CAV["x1"], CAV["floor"], 80, -CAV["z"], CAV["z"]))                # electronics bay
@@ -342,8 +350,6 @@ def fuselage_cuts():
         c = c.union(clip_pocket(SPAR_X, 15.6, s, yb))                                            # spar carrier block
         lo, hi = sorted((s * (LZ - 11.5), s * (LZ + 11.5))); c = c.union(box(SPAR_X - 15.6, SPAR_X + 15.6, yb, -2.4, lo, hi))
         lo, hi = sorted((s * 78.0, s * 110.0)); c = c.union(box(SPAR_X - 4, SPAR_X + 4, CAV["floor"], -15.2, lo, hi))   # roll-motor wires under the spar
-        lo, hi = sorted((s * 70.0, s * (LZ + 8.0)))                                              # tilt bearings
-        c = c.union(box(PIVOT_X - (27.5 if s < 0 else 15), PIVOT_X + 15.5, yb, 11.5, lo, hi))
         for xs in SKID_X: c = c.union(clip_pocket(xs, 6.0, s, yb))
         sx = STAB_SERVO_X - s * SV_SHAFT_OFF                                                     # tail servo, dropped in from below
         lo, hi = sorted((s * (STAB["root_z"] - 14 - 6.5), s * (STAB["root_z"] - 14 + 6.5)))
@@ -412,7 +418,7 @@ def battery_tray():  # slides fore-aft on the bay floor; strap slots
     return b
 
 def fc_sled():       # carries the ESP32 (47 x 23.5 mm hole pattern) and the gyro board
-    y = CAV["floor"]; zc = -55.0
+    y = CAV["floor"]; zc = -52.0
     b = box(-110, -22, y + 5.0, y + 7.0, zc - 18, zc + 18)
     for xx in (-106, -26): b = b.union(box(xx - 4, xx + 4, y + 0.4, y + 5.0, zc - 18, zc + 18))
     for dx in (-23.5, 23.5):
@@ -426,10 +432,6 @@ ROT_UP = ((0, 1, 0), -90)      # stand the part on its tail: aircraft +X becomes
 PARTS = {
     "spar_carrier": (spar_carrier, "sparCarrier", (0, 0, 0), None, "PETG"),
     "fan_spider": (fan_spider, "fanSpider", (0, 0, 0), None, "PETG"),
-    "tilt_bearing_left": (bearing_left, "bearingL", (0, 0, 0), None, "PETG"),
-    "tilt_bearing_right": (bearing_right, "bearingR", (0, 0, 0), None, "PETG"),
-    "tilt_yoke": (yoke, "yoke", (PIVOT_X, 0, 0), ((1, 0, 0), 180), "PETG"),
-    "motor_cradle": (cradle, "cradle", (PIVOT_X, 0, 0), ((1, 0, 0), 90), "PETG"),
     "roll_mount_right": (lambda: roll_pod(1), "podR", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
     "roll_mount_left": (lambda: roll_pod(-1), "podL", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
     "skid_front": (lambda: skid(SKID_X[0]), "skidF", (0, 0, 0), ROT_UP, "PETG"),
@@ -458,18 +460,15 @@ PARTS = {
 }
 
 def envelopes():
-    sx = PIVOT_X - SV_SHAFT_OFF
     return {
         "longerons": cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, -LZ).union(cyl("x", TUBE / 2, TUBE_REAR, TUBE_FRONT, 0, LZ)),
         "spar": cyl("z", TUBE / 2, -SPAR_HALF, SPAR_HALF, SPAR_X, SPAR_Y),
+        "lift fan rotor": cyl("y", 60.2, -6.0, 24.0, FAN_X, 0),
+        "lift fan shroud ring": cyl("y", LIFT_HOLE_R - 0.2, -4.0, MID[1][4] - 5.5, FAN_X, 0).cut(cyl("y", 60.6, -10, 60, FAN_X, 0)),
+        "main fan duct": cyl("x", DUCT_R - 0.3, X_J1, PLENUM[0] + 4, Y_AX, 0),
         "roll propeller discs": cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, -ROLL_Z).union(cyl("y", 52.0, ROLL_PROP_Y - 4, ROLL_PROP_Y + 4, ROLL_X, ROLL_Z)),
         "roll motor bodies": cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, -ROLL_Z).union(cyl("y", 15.0, ROLL_PAD_Y + 0.3, ROLL_PROP_Y - 5, ROLL_X, ROLL_Z)),
-        "tilt servo body": box(sx - SV_L / 2, sx + SV_L / 2, -SV_W / 2, SV_W / 2, SV_TILT_ZC - SV_HALF_H, SV_TILT_ZC + SV_HALF_H),
-        "yaw servo body": box(sx - SV_L / 2, sx + SV_L / 2, YAW_SY - SV_HALF_H, YAW_SY + SV_HALF_H, -SV_W / 2, SV_W / 2),
-        "lift propeller disc": cyl("y", 77.0, 5.0, 14.0, FAN_X, 0),
-        "main propeller, hover": cyl("y", 77.0, -62.0, -52.0, PIVOT_X, 0),
-        "main propeller, forward": cyl("x", 77.0, PIVOT_X - 62.0, PIVOT_X - 52.0, 0, 0),
-        "speed controllers": box(CAV["x0"] + 0.5, CAV["x0"] + 25.5, CAV["floor"] + 0.2, -3.0, -70, -24).union(box(CAV["x0"] + 0.5, CAV["x0"] + 25.5, CAV["floor"] + 0.2, -3.0, 24, 70)),
+        "speed controllers": box(-128.5, -29.5, -18.5, 7.5, -79.8, -72.0).union(box(-128.5, -29.5, -18.5, 7.5, 72.0, 79.8)),
         "battery": box(BATT_X - 67.5, BATT_X + 67.5, CAV["floor"] + 2.5, CAV["floor"] + 32.5, -21.5, 21.5),
     }
 
