@@ -46,6 +46,7 @@
     <button id="tSpin" class="tog" aria-pressed="false">Spin propellers</button>
     <button id="tXray" class="tog" aria-pressed="false">X-ray shells</button>
     <button id="tForces" class="tog" aria-pressed="true">Balance &amp; thrust</button>
+    <button id="tSim" class="tog fly" aria-pressed="false">Fly it (simulator)</button>
     <button id="bReset" class="tog plain">Reset view</button>
     <button id="bShowAll" class="tog plain">Show all</button>
     <button id="bExport" class="tog plain">Export sim JSON</button>
@@ -57,6 +58,15 @@
   <div id="sBody"></div>
   <button id="sNext" aria-label="Next step">›</button>
 </section>
+
+<section id="simhud" hidden>
+  <div id="simstats"></div>
+  <div id="simbars"></div>
+  <div class="row"><button id="sReset" class="tog">Reset</button><button id="sHover" class="tog">Nozzle down (hover)</button><button id="sFwd" class="tog">Nozzle aft (fly)</button><button id="sExit" class="tog plain">Exit simulator</button></div>
+  <p class="keys">Keys: W/S climb, A/D yaw, arrows pitch and roll, Q/E nozzle, R reset. On a phone use the two pads.</p>
+</section>
+<div id="padL" class="pad" hidden><i></i><span>climb · yaw</span></div>
+<div id="padR" class="pad" hidden><i></i><span>pitch · roll</span></div>
 
 <nav id="tabs">
   <button data-t="parts">Parts</button>

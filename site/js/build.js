@@ -232,10 +232,12 @@ function battery() { // 4S 3300 mAh: 135 x 43 x 30, centred on x
 }
 
 // ---------- assembly
-export function buildModel() {
+const CAD_AXIS = { sparCarrier: 'y', fanSpider: 'y', bearingL: 'y', bearingR: 'y', yoke: 'y', cradle: 'z', podL: 'y', podR: 'y' };
+export function buildModel(cad = {}) {
   const root = new THREE.Group();
   const parts = new Map(), movers = [];
   const add = (id, obj, ex = [0, 0, 0], parent = root) => {
+    if (cad[id]) { const pos = obj.position.clone(); obj = mesh(cad[id], MAT.petg(CAD_AXIS[id] || 'y')); obj.position.copy(pos); obj.userData.cad = true; }   // real CAD replaces the stand-in
     optimise(obj); obj.userData.partId = id; obj.userData.home = obj.position.clone(); obj.userData.ex = V(...ex);
     obj.traverse(o => { if (o.isMesh) o.userData.partId = id; });
     if (!PART[id]) console.warn('no spec for', id);
@@ -319,8 +321,8 @@ export function buildModel() {
     const m = MAT.petg('z'), z = s * D.rollZ;
     add('pod' + sfx, grp(mesh(cylZ(6.6, 62, D.sparX, D.sparY, s * 429, 28), m), mesh(box(15, 14, 22, D.sparX, -1, z), m), mesh(cylY(15, 4.5, D.sparX, 7.7, z), m),
       mesh(new THREE.SphereGeometry(6.6, 24, 14).scale(1, 1, 1.5).translate(D.sparX, D.sparY, s * 460), m), mesh(cylY(2.2, 3, D.sparX, D.sparY - 6.5, s * 412, 14), m)), [0, 0, s * 520]);
-    const mo = motor(); mo.position.set(D.sparX, 10, z); add('motor' + sfx, mo, [0, 80, s * 520]);
-    const pr = prop(127, 3, dir); pr.position.set(D.sparX, 31, z); add('prop' + sfx, pr, [0, 170, s * 520]); props.push(pr);
+    const mo = motor(); mo.position.set(D.sparX, 8, z); add('motor' + sfx, mo, [0, 80, s * 520]);
+    const pr = prop(127, 3, dir); pr.position.set(D.sparX, 29, z); add('prop' + sfx, pr, [0, 170, s * 520]); props.push(pr);
   }
   // --- lift fan: spider, motor, prop
   { const m = MAT.petg(), sp = grp(), ang = Math.atan2(LZ, 50), len = 2 * Math.hypot(LZ, 50) - 6;
@@ -338,15 +340,15 @@ export function buildModel() {
       const m = MAT.petg();
       add(id, grp(mesh(box(28, 24, 12, D.pivotX, 0, s * (LZ - 6)), m), clip(D.pivotX, s * LZ, 28, m), s > 0 ? mesh(cylZ(7, 6, D.pivotX, 0, LZ - 14, 24), m) : null), [-120, 0, s * 90]);
     }
-    const ts = servo(true); ts.rotation.x = Math.PI / 2; ts.position.set(D.pivotX - 5.9, 0, -74.5); add('tiltServo', ts, [-120, 0, -150]);
+    const ts = servo(true); ts.rotation.x = Math.PI / 2; ts.position.set(D.pivotX - 5.9, 0, -72.8); add('tiltServo', ts, [-120, 0, -150]);
     const ym = MAT.petg('z');
     add('yoke', grp(mesh(box(13, 13, 38, 0, 0, -35.5), ym), mesh(box(13, 13, 60, 0, 0, 44), ym), mesh(box(32, 3.2, 17, -5.5, -14.4, 0), ym), mesh(box(3.2, 30, 17, 9, 0, 0), ym),
       [-15.5, 15.5].map(z => mesh(box(13, 30, 3.2, 0, 0, z), ym)), mesh(cylZ(3.9, 14, 0, 0, 79, 20), ym), mesh(cylZ(5.2, 5, 0, 0, -53, 20), ym)), [0, 0, 0], tiltG);
     const ys = servo(true); ys.position.set(-5.9, -1.5, 0); add('yawServo', ys, [0, 90, 0], tiltG);
     const cm = MAT.petg('x');
     add('cradle', grp(mesh(box(36, 2.6, 18, -14, 21.6, 0), cm), mesh(box(36, 2.6, 18, -14, -18.6, 0), cm), mesh(cylX(15.5, 3.2, -31.4, 1.5, 0, 36), cm), mesh(box(3.2, 41, 12, -31.4, 1.5, 0), cm), mesh(cylY(2.2, 4, 0, -16, 0, 14), cm)), [-60, 0, 0], yawG);
-    const mo = motor(); mo.rotation.z = Math.PI / 2; mo.position.set(-33, 1.5, 0); add('motorM', mo, [-120, 0, 0], yawG);
-    const pr = prop(152, 3, -1); pr.rotation.z = Math.PI / 2; pr.position.set(-D.propOffset + 3, 1.5, 0); add('propM', pr, [-200, 0, 0], yawG); props.push(pr);
+    const mo = motor(); mo.rotation.z = Math.PI / 2; mo.position.set(-33, 0, 0); add('motorM', mo, [-120, 0, 0], yawG);
+    const pr = prop(152, 3, -1); pr.rotation.z = Math.PI / 2; pr.position.set(-D.propOffset + 3, 0, 0); add('propM', pr, [-200, 0, 0], yawG); props.push(pr);
   }
   // --- tail
   const stabs = [];
@@ -430,5 +432,5 @@ export function buildModel() {
   }
 
   const shells = ['nose', 'canopy', 'fanbay', 'tray', 'hatch', 'aftBridge', 'boomL', 'boomR', 'wingInL', 'wingInR', 'wingOutL', 'wingOutR', 'stabL', 'stabR', 'finL', 'finR'];
-  return { root, parts, movers, props, joints: { tiltG, yawG, stabs, battG }, shells };
+  return { root, parts, movers, props, joints: { tiltG, yawG, stabs, battG }, shells };   // stabs = [right, left]
 }

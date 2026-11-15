@@ -171,6 +171,37 @@ printing. **Intern B** = foam, assembly, test rigs.
 3. **Test frame:** the same four motors at the same spacing on a wooden cross.
    Crash it, not the jet.
 
+## 8a. Printable test-frame parts (PETG)
+
+Files are in `cad/stl/` (print orientation) and `cad/step/`. Regenerate with
+`python3 cad/build.py`. Masses are estimates at 4 walls, 40% infill.
+
+| File | Qty | Bed footprint mm | Est. g | Orientation |
+|---|---|---|---|---|
+| `spar_carrier` | 1 | 26 x 204 | 24 | Flat on its base |
+| `fan_spider` | 1 | 114 x 198 | 32 | Flat, clips up |
+| `tilt_bearing_left` | 1 | 41 x 31 | 8 | Floor on the bed |
+| `tilt_bearing_right` | 1 | 28 x 27 | 7 | Base on the bed |
+| `tilt_yoke` | 1 | 35 x 140 | 20 | Upside down on its flat top |
+| `motor_cradle` | 1 | 41 x 43 | 7 | On its side |
+| `roll_pod_left`, `roll_pod_right` | 1 each | 32 x 60 | 9 | Motor pad on the bed |
+
+Print first, in this order: one clip test (cut the end off `tilt_bearing_right` in
+the slicer), then `tilt_bearing_right`, `tilt_bearing_left`, `motor_cradle`,
+`tilt_yoke`, `fan_spider`, `spar_carrier`, pods.
+
+Check on the first prints, then adjust the parameters at the top of `cad/build.py`:
+
+- **Clip grip.** `CLIP_ID` 8.2 mm for an 8.0 mm tube. Measure your tube first.
+- **Servo pocket.** MG90S body 22.8 x 12.2 mm with 0.4 mm clearance.
+- **Horn recess.** Sized for the stock single-arm horn (`HORN_*`). Horns vary:
+  measure yours.
+- **Motor screws.** 4 x M3 on a 16 mm square. Pad thickness is 4 mm at the screws,
+  so use M3 x 6 or M3 x 7 and check they do not bottom out in the motor.
+
+Hardware not printed: 2 mm pin or screw per roll pod (drill the spar end 2 mm),
+servo screws supplied with the servos, zip ties as a second lock on each clip.
+
 ## 9. Safety
 
 - Propellers off whenever the board is connected to USB or the mixer is edited.

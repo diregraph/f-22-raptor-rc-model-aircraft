@@ -57,7 +57,7 @@ const rows = [
   ['longeronL', 'Longeron, left', 'Backbone', 'Aluminium', 'Cut', 39, [-100, 0, -92], 1, 'Everything snaps onto this tube with C-clips.', '8 mm tube, 650 mm long. Runs nose to tail and doubles as the tail boom.'],
   ['longeronR', 'Longeron, right', 'Backbone', 'Aluminium', 'Cut', 39, [-100, 0, 92], 1, 'Everything snaps onto this tube with C-clips.', '8 mm tube, 650 mm long.'],
   ['spar', 'Wing spar', 'Backbone', 'Aluminium', 'Cut', 54, [-200, -9, 0], 1, 'Captured by the spar carrier saddles.', '8 mm tube, 910 mm long. Carries both wings and both roll motors, so roll loads never pass through printed shells.'],
-  ['sparCarrier', 'Spar carrier', 'Backbone', 'PETG', 'Print', 22, [-200, -8, 0], 1, 'Two C-clips onto the longerons; spar slides through two saddles.', 'The one joint that sets the airframe square. Print flat, 4 walls, 40% infill.'],
+  ['sparCarrier', 'Spar carrier', 'Backbone', 'PETG', 'Print', 24, [-200, -8, 0], 1, 'Two C-clips onto the longerons; spar slides through two saddles.', 'The one joint that sets the airframe square. Print flat, 4 walls, 40% infill.'],
   // ---- Airframe shells
   ['nose', 'Nose section', 'Airframe shells', 'LW-PLA', 'Print', 40, [320, 2, 0], 9, 'Bayonet: push on, quarter turn.', 'First thing to hit the ground. Print upright, single wall. Keep two spares.'],
   ['noseRing', 'Nose bayonet ring', 'Airframe shells', 'PETG', 'Print', 8, [230, 0, 0], 9, 'C-clips onto the longeron ends.', 'Gives the soft LW-PLA nose a hard bayonet to lock onto.'],
@@ -80,22 +80,22 @@ const rows = [
   ['finL', 'Fin, left', 'Wings & tail', 'LW-PLA', 'Print', 15, [-350, 85, -125], 7, 'Tab into the boom socket with a snap barb.', 'Fixed, canted 25 degrees. No rudder: yaw comes from the vectored motor.'],
   ['finR', 'Fin, right', 'Wings & tail', 'LW-PLA', 'Print', 15, [-350, 85, 125], 7, 'Tab into the boom socket with a snap barb.', 'Fixed, canted 25 degrees.'],
   // ---- Propulsion
-  ['fanSpider', 'Lift-fan spider', 'Propulsion', 'PETG', 'Print', 18, [130, -12, 0], 2, 'Four C-clips onto the longerons.', 'X-brace that carries the front motor in the middle of the duct.'],
+  ['fanSpider', 'Lift-fan spider', 'Propulsion', 'PETG', 'Print', 32, [130, -12, 0], 2, 'Four C-clips onto the longerons.', 'X-brace that carries the front motor in the middle of the duct.'],
   ['motorF', 'Front lift motor', 'Propulsion', 'Bought', 'Owned', 34, [130, 0, 0], 2, '4 x M3 screws into the spider pad.', 'EMAX ECO II 2306 1700KV. Spins clockwise.'],
   ['propF', 'Front propeller, 6 in', 'Propulsion', 'Bought', 'Buy', 6, [130, 17, 0], 10, 'Motor nut. Fit last.', '6040 or 6045, clockwise. Main crash consumable.'],
-  ['podL', 'Roll pod, left', 'Propulsion', 'PETG', 'Print', 12, [-200, -4, -430], 8, 'Spring button into a hole in the spar end.', 'Also traps the outer wing panel on the spar.'],
-  ['podR', 'Roll pod, right', 'Propulsion', 'PETG', 'Print', 12, [-200, -4, 430], 8, 'Spring button into a hole in the spar end.', 'Also traps the outer wing panel on the spar.'],
+  ['podL', 'Roll pod, left', 'Propulsion', 'PETG', 'Print', 9, [-200, -4, -430], 8, 'Slides onto the spar end; a 2 mm pin through pod and spar.', 'Also traps the outer wing panel on the spar.'],
+  ['podR', 'Roll pod, right', 'Propulsion', 'PETG', 'Print', 9, [-200, -4, 430], 8, 'Slides onto the spar end; a 2 mm pin through pod and spar.', 'Also traps the outer wing panel on the spar.'],
   ['motorL', 'Roll motor, left', 'Propulsion', 'Bought', 'Owned', 34, [-200, 18, -445], 8, '4 x M3 screws into the pod.', 'EMAX ECO II 2306 1700KV. Idles in hover; speeds up or slows down to roll.'],
   ['motorR', 'Roll motor, right', 'Propulsion', 'Bought', 'Owned', 34, [-200, 18, 445], 8, '4 x M3 screws into the pod.', 'EMAX ECO II 2306 1700KV. Opposite spin to the left one.'],
   ['propL', 'Roll propeller, left, 5 in', 'Propulsion', 'Bought', 'Buy', 4, [-200, 36, -445], 10, 'Motor nut. Fit last.', '5 in three-blade.'],
   ['propR', 'Roll propeller, right, 5 in', 'Propulsion', 'Bought', 'Buy', 4, [-200, 36, 445], 10, 'Motor nut. Fit last.', '5 in three-blade.'],
   // ---- Vectoring mount
   ['bearingL', 'Tilt bearing, left', 'Vectoring mount', 'PETG', 'Print', 8, [-300, 0, -92], 3, 'C-clip onto the longeron.', 'Holds the tilt servo.'],
-  ['bearingR', 'Tilt bearing, right', 'Vectoring mount', 'PETG', 'Print', 8, [-300, 0, 92], 3, 'C-clip onto the longeron.', 'Plain bearing for the yoke stub axle.'],
-  ['tiltServo', 'Tilt servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-294, 0, -71], 3, 'Press-fit pocket with a retaining clip.', 'TowerPro MG90S (metal gears). Rotates the yoke 0 to 100 degrees.'],
-  ['yoke', 'Tilt yoke', 'Vectoring mount', 'PETG', 'Print', 16, [-300, 0, 12], 3, 'Presses onto the servo spline; stub axle in the right bearing.', 'The thrust line passes through this axis, so the servo only fights friction, not thrust.'],
-  ['yawServo', 'Yaw servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-306, 2, 0], 3, 'Press-fit pocket in the yoke.', 'TowerPro MG90S. Swings the motor 20 degrees each way.'],
-  ['cradle', 'Motor cradle', 'Vectoring mount', 'PETG', 'Print', 6, [-322, 0, 0], 3, 'Presses onto the yaw servo horn; pin at the bottom.', 'C-bracket that wraps the yaw servo.'],
+  ['bearingR', 'Tilt bearing, right', 'Vectoring mount', 'PETG', 'Print', 7, [-300, 0, 92], 3, 'C-clip onto the longeron.', 'Plain bearing for the yoke stub axle.'],
+  ['tiltServo', 'Tilt servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-306, 0, -73], 3, 'Slides into the bearing plate window from inboard; two servo screws.', 'TowerPro MG90S (metal gears). Rotates the yoke 0 to 100 degrees.'],
+  ['yoke', 'Tilt yoke', 'Vectoring mount', 'PETG', 'Print', 20, [-300, 0, 12], 3, 'Stock servo horn sits in a recess on the left end; stub axle runs in the right bearing.', 'The thrust line passes through this axis, so the servo only fights friction, not thrust.'],
+  ['yawServo', 'Yaw servo', 'Vectoring mount', 'Bought', 'Owned', 14, [-306, 2, 0], 3, 'Drops into the yoke frame from above; two servo screws.', 'TowerPro MG90S. Swings the motor 20 degrees each way.'],
+  ['cradle', 'Motor cradle', 'Vectoring mount', 'PETG', 'Print', 7, [-322, 0, 0], 3, 'Stock servo horn sits in a recess under the top arm; a printed pin pivots in the yoke stirrup.', 'C-bracket that wraps the yaw servo.'],
   ['motorM', 'Main motor', 'Vectoring mount', 'Bought', 'Owned', 34, [-342, 0, 0], 3, '4 x M3 screws into the cradle.', 'EMAX ECO II 2306 1700KV. Spins anticlockwise to cancel the front motor torque.'],
   ['propM', 'Main propeller, 6 in', 'Vectoring mount', 'Bought', 'Buy', 6, [-358, 0, 0], 10, 'Motor nut. Fit last.', '6040 or 6045, anticlockwise (pusher).'],
   // ---- Electronics
@@ -157,3 +157,35 @@ export function hoverTrim(mp, tiltDeg = 90, rollIdleG = 60) {
   const tM = tMv / Math.max(s, 0.5);
   return { F: tF, M: tM, L: r, R: r, split: tF / (tF + tMv) };
 }
+
+// Printable CAD (cad/build.py). Twin part id -> file stem in /cad and print notes.
+export const CAD = {
+  sparCarrier: { file: 'spar_carrier', print: 'Flat on its base, no supports.' },
+  fanSpider: { file: 'fan_spider', print: 'Flat, clips up, no supports. Counterbores face the bed.' },
+  bearingL: { file: 'tilt_bearing_left', print: 'Floor on the bed; the servo window bridges 23 mm.' },
+  bearingR: { file: 'tilt_bearing_right', print: 'Base on the bed, no supports.' },
+  yoke: { file: 'tilt_yoke', print: 'Upside down on its flat top face; the stirrup bridges 22 mm.' },
+  cradle: { file: 'motor_cradle', print: 'On its side so the two arms are not layered across their bend.' },
+  podL: { file: 'roll_pod_left', print: 'Motor pad on the bed, no supports.' },
+  podR: { file: 'roll_pod_right', print: 'Motor pad on the bed, no supports.' },
+};
+export const PRINT_PETG = 'PETG, 0.2 mm layers, 4 walls, 40% gyroid, 240 C nozzle / 80 C bed. Snap bores are 8.2 mm for an 8.0 mm tube: print one clip first and adjust CLIP_ID in cad/build.py if it is loose or will not snap.';
+
+// Suggested wiring. ESP32 pin numbers are a starting map; set the same numbers in the madflight config.
+// [from part, to part, what, wire, ESP32 pin or note]
+export const WIRING = [
+  ['battery', 'harness', 'Battery power', 'XT60, 14 AWG red/black', '14.8 V'],
+  ['harness', 'escF', 'Power', '14 AWG pair', ''], ['harness', 'escM', 'Power', '14 AWG pair', ''],
+  ['harness', 'escL', 'Power', '14 AWG pair', ''], ['harness', 'escR', 'Power', '14 AWG pair', ''],
+  ['harness', 'ubec', 'Power', '20 AWG pair', '14.8 V in, 5 V out'],
+  ['escF', 'motorF', '3 phase wires', '18 AWG x 3', 'swap any two to reverse'], ['escM', 'motorM', '3 phase wires', '18 AWG x 3', 'swap any two to reverse'],
+  ['escL', 'motorL', '3 phase wires', '18 AWG x 3', 'runs along the spar'], ['escR', 'motorR', '3 phase wires', '18 AWG x 3', 'runs along the spar'],
+  ['esp32', 'escF', 'Throttle signal', 'signal + ground', 'GPIO 32'], ['esp32', 'escM', 'Throttle signal', 'signal + ground', 'GPIO 33'],
+  ['esp32', 'escL', 'Throttle signal', 'signal + ground', 'GPIO 25'], ['esp32', 'escR', 'Throttle signal', 'signal + ground', 'GPIO 26'],
+  ['esp32', 'tiltServo', 'Servo signal', '3-wire lead', 'GPIO 16'], ['esp32', 'yawServo', 'Servo signal', '3-wire lead', 'GPIO 17'],
+  ['esp32', 'stabServoL', 'Servo signal', '3-wire lead', 'GPIO 18'], ['esp32', 'stabServoR', 'Servo signal', '3-wire lead', 'GPIO 19'],
+  ['rx', 'esp32', 'PPM (all channels)', '1 signal wire + 5 V + ground', 'GPIO 35 (input only)'],
+  ['imu', 'esp32', 'I2C data / clock', '4 wires: 3.3 V, ground, SDA, SCL', 'SDA 21, SCL 22'],
+  ['ubec', 'esp32', '5 V supply', 'red/black', 'VIN and GND'],
+  ['ubec', 'harness', '5 V servo rail', 'red/black to all four servo plugs', 'servos must not be fed from the ESP32 3.3 V pin'],
+];

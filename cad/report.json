@@ -1,0 +1,98 @@
+{
+ "spar_carrier": {
+  "twin_id": "sparCarrier",
+  "bed_mm": [
+   26.0,
+   204.0,
+   24.7
+  ],
+  "solids": 1,
+  "volume_cm3": 30.54,
+  "mass_solid_g": 38.8,
+  "mass_est_g": 24.0
+ },
+ "fan_spider": {
+  "twin_id": "fanSpider",
+  "bed_mm": [
+   114.0,
+   197.6,
+   24.2
+  ],
+  "solids": 1,
+  "volume_cm3": 40.07,
+  "mass_solid_g": 50.9,
+  "mass_est_g": 31.6
+ },
+ "tilt_bearing_left": {
+  "twin_id": "bearingL",
+  "bed_mm": [
+   41.0,
+   30.8,
+   21.5
+  ],
+  "solids": 1,
+  "volume_cm3": 9.9,
+  "mass_solid_g": 12.6,
+  "mass_est_g": 7.8
+ },
+ "tilt_bearing_right": {
+  "twin_id": "bearingR",
+  "bed_mm": [
+   28.0,
+   26.8,
+   19.6
+  ],
+  "solids": 1,
+  "volume_cm3": 8.36,
+  "mass_solid_g": 10.6,
+  "mass_est_g": 6.6
+ },
+ "tilt_yoke": {
+  "twin_id": "yoke",
+  "bed_mm": [
+   35.2,
+   140.1,
+   27.9
+  ],
+  "solids": 1,
+  "volume_cm3": 25.2,
+  "mass_solid_g": 32.0,
+  "mass_est_g": 19.8
+ },
+ "motor_cradle": {
+  "twin_id": "cradle",
+  "bed_mm": [
+   41.0,
+   42.9,
+   32.0
+  ],
+  "solids": 1,
+  "volume_cm3": 8.29,
+  "mass_solid_g": 10.5,
+  "mass_est_g": 6.5
+ },
+ "roll_pod_right": {
+  "twin_id": "podR",
+  "bed_mm": [
+   32.0,
+   60.0,
+   24.0
+  ],
+  "solids": 1,
+  "volume_cm3": 10.88,
+  "mass_solid_g": 13.8,
+  "mass_est_g": 8.6
+ },
+ "roll_pod_left": {
+  "twin_id": "podL",
+  "bed_mm": [
+   32.0,
+   60.0,
+   24.0
+  ],
+  "solids": 1,
+  "volume_cm3": 10.88,
+  "mass_solid_g": 13.8,
+  "mass_est_g": 8.6
+ }
+}

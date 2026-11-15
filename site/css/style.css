@@ -86,7 +86,34 @@ input[type=range] { width: 100%; accent-color: var(--acc); height: 22px; margin:
 #tip { position: fixed; pointer-events: none; background: #0b1118; border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; font-size: 12px; z-index: 6; white-space: nowrap; }
 #tabs { display: none; }
 
+.tog.fly { border-color: rgba(255, 122, 26, .6); color: #ffd2ad; }
+.tog.fly[aria-pressed="true"] { background: var(--acc); color: #1a0d00; border-color: var(--acc); font-weight: 600; }
+.wire { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; }
+.wire td { padding: 4px 6px 4px 0; border-top: 1px solid var(--line); vertical-align: top; color: #cfd9e3; }
+.wire td:last-child { font-family: var(--mono); font-size: 11px; color: var(--acc2); padding-right: 0; }
+.wire b { color: var(--ink); font-weight: 600; }
+a.tog { text-decoration: none; display: inline-block; color: var(--ink); }
+a.tog.plain { color: var(--mute); }
+#simhud { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 28px)); background: var(--panel); border: 1px solid rgba(255, 122, 26, .5); border-radius: var(--r); padding: 10px 14px; backdrop-filter: blur(14px); z-index: 4; }
+#simhud[hidden], .pad[hidden] { display: none; }
+#simstats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 8px; }
+#simstats div { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+#simstats b { display: block; font: 600 16px var(--mono); color: var(--ink); letter-spacing: 0; text-transform: none; }
+#simstats b.warn { color: #ffb347; } #simstats b.bad { color: #ff6b6b; }
+#simbars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 9px; }
+#simbars div { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: .06em; }
+#simbars u { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .1); margin-top: 3px; overflow: hidden; text-decoration: none; }
+#simbars u i { display: block; height: 100%; background: var(--acc2); }
+#simhud .keys { font-size: 11px; color: var(--mute); margin-top: 8px; }
+.pad { position: fixed; bottom: 96px; width: 132px; height: 132px; border-radius: 50%; border: 1px solid var(--line); background: rgba(14, 21, 30, .55); backdrop-filter: blur(6px); z-index: 4; touch-action: none; }
+.pad i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: rgba(255, 122, 26, .85); box-shadow: 0 0 14px rgba(255, 122, 26, .5); pointer-events: none; }
+.pad span { position: absolute; left: 0; right: 0; bottom: -20px; text-align: center; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); pointer-events: none; }
+#padL { left: 22px; } #padR { right: 22px; }
+body.sim #parts, body.sim #info, body.sim #dock, body.sim #tabs { display: none !important; }
+
 @media (max-width: 900px) {
+  #simhud { top: 58px; padding: 8px 10px; } #simhud .keys { display: none; } #simstats b { font-size: 14px; }
+  .pad { bottom: 34px; }
   #hud { max-width: 58vw; } .chip { font-size: 11px; padding: 4px 9px; }
   #parts, #info, #dock { left: 8px; right: 8px; top: auto; bottom: calc(58px + env(safe-area-inset-bottom)); width: auto; max-height: 44vh; display: none; }
   #parts.show { display: flex; height: 44vh; } #info.show, #dock.show { display: block; overflow: auto; }
