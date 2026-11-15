@@ -93,7 +93,7 @@ Wing loading stays low, so forward flight is slow and forgiving.
 | 5 V 3 A regulator (UBEC) | 2 | Powers servos and ESP32 |
 | Propellers 6 in (6040 or 6045), clockwise + anticlockwise | 10 pairs | Main crash consumable |
 | Propellers 5 in, clockwise + anticlockwise | 6 pairs | |
-| MG90S servos | 4 | Spares; gears strip in crashes |
+| MG90S servos | 7 | 4 spares + 3 for the nozzle demo |
 | XT60 connectors, 14 AWG silicone wire, heat-shrink | — | Power harness |
 | Low-voltage buzzer alarm for the battery | 2 | |
 | Second 4-cell 3300 mAh battery | 1 | Optional; doubles test time per day |
@@ -110,8 +110,10 @@ Owned parts not used in the aircraft: 5 × A2212 1000KV (fallback, thrust-stand
 motor), A2212 2700KV, Raspberry Pi 2B, ESP32 camera (optional onboard video
 later), Skywalker controller (bench tests on a 3-cell pack only).
 
-**Check:** the cell count of the ZOP 1500 mAh battery. If it is 3-cell, use it
-for bench tests with the Skywalker controller.
+Bench power set: ZOP 3-cell 1500 mAh + Skywalker 30 A controller. Use it from
+day 1 for thrust tests and for the nozzle demo, before the 4-cell controllers
+arrive. A 3-cell thrust reading scales to 4 cells by roughly (4/3) squared,
+about 1.8 x, less some sag; confirm on 4 cells when the controllers arrive.
 
 ## 6. Flight controller
 
@@ -145,7 +147,7 @@ printing. **Intern B** = foam, assembly, test rigs.
 
 | Day | Lead | Intern A | Intern B | Gate |
 |---|---|---|---|---|
-| 1 | Order parts. Thrust test on kitchen scale: 2306 + 6 in on 4 cells (needs one 4-cell controller; if none, test A2212 on 3 cells meanwhile) | Print motor mounts, thrust-stand bracket | Buy foam, tape, spars. Build hot-wire cutter if using polystyrene | Thrust measured |
+| 1 | Order parts. Thrust test on kitchen scale: 2306 + 6 in on 4 cells (3-cell bench set today; repeat on 4 cells when controllers arrive) | Print motor mounts, thrust-stand bracket | Buy foam, tape, spars. Build hot-wire cutter if using polystyrene | Thrust measured |
 | 2 | ESP32 + MPU6050 + receiver on the bench; madflight reading sticks and angles | Design + print tilt/yaw mount v1 | Build test frame: wooden or aluminium cross with motors at final spacing | |
 | 3 | Wire 4 controllers; calibrate; motors respond to mixer, propellers off | Tilt mount v2; print spares | Cut airframe #1 parts from templates | All parts on bench |
 | 4 | Single-axis tuning on tether: roll | Simulator practice, 1 h | Tether rig; airframe #1 assembly | |
@@ -157,7 +159,7 @@ printing. **Intern B** = foam, assembly, test rigs.
 | 10 | Airframe free hover | Video logging | Repairs | **Core goal: stable hover** |
 | 11 | Hover with tilt at 80–100 deg: slow forward and back | | Assemble airframe #2 | |
 | 12 | Glide test, power off, hand launch over long grass; set tail trims | | | Glides straight |
-| 13 | Transition attempt in open field: hover at 3 m, tilt slowly forward | | | Stretch goal |
+| 13 | Transition attempt in open field: hover at 3 m, tilt slowly forward | | | Stretch only; hover is the agreed success criterion |
 | 14 | Buffer, repeat, document | | | |
 
 ## 8. Test rigs (cheap, build first)
@@ -179,12 +181,23 @@ printing. **Intern B** = foam, assembly, test rigs.
 - Fly over grass, away from roads and people. Check Civil Aviation Authority of
   Sri Lanka rules for model aircraft before field flights.
 
-## 10. Stretch: real swivel nozzle
+## 10. Parallel track: bench swivel nozzle (Intern A)
 
-A true three-bearing nozzle only makes sense behind a ducted fan. After the
-hover works, Intern A can print a bench nozzle driven by the ESP32 with printed
-2:1 gears so ordinary 180-degree servos turn each ring 360 degrees. Flying it
-needs a 64–70 mm ducted fan and a 60 A+ controller.
+Decided: build a real three-bearing nozzle as a bench demo. It does not fly in
+this build; flying it needs a 64-70 mm ducted fan and a 60 A+ controller.
+
+| Days | Step |
+|---|---|
+| 2-4 | CAD: three duct segments, about 70 mm bore, joined by printed ring bearings; joints 2 and 3 cut at an angle. Print one joint first and check it turns freely |
+| 5-7 | Add a ring gear on each segment and a 2:1 pinion so a 180-degree MG90S turns the ring 360 degrees. Print all three segments |
+| 8-10 | Second ESP32 sketch: two inputs (tilt, yaw) to three ring angles. Compute the angles with rotation matrices offline, store as a lookup table |
+| 11-14 | Drive it from two spare receiver channels; blow air through it with an A2212 2700KV and 6 x 4 propeller in a printed duct, on the 3-cell pack and Skywalker controller |
+
+Extra parts: 3 more MG90S (total to buy: 7), M3 screws, 3 mm airsoft BBs or
+printed-in-place balls if the plain printed bearing binds.
+
+The nozzle track must not delay flight parts: flight prints take printer
+priority every day.
 
 ## Sources
 
