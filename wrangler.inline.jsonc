@@ -1,0 +1,7 @@
+{
+  // Fallback deploy: `node scripts/build-inline-worker.mjs && wrangler deploy -c wrangler.inline.jsonc`
+  "name": "f35b-vtol-twin",
+  "main": "dist/worker.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true
+}

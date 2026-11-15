@@ -10,4 +10,7 @@ sized around parts on hand.
 - `docs/build-plan.md` — 14-day build plan. `docs/source-video.md` — reference build.
 
 Run locally: `npm run dev`, open http://localhost:8765.
+Live: https://f35b-vtol-twin.nuwanrx.workers.dev
+
 Deploy to Cloudflare: `npx wrangler deploy` (config in `wrangler.jsonc`).
+Fallback when asset upload is unavailable: `node scripts/build-inline-worker.mjs && npx wrangler deploy -c wrangler.inline.jsonc`.
