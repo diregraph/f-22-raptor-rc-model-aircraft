@@ -1,22 +1,22 @@
 {
  "now": {
-  "mass": 1996,
-  "cg": -25.1,
+  "mass": 1970,
+  "cg": -24.3,
   "np": -39,
-  "margin": 5.8,
-  "hover_worst": 0.599,
+  "margin": 6.1,
+  "hover_worst": 0.593,
   "hover": {
-   "F": 0.599,
-   "M": 0.25,
-   "R": 0.599
+   "F": 0.593,
+   "M": 0.242,
+   "R": 0.593
   },
-  "stall": 11.5,
+  "stall": 11.4,
   "thrust_g": {
    "lift": 1344.0,
    "nozzle_down": 814,
    "roll_pair": 1646.0
   },
-  "ideal_equal_load": 0.525
+  "ideal_equal_load": 0.518
  },
  "first": {
   "mass": 1892,

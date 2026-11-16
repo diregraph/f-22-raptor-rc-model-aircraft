@@ -1,5 +1,5 @@
-// Loads on the three-bearing swivel nozzle and what the two cord servos must hold. Pure functions, used by the
-// bench viewer, tools/nozzle-loads.mjs (which also writes the firmware's thrust-limit table) and the docs.
+// Loads on the three-bearing swivel nozzle and what the three joint gearmotors must hold. Pure functions, used by the
+// bench viewer, tools/nozzle-loads.mjs and the docs.
 //
 // Model, in plain words:
 //   * The jet leaves the exit along d. Its reaction, -T_exit * d, acts on the nozzle at the exit centre. The flow coming
@@ -8,10 +8,8 @@
 //   * Bearings are plain printed flanges clamped by a collar. Each one carries an axial force Fa on its faces (mean
 //     radius rm), a radial force Fr on the collar bore (radius ro) and a tilting moment Mt on its faces. Friction torque
 //     = mu * (Fa * rm + Fr * ro + 4/pi * Mt). The 4/pi comes from a cosine pressure pattern round the face ring.
-//   * Cords lose tension where they turn: capstan factor e^(mu * angle). Servo 1 turns 90 deg at its fairlead; servo 2
-//     the same, plus about 80 deg over posts between the ring and bearing 2; the slave loop about 120 deg.
-//   * Servo coordinates are the bearing-1 collar angle u = a and the drive-ring angle v = a + k b, with c = -b.
-//     Virtual work gives tau_v = (Q_b - Q_c) / k and tau_u = Q_a - (Q_b - Q_c) / k.
+//   * Each joint has its own motor: it holds that joint's generalised force plus its bearing's friction, through the
+//     ring gear and pinion (ratio ring / pinion) at a printed-spur efficiency.
 // Everything is an estimate to be checked on the bench: friction coefficients are the least certain input.
 import { NOZZLE, solve, chain, yawLimit } from './nozzle.js';
 
@@ -24,18 +22,18 @@ export const LOADS = {
   thrustMax: 958, loss90: 0.25,                 // main fan, grams straight (site/js/spec.js THRUSTERS), and the estimated bend loss (spec.js D.nozzle.loss90)
   mass2: 42.7, mass3: 26.7,                     // segment + collar, grams (cad/kit-report.json)
   rMean: [43.6, 48.7, 48.7], rOuter: [46.6, 51.7, 51.7],   // bearing face mean radius and flange rim radius, mm
-  wrap: { fairlead: 90, stage: 80, slave: 120 },             // degrees each cord bends over printed parts
+  mesh: 0.85,                                                // printed spur mesh efficiency, ring gear to pinion
 };
-// Friction cases. "plain" is the drawn design before this change; "ptfe" is with the PTFE seal washers and liners.
+// Friction cases: plain printed flanges, and with the PTFE seal washers.
 export const FRICTION = {
-  plain: { label: 'PETG on PETG, greased', mu: 0.20, cord: 0.25 },
-  ptfe: { label: 'PTFE washers, collar liner and fairlead tubes', mu: 0.08, cord: 0.10 },
+  plain: { label: 'PETG on PETG, greased', mu: 0.20 },
+  ptfe: { label: 'PTFE seal washers', mu: 0.08 },
 };
-// Servos that fit the existing pocket. Stall torque at the voltage given; "budget" is the share of stall we let the
-// nozzle use continuously, so the servo does not sit near stall and cook.
-export const SERVOS = {
-  mg90s_5v: { label: 'MG90S on 5 V', stall: 1.9, budget: 0.7, g: 13.4 },
-  mg90s_6v: { label: 'MG90S on 6 V', stall: 2.2, budget: 0.7, g: 13.4 },
+// Joint motors. Stall torque (kg cm) and free speed (rpm) at the gearbox shaft on 6 V; "budget" is the share of stall we let
+// the nozzle use continuously: a brushed motor holding a load draws current in proportion, so it must not sit near stall.
+export const MOTORS = {
+  n20_100: { label: 'N20 100:1 high-power, 6 V', stall: 2.2, rpm: 320, budget: 0.5, g: 10.5 },
+  n20_50: { label: 'N20 50:1 high-power, 6 V', stall: 1.1, rpm: 625, budget: 0.5, g: 10.5 },
 };
 
 // Generalised forces (N m) on joints a, b, c and the friction torque (N m, per unit mu) of each bearing.
@@ -57,32 +55,32 @@ export function jointLoads(deflection, yaw, thrustG, grav = [0, -1, 0]) {
   return { j, Q, bearings, Te };
 }
 
-// Torque each servo must hold (N m at the servo shaft) for one pose and thrust.
-export function servoTorque(deflection, yaw, thrustG, fr = FRICTION.ptfe) {
-  const { Q, bearings } = jointLoads(deflection, yaw, thrustG), c = NOZZLE.cord, k = c.collar / c.ring;
-  const [f1, f2, f3] = bearings.map(b => b.perMu * fr.mu), cap = deg => Math.exp(fr.cord * deg * RAD);
-  const Qbc = Q[1] - Q[2], loopB = (f2 + f3 * cap(LOADS.wrap.slave)) / k * cap(LOADS.wrap.stage);
-  const tv = Math.abs(Qbc) / k * cap(LOADS.wrap.stage) + loopB;                 // at the drive ring
-  const tu = Math.abs(Q[0] - Qbc / k) + 1.3 * f1 + loopB;                         // at the bearing-1 collar; the ring also drags on its sleeve
-  return { s1: tu * c.drum / c.band1 * cap(LOADS.wrap.fairlead), s2: tv * c.drum / c.ring * cap(LOADS.wrap.fairlead), Q, friction: [f1, f2, f3] };
+// Torque each joint motor must hold at its gearbox shaft (N m) for one pose and thrust.
+export function motorTorque(deflection, yaw, thrustG, fr = FRICTION.ptfe) {
+  const { Q, bearings } = jointLoads(deflection, yaw, thrustG), g = NOZZLE.gear;
+  const friction = bearings.map(b => b.perMu * fr.mu);
+  return { m: Q.map((q, i) => (Math.abs(q) + friction[i]) * g.pinion / g.ring[i] / LOADS.mesh), Q, friction };
 }
 export const kgcm = nm => nm / 0.0981;
 
-// Worst case over yaw left, centre and right at the yaw limit.
-export function worstServo(deflection, thrustG, fr) {
+// Worst motor over yaw left, centre and right at the yaw limit.
+export function worstMotor(deflection, thrustG, fr) {
   let w = 0;
-  for (const s of [-1, 0, 1]) { const r = servoTorque(deflection, s * yawLimit(deflection), thrustG, fr); w = Math.max(w, r.s1, r.s2); }
+  for (const s of [-1, 0, 1]) w = Math.max(w, ...motorTorque(deflection, s * yawLimit(deflection), thrustG, fr).m);
   return w;
 }
 
-// Largest main-fan thrust (grams) at each deflection that keeps both servos inside their budget.
-export function thrustEnvelope(servo = SERVOS.mg90s_6v, fr = FRICTION.ptfe, step = 5) {
-  const lim = servo.stall * servo.budget * 0.0981, out = [];
+// Largest main-fan thrust (grams) at each deflection that keeps every motor inside its budget.
+export function thrustEnvelope(motor = MOTORS.n20_100, fr = FRICTION.ptfe, step = 5) {
+  const lim = motor.stall * motor.budget * 0.0981, out = [];
   for (let d = 0; d <= NOZZLE.maxDeflection; d += step) {
     let lo = 0, hi = LOADS.thrustMax;
-    if (worstServo(d, hi, fr) <= lim) lo = hi;
-    else for (let it = 0; it < 30; it++) { const m = (lo + hi) / 2; if (worstServo(d, m, fr) <= lim) lo = m; else hi = m; }
+    if (worstMotor(d, hi, fr) <= lim) lo = hi;
+    else for (let it = 0; it < 30; it++) { const m = (lo + hi) / 2; if (worstMotor(d, m, fr) <= lim) lo = m; else hi = m; }
     out.push([d, Math.floor(lo)]);
   }
   return out;
 }
+
+// Fastest each joint can turn (deg/s) while holding torque tau (N m): a brushed motor's speed falls in a straight line to stall.
+export const jointSpeed = (motor, i, tau = 0) => motor.rpm * 6 * Math.max(0, 1 - kgcm(tau) / motor.stall) * NOZZLE.gear.pinion / NOZZLE.gear.ring[i];

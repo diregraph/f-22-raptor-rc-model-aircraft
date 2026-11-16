@@ -92,14 +92,14 @@
  "edf_duct": {
   "id": "duct",
   "frame": "base",
-  "note": "Rear flange on the bed. The motor plate bridges 34 mm.",
+  "note": "Rear flange on the bed, supports under the gearmotor plate only. The fan motor plate bridges 34 mm.",
   "bed": [
    96.4,
-   96.4,
+   112.8,
    100.0
   ],
   "solids": 1,
-  "mass": 58.7,
+  "mass": 59.6,
   "matrix": [
    0.0,
    1.0,
@@ -115,7 +115,7 @@
    0,
    0.0,
    -0.0,
-   -0.0,
+   -8.2,
    1
   ]
  },
@@ -152,14 +152,14 @@
  "nozzle_segment_1": {
   "id": "seg1",
   "frame": "j1",
-  "note": "Bearing-1 flange on the bed, supports on. The sleeve behind the flange must be smooth: the drive ring turns on it.",
+  "note": "Bearing-1 flange on the bed, supports on. Carries the joint-2 motor plate underneath.",
   "bed": [
-   96.9,
-   106.0,
-   93.2
+   105.4,
+   103.4,
+   99.8
   ],
   "solids": 1,
-  "mass": 36.0,
+  "mass": 22.7,
   "matrix": [
    0.0,
    -1.0,
@@ -174,22 +174,22 @@
    0.0,
    0,
    -2.0,
-   1.1855,
-   -1.3,
+   -6.12233,
+   -0.0,
    1
   ]
  },
  "nozzle_segment_2": {
   "id": "seg2",
   "frame": "j2",
-  "note": "Lay the upstream bearing face on the bed: rotate 50 degrees in the slicer. Supports on.",
+  "note": "Lay the upstream bearing face on the bed: rotate 50 degrees in the slicer. Supports on. Carries the joint-3 motor plate on top.",
   "bed": [
-   170.5,
+   177.1,
    103.4,
-   81.1
+   98.5
   ],
   "solids": 1,
-  "mass": 32.1,
+  "mass": 33.0,
   "matrix": [
    1.0,
    0.0,
@@ -203,7 +203,7 @@
    1.0,
    0.0,
    0,
-   110.0,
+   113.30104,
    -39.60585,
    -0.0,
    1
@@ -239,47 +239,17 @@
    1
   ]
  },
- "bearing_collar_half": {
-  "id": "collar",
-  "frame": "base",
-  "note": "Flat. Print 4 (bearings 2 and 3). The two bumps carry the cords over the collar.",
-  "bed": [
-   10.4,
-   108.6,
-   54.8
-  ],
-  "solids": 1,
-  "mass": 4.7,
-  "matrix": [
-   1.0,
-   0.0,
-   0.0,
-   0,
-   0.0,
-   0.0,
-   -1.0,
-   0,
-   0.0,
-   1.0,
-   0.0,
-   0,
-   0.0,
-   0.15,
-   -0.0,
-   1
-  ]
- },
  "bearing_collar_half_j1": {
   "id": "collarJ1",
   "frame": "base",
-  "note": "Flat. Print 2 (bearing 1).",
+  "note": "Flat, gear side down. Print 2 (bearing 1). 0.12 mm layers for clean teeth.",
   "bed": [
-   10.4,
-   98.4,
-   49.1
+   12.8,
+   102.0,
+   50.8
   ],
   "solids": 1,
-  "mass": 4.0,
+  "mass": 5.1,
   "matrix": [
    1.0,
    0.0,
@@ -293,23 +263,83 @@
    1.0,
    0.0,
    0,
-   0.0,
+   -1.2,
    0.15,
    0.0,
    1
   ]
  },
- "nozzle_drive_ring": {
-  "id": "driveRing",
-  "frame": "ring",
-  "note": "Flat. Slip it over segment 1 from the front before the nozzle goes on the duct.",
+ "bearing_collar_half_j2": {
+  "id": "collar",
+  "frame": "base",
+  "note": "Flat, gear side down. Print 2 (bearing 2). 0.12 mm layers for clean teeth.",
   "bed": [
-   101.8,
-   101.8,
-   6.6
+   12.8,
+   112.0,
+   55.8
   ],
   "solids": 1,
-  "mass": 6.0,
+  "mass": 5.5,
+  "matrix": [
+   1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   0.0,
+   1.0,
+   0.0,
+   0,
+   -1.2,
+   0.15,
+   0.0,
+   1
+  ]
+ },
+ "bearing_collar_half_j3": {
+  "id": "collarJ3",
+  "frame": "base",
+  "note": "Flat, gear side down. Print 2 (bearing 3): the lug is in a different place from bearing 2's.",
+  "bed": [
+   12.8,
+   112.0,
+   55.8
+  ],
+  "solids": 1,
+  "mass": 5.5,
+  "matrix": [
+   1.0,
+   0.0,
+   0.0,
+   0,
+   0.0,
+   0.0,
+   -1.0,
+   0,
+   0.0,
+   1.0,
+   0.0,
+   0,
+   -1.2,
+   0.15,
+   0.0,
+   1
+  ]
+ },
+ "nozzle_pinion": {
+  "id": "pinion",
+  "frame": "base",
+  "note": "Teeth up. Print 3 at 0.08 mm layers, 100% infill, or buy brass module-1 14-tooth pinions for a 3 mm D shaft.",
+  "bed": [
+   16.0,
+   15.7,
+   5.8
+  ],
+  "solids": 1,
+  "mass": 0.7,
   "matrix": [
    0.0,
    -1.0,
@@ -323,8 +353,8 @@
    0.0,
    0.0,
    0,
-   5.7,
-   0.0,
+   -6.2,
+   -0.0,
    0.0,
    1
   ]
@@ -385,36 +415,6 @@
    0,
    0.125,
    -46.3,
-   -0.0,
-   1
-  ]
- },
- "servo_cord_drum": {
-  "id": "servoDrum",
-  "frame": "base",
-  "note": "Flat, horn recess up. Print 2. The stock servo horn presses into the recess; the horn screw goes through the centre.",
-  "bed": [
-   56.8,
-   56.8,
-   6.0
-  ],
-  "solids": 1,
-  "mass": 8.0,
-  "matrix": [
-   0.0,
-   -1.0,
-   -0.0,
-   0,
-   0.0,
-   0.0,
-   -1.0,
-   0,
-   1.0,
-   0.0,
-   0.0,
-   0,
-   -0.0,
-   -0.0,
    -0.0,
    1
   ]

@@ -2,7 +2,7 @@
 
 Every part of the aircraft as it is now drawn, split into what is already on the shelf and what
 still has to be bought. Masses come from `site/js/spec.js`, which is generated from the CAD, so
-they match the 1,996 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
+they match the 1,970 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
 US dollars at the time of writing, not quotes.
 
 **To buy: about $190**, of which $100 is the flight controller (ArduPilot, decided 2026-11-16). Everything else is either owned or printed.
@@ -30,8 +30,9 @@ US dollars at the time of writing, not quotes.
 | ESP32 DevKit v1 | 1 | 10 g | No longer flies the aircraft (ArduPilot board instead); keep for the nozzle bench rig |
 | MPU6050 gyro board | 1 | 3 g | Not needed with the ArduPilot board |
 | FS-iA6B receiver | 1 | 15 g | |
-| Adjustable regulator, set to 6 V | 1 | 2 g | Spare: the H743 board's servo supply does this (jumper to 6 V). Servo rail. 6 V, not 5 V: the nozzle servos need the extra 15% torque (docs/ducted-propulsion.md) |
-| MG90S servo | 2 | 14 g | Nozzle cords |
+| Adjustable regulator, set to 6 V | 1 | 2 g | Spare: the H743 board's servo supply does this (jumper to 6 V). Servo rail at 6 V: the nozzle gearmotors are rated for it |
+| N20 gearmotor, 6 V 100:1, magnetic encoder | 3 | 11 g | Nozzle joints, one per bearing (docs/ducted-propulsion.md, "Drive") |
+| Nozzle board: RP2040-Zero, 2 x DRV8833 carrier | 1 | 8 g | Homes and drives the three nozzle motors |
 | 9 g servo | 2 | 10 g | Stabilators |
 | 8 × 1 mm carbon tube | 1,950 mm | 76 g total | One 676 mm spar, two 637 mm longerons. About $12 of arrow shaft if the leftovers measure short |
 | M3 hardware, bearings, heat-set inserts | — | in the part masses | Three 8 mm bearings for the nozzle |
@@ -44,7 +45,7 @@ US dollars at the time of writing, not quotes.
 | PETG (structure, mounts, gear, fan and nozzle) | 488 g | 560 g | $11 |
 
 78 parts in all. `python3 cad/build.py` writes every one of them; the bench kit (fan, nozzle,
-collars, drums) comes from `python3 cad/propulsion.py`.
+geared collars, pinions) comes from `python3 cad/propulsion.py`.
 
 ## What drives the cost
 

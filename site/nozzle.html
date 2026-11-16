@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ducted Fan and Swivel Nozzle</title>
-<meta name="description" content="Printable 80 mm ducted fan and three-bearing swivel nozzle for the F-35B model: move the nozzle, see each servo angle, download the parts.">
+<meta name="description" content="Printable 80 mm ducted fan and three-bearing swivel nozzle for the F-35B model: move the nozzle, see each joint and motor, download the parts.">
 <meta name="theme-color" content="#0a0f15">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/style.css">
@@ -32,13 +32,12 @@
 <aside id="kparts" class="panel"><div class="panel-head"><h2>Printed parts</h2><span id="kcount" class="muted"></span></div><div id="klist"></div></aside>
 <aside id="kinfo" class="panel">
   <h2 style="margin-bottom:8px">Nozzle state</h2>
-  <table class="jt"><thead><tr><th>Bearing</th><th>Joint</th><th>Servo</th><th>Pulse</th></tr></thead><tbody id="jrows"></tbody></table>
+  <table class="jt"><thead><tr><th>Bearing</th><th>Joint</th><th>Motor turns from its stop</th></tr></thead><tbody id="jrows"></tbody></table>
   <div class="blk"><h4>Exit direction</h4><p id="kexit"></p></div>
   <div class="blk"><h4>Thrust (estimate)</h4><p id="kthrust"></p></div>
-  <div class="blk"><h4>Servo load (estimate)</h4><p id="kload"></p></div>
-  <div class="blk"><h4>Sealing</h4><p>Each bearing has a 2 mm lip on the downstream part that turns inside a counterbore in the upstream part, so the gap between the flanges sits behind a step, out of the jet. A 0.25 mm PTFE washer between the flange faces closes that gap and cuts the friction the servos fight; a second one behind the upstream flange takes up the play. Washers are shown white. Cut them from sheet with the DXF files in <code>cad/dxf</code>.</p></div>
-  <div class="blk"><h4>How it works</h4><p>Bearing 1 is square to the duct. Bearings 2 and 3 are canted 40° in opposite directions. Turning 2 and 3 by equal and opposite angles bends the jet; bearing 1 turns the whole bend so it points straight down, and a little more or less to swing the jet sideways for yaw. Nothing rides on the nozzle but cords (yellow). Two MG90S servos sit inside the body, each turning a drum. Servo 1 pulls the bearing-1 collar round. Servo 2 pulls a free ring, and cords from that ring work bearing 2. Bearing 3 has no servo: a cord loop makes it mirror bearing 2.</p></div>
-  <div class="blk"><h4>Cord routing</h4><a href="img/nozzle-cords.svg" target="_blank" rel="noopener"><img src="img/nozzle-cords.svg" alt="Side view: servo 1 pulls the bearing-1 collar, servo 2 pulls a free ring whose cords turn bearing 2, and a loop makes bearing 3 follow" style="width:100%;border-radius:8px;display:block"></a><p>Click to enlarge.</p></div>
+  <div class="blk"><h4>Motor load (estimate)</h4><p id="kload"></p></div>
+  <div class="blk"><h4>Sealing</h4><p>Each bearing has a 2 mm lip on the downstream part that turns inside a counterbore in the upstream part, so the gap between the flanges sits behind a step, out of the jet. A 0.25 mm PTFE washer between the flange faces closes that gap and cuts the friction the motors fight; a second one behind the upstream flange takes up the play. Washers are shown white. Cut them from sheet with the DXF files in <code>cad/dxf</code>.</p></div>
+  <div class="blk"><h4>How it works</h4><p>Bearing 1 is square to the duct. Bearings 2 and 3 are canted 40° in opposite directions. Turning 2 and 3 by equal and opposite angles bends the jet; bearing 1 turns the whole bend so it points straight down, and a little more or less to swing the jet sideways for yaw. Each bearing has its own drive, as on proven 3BSM models: the collar is a ring gear keyed to the part downstream, and a small N20 gearmotor with an encoder on the part upstream turns it through a 14-tooth pinion. At power-up the nozzle board drives each joint gently onto a stop (a lug on the collar meets the motor plate), then counts from there.</p></div>
   <div class="blk"><h4>Before you run it</h4><p>A printed fan at 18,000 rpm can shed a blade. Run it behind a board, wear eye protection, and never stand in line with the fan disc.</p></div>
 </aside>
 <section id="kdock" class="panel">

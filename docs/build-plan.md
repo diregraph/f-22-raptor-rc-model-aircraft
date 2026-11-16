@@ -52,8 +52,8 @@ Day 1 exists to replace them with measurements.
 | Roll | L vs R thrust difference | Tail surfaces opposite |
 | Yaw | M swivels left/right | None (no rudder), same as reference |
 
-Servo allocation (all four owned): 2 × MG90S inside the aft body pulling the nozzle
-cords, 2 × 9 g on the tail surfaces.
+Servo allocation: 2 × 9 g on the tail surfaces. The nozzle has three N20 gearmotors and its own
+board instead (`docs/ducted-propulsion.md`, "Drive"); the 2 owned MG90S are spares.
 
 ## 4. Sizing
 
@@ -93,8 +93,8 @@ Wing loading stays low, so forward flight is slow and forgiving.
 | 5 V 3 A regulator (UBEC) | 2 | Powers servos and ESP32 |
 | Propellers 6 in (6040 or 6045), clockwise + anticlockwise | 10 pairs | Main crash consumable |
 | Propellers 4 in, clockwise + anticlockwise | 6 pairs | Roll motors, buried in the wings |
-| MG90S servos | 2 | Spares only: the 2 owned ones drive the nozzle |
-| Braided fishing line, 0.5 mm (about 20 kg) | 1 small spool | Nozzle cords, about 3 m used |
+| N20 gearmotor, 6 V 100:1 high-power, magnetic encoder, extended back shaft | 3 | Nozzle joints |
+| RP2040-Zero and DRV8833 motor-driver carriers | 1 + 2 | Nozzle board |
 | XT60 connectors, 14 AWG silicone wire, heat-shrink | — | Power harness |
 | Low-voltage buzzer alarm for the battery | 2 | |
 | Second 4-cell 3300 mAh battery | 1 | Optional; doubles test time per day |
@@ -185,8 +185,6 @@ foamed wall with 4% infill.
 | `skid_rear` | PETG | 155 x 200 x 30 | 18 |
 | `battery_tray` | PETG | 142 x 50 x 10 | 14 |
 | `fc_sled` | PETG | 88 x 59 x 23 | 8 |
-| `cord_fairlead_right` | PETG | 62 x 9 x 4 | 2 |
-| `cord_fairlead_left` | PETG | 62 x 9 x 4 | 2 |
 | `nose_plug` | PETG | 74 x 138 x 11 | 17 |
 | `hatch_latch` | PETG | 6 x 30 x 13 | 1 |
 | `canopy` | PETG-clear | 180 x 68 x 43 | 15 |
@@ -214,12 +212,12 @@ foamed wall with 4% infill.
 | `nozzle_segment_1` | PETG | 97 x 106 x 91 | 40 |
 | `nozzle_segment_2` | PETG | 170 x 103 x 82 | 40 |
 | `nozzle_segment_3` | PETG | 82 x 103 x 89 | 21 |
-| `bearing_collar_half` | PETG | 10 x 109 x 55 | 5 |
-| `bearing_collar_half_j1` | PETG | 10 x 98 x 49 | 4 |
-| `nozzle_drive_ring` | PETG | 102 x 102 x 7 | 6 |
-| `servo_cord_drum` | PETG | 57 x 57 x 6 | 10 |
+| `bearing_collar_half_j1` | PETG | 13 x 102 x 51 | 5 |
+| `bearing_collar_half_j2` | PETG | 13 x 112 x 56 | 6 |
+| `bearing_collar_half_j3` | PETG | 13 x 112 x 56 | 6 |
+| `nozzle_pinion` | PETG | 16 x 16 x 6 | 1 |
 
-Print quantities above one: `bearing_collar_half` x 4, `bearing_collar_half_j1` x 2, `servo_cord_drum` x 2.
+Print quantities above one: each `bearing_collar_half_j*` x 2, `nozzle_pinion` x 3.
 
 **LW-PLA slicing.** The shell files are solid bodies. Slice with 1 wall, 4% gyroid
 infill, 3 bottom layers and 0 top layers so they print hollow. The inner wing
@@ -259,7 +257,7 @@ this build; flying it needs a 64-70 mm ducted fan and a 60 A+ controller.
 | Days | Step |
 |---|---|
 | 2-4 | CAD: three duct segments, about 70 mm bore, joined by printed ring bearings; joints 2 and 3 cut at an angle. Print one joint first and check it turns freely |
-| 5-7 | Print all three segments, the collars, the drive ring and two cord drums. String the cords as in `docs/ducted-propulsion.md` |
+| 5-7 | Print all three segments, the geared collars and the pinions; fit the three gearmotors as in `docs/ducted-propulsion.md` |
 | 8-10 | Second ESP32 sketch: two inputs (tilt, yaw) to two servo angles. Compute the angles with rotation matrices offline, store as a lookup table |
 | 11-14 | Drive it from two spare receiver channels; blow air through it with an A2212 2700KV and 6 x 4 propeller in a printed duct, on the 3-cell pack and Skywalker controller |
 

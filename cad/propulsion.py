@@ -1,10 +1,11 @@
 """Printed 80 mm ducted fan for the EMAX 2306 motor and a three-bearing swivel nozzle that sits flush with the body.
-Nothing rides on the nozzle but cords: two MG90S servos buried in the aft body pull them (see docs/ducted-propulsion.md).
+Gear drive, as on proven 3BSM models: each bearing collar is a ring gear, and a micro gearmotor with an encoder on the part
+upstream of it turns it through a pinion. The motors home against a lug on each collar (see docs/ducted-propulsion.md).
 Run: python3 cad/propulsion.py
 
 Kit frame: +X is the flow direction (aft), +Y up, +Z right. x = 0 is the first nozzle bearing.
 Everything here is a first design to be printed, run on the thrust stand and corrected.
-The joint maths lives in site/js/nozzle.js; ALPHA and the cord radii must match it.
+The joint maths lives in site/js/nozzle.js; ALPHA and the gear tooth counts must match it.
 """
 import json, math, os, shutil, sys, time
 import cadquery as cq
@@ -34,17 +35,24 @@ NECK_UP, NECK_DN = 6.0, 6.0      # straight length of tube each side of a canted
 SWIRL_K = 12.5                   # swirl leaving the rotor, as Vtheta * r / Vaxial in mm (free vortex, from analysis/fan_bem.py at full power)
 VANE_T = 1.6                     # cambered stator vane thickness
 R_J1, R_J = (BORE + 2 * TIP_GAP) / 2 + FL_W, DJ / 2 + FL_W     # flange radius at bearing 1 and at the canted bearings
-G_W, G_D, CORD = 1.4, 1.2, 0.3  # cord groove width and depth; the cord centre rides 0.3 above the groove floor
-R_BAND1 = R_J1 + 2.6 - G_D + CORD          # cord radius on the bearing-1 collar            (NOZZLE.cord.band1)
-R_COLLAR = R_J + 2.6 - G_D + CORD          # cord radius on the bearing-2 and -3 collars    (NOZZLE.cord.collar)
-RING_ID, RING_W, RING_X = R_J1 + 0.6, 6.6, FL_T + 2.2 + 0.5      # free drive ring: slips over the bearing-1 flange, rides on segment 1
-R_RING = RING_ID + 2.5 + CORD              # cord radius on the drive ring                 (NOZZLE.cord.ring)
-DRUM_R, DRUM_T = B.NZ["drum_r"], B.NZ["drum_t"]                  # servo drum cord radius  (NOZZLE.cord.drum)
+# Gear drive (docs/ducted-propulsion.md, "Drive"). Each collar carries a ring gear and turns with the part downstream of its
+# bearing; the motor sits on the part upstream, so nothing has to reach across a moving joint but a motor lead.
+MOD, PA, Z_PIN = 1.0, 20.0, 14           # module, pressure angle, pinion teeth
+Z_RING = (100, 110, 110)                 # ring-gear teeth on the collars of bearings 1, 2, 3        (NOZZLE.gear.ring in site/js/nozzle.js)
+GEAR_W = 4.6                             # tooth face width: the upstream part of the collar; the zip tie sits in the rest
+BACKLASH = 0.15                          # mm taken off every tooth at the pitch circle: printed gears need running play
+CD = [(z + Z_PIN) * MOD / 2 + 0.1 for z in Z_RING]   # pinion centre from the bearing axis
+MOTOR_CLOCK = (-90.0, 180.0, 0.0)        # where each motor sits round its bearing (bearing frame, nozzle straight): joint 1 beside the duct,
+                                         # inside the body; joint 2 under segment 1 and joint 3 on top of segment 2, each on its segment's long side
+GM = dict(w=12.0, h=10.0, box=9.2, can=15.0, enc=4.5, hole=9.0)   # N20 micro gearmotor: 12 x 10 section, gearbox, can, magnetic encoder
+PLATE = (-8.6, -6.4)                     # motor face plate, bearing frame x: just upstream of the collar
+assert abs(CD[0] - B.NZ["cd"]) < 1e-6, "cad/build.py NZ['cd'] must match the joint-1 centre distance"
+STOP_Q = (-62.0, -8.0, 8.0)              # joint angle where a collar lug meets the motor plate: the homing stop, 8 degrees past the travel
 SHORT = (0.0, 180.0, 180.0)                # clock angle of the short side of the wedge at each bearing, seen from its downstream part
 # Sealing (see docs/ducted-propulsion.md, "Sealing"). Two things stop jet air leaking out of each bearing:
 #   a spigot: a short lip on the downstream part that reaches back into a counterbore in the upstream part, so the gap
 #             between the flanges is behind a step, out of the jet, and the air must turn twice to get out;
-#   a PTFE washer between the flange faces, 0.25 mm sheet, which also lowers the friction the cord servos fight.
+#   a PTFE washer between the flange faces, 0.25 mm sheet, which also lowers the friction the motors fight.
 # A second washer between the collar's upstream leg and the upstream flange takes up the play, so the bearing cannot rattle.
 SPIG_L, SPIG_T, SPIG_GAP = 2.0, 0.9, 0.4    # spigot length and wall, and its clearance in the counterbore (radial and at the end)
 PTFE_T = 0.25                               # PTFE sheet
@@ -145,15 +153,6 @@ def key(j):                 # rib behind the downstream flange: it fills a notch
     r = JOINTS[j][2] / 2
     return rot_x(box(FL_T - 0.1, FL_T + 2.3, r - 1.0, r + FL_W - 0.6, -3.0, 3.0), SHORT[j])
 
-def sector(a0, a1, x0=-30.0, x1=30.0, r=200.0):      # wedge between two clock angles (degrees from +Y toward +Z), for trimming
-    n = max(2, int(abs(a1 - a0) / 6) + 1)
-    pts = [(0.0, 0.0)] + [(-r * math.sin(math.radians(a0 + (a1 - a0) * i / n)), r * math.cos(math.radians(a0 + (a1 - a0) * i / n))) for i in range(n + 1)]
-    return cq.Workplane("YZ").polyline(pts).close().extrude(x1 - x0).translate((x0, 0, 0))
-
-def post(x0, x1, r0, r1, clock, w=5.0):      # eyelet post: the cord runs through the hole near its top, along the circumference
-    p = box(x0, x1, r0, r1, -w / 2, w / 2)
-    return rot_x(p, clock), rot_x(cyl("z", 0.9, -w, w, (x0 + x1) / 2, r1 - 1.9), clock)
-
 def annulus(x0, x1, r0, r1): return revolve([(x0, r0), (x0, r1), (x1, r1), (x1, r0)])
 
 def stator_vane(x0, x1, r_in, r_out, n=14):
@@ -181,7 +180,8 @@ def fan_duct():
         else: v = stator_vane(X_MOTOR_FACE + 1, X_STATOR1 - 1, HUB_R - 1, r0 + 1)
         body = body.union(rot_x(v, 360.0 * i / N_VANES + 36))
     body = body.union(flange(0, -1))
-    body = body.cut(counterbore(0))
+    m, h = motor_mount(0); body = body.union(m)                                 # joint-1 motor plate: the motor runs forward into the body
+    body = body.cut(counterbore(0)).cut(h)
     cut = (cyl("x", r0, X_DUCT0 + BELL, 1, 0, 0).cut(cyl("x", HUB_R, X_MOTOR_FACE, X_STATOR1, 0, 0)).cut(cyl("x", r0 + 5, X_MOTOR_FACE + 1, X_STATOR1 - 1, 0, 0)))
     cut = cut.union(B.motor_holes("x", X_MOTOR_FACE - 1, X_MOTOR_FACE + 5, 0, 0))
     cut = cut.union(rot_x(box(X_MOTOR_FACE + 5, X_STATOR1 - 5, 8, r1 + 3, -1.6, 1.6), 36))      # wire slot through the wide vane
@@ -198,42 +198,74 @@ def tail_cone():
 
 def segment(k):
     """nozzle segment k (0, 1, 2): downstream half of bearing k, upstream half of bearing k + 1 (or the exit).
-    No servo, no gear: only flanges, a key for the collar, and small posts and bands that guide the cords."""
+    Segments 1 and 2 also carry the motor that turns the next bearing."""
     body = seg_tube(k, NW).union(place(flange(k, 1), k)).union(place(key(k), k)).union(place(spigot(k), k))
     cut = seg_tube(k, 0.0)
-    def add(shape, hole, j):
-        nonlocal body, cut
-        body = body.union(place(shape, j)); cut = cut.union(place(hole, j)) if hole is not None else cut
-    if k < 2: body = body.union(place(flange(k + 1, -1), k + 1)); cut = cut.union(place(counterbore(k + 1), k + 1))
-    if k == 0:
-        body = body.union(annulus(RING_X - 0.1, RING_X + RING_W + 0.3, 30.0, RING_ID - 0.3))               # sleeve the drive ring turns on
-        for cl in (120, 240): body = body.union(rot_x(box(RING_X + RING_W + 0.4, RING_X + RING_W + 2.2, 30.0, RING_ID + 1.6, -3, 3), cl))   # keep the ring on
-        for sg in (-1, 1):
-            add(*post(RING_X + RING_W + 0.5, RING_X + RING_W + 3.9, 30.0, R_RING + 1.9, sg * 20), 0)        # cords leave the drive ring here ...
-            add(*post(-FL_T - 2.2 - 4.4, -FL_T - 2.2 - 0.8, 30.0, R_COLLAR + 1.9, sg * 20), 1)              # ... cross the short side, and reach the bearing-2 collar here
-        x0, x1 = -FL_T - 2.2 - 3.6, -FL_T - 2.2 - 0.6                                                      # slave band: a sector on the long side
-        band = annulus(x0, x1, 30.0, R_COLLAR - CORD + G_D).cut(annulus(x0 + 0.8, x1 - 0.8, R_COLLAR - CORD, 80.0)).intersect(sector(145, 300))
-        holes = rot_x(cyl("x", 0.75, x0 - 1, x1 + 1, R_COLLAR - 3.5, 0), 151).union(rot_x(cyl("x", 0.75, x0 - 1, x1 + 1, R_COLLAR - 3.5, 0), 294))
-        add(band, holes, 1)
-    if k == 1:
-        for sg in (-1, 1): add(*post(-FL_T - 2.2 - 4.4, -FL_T - 2.2 - 0.8, 30.0, R_COLLAR + 1.9, 180 + sg * 20), 2)   # slave cords reach the bearing-3 collar here
+    if k < 2:
+        body = body.union(place(flange(k + 1, -1), k + 1)); cut = cut.union(place(counterbore(k + 1), k + 1))
+        m, h = motor_mount(k + 1); body = body.union(place(m, k + 1)); cut = cut.union(place(h, k + 1))
     return body.cut(cut)
 
-def collar_half(rf=None, bosses=True):
-    """Half of a bearing collar. Two halves clamp the pair of flanges; a zip tie sits in the middle groove.
-    The collar is also a cord pulley: one groove on each shoulder, slits to knot the cords in, a notch for the segment's key."""
-    rf = R_J if rf is None else rf
-    o, t = rf + 2.6, FL_T + 2.2
-    c = revolve([(-t, rf - LEG), (-t, o), (t, o), (t, rf - LEG), (FL_T + COLLAR_PLAY, rf - LEG), (FL_T + COLLAR_PLAY, rf + 0.35), (-FL_T - COLLAR_PLAY, rf + 0.35), (-FL_T - COLLAR_PLAY, rf - LEG)])
-    cut = annulus(-2.2, 2.2, o - G_D, o + 0.3)                                                            # zip tie
-    for sx in (-1, 1):
-        a, b = sorted((sx * 3.0, sx * (3.0 + G_W))); cut = cut.union(annulus(a, b, o - G_D, o + 0.3))     # cord grooves
-        a, b = sorted((sx * (2.9 + G_W), sx * (t + 0.1)))
-        for cl in (-67.5, -22.5, 22.5, 67.5): cut = cut.union(rot_x(box(a, b, o - G_D, o + 0.3, -0.5, 0.5), cl))   # knot slits
-    if bosses:                                                                                            # the slave cords pass through these, over the collar
-        for sg in (-1, 1):
-            c = c.union(rot_x(box(-t, t, o - 0.4, rf + 5.8, -2.6, 2.6), sg * 20))
-            cut = cut.union(rot_x(cyl("x", 0.9, -t - 1, t + 1, rf + 4.3, 0), sg * 20))
+# ------------------------------------------------------------------ gear drive
+def gear_pts(z, m=MOD):
+    """Involute spur gear outline in the CadQuery (Y, Z) plane, tooth gaps at 0 and 180 degrees (the collar split lines)."""
+    rp = z * m / 2; rb = rp * math.cos(math.radians(PA)); ra, rf = rp + m, rp - 1.25 * m
+    inv = lambda a: math.tan(a) - a
+    psi_p = math.pi / (2 * z) - BACKLASH / 2 / rp + inv(math.radians(PA))
+    psi = lambda r: psi_p - inv(math.acos(min(1.0, rb / r)))
+    r0 = max(rf, rb); rs = [r0 + (ra - r0) * i / 6 for i in range(7)]
+    pts = []
+    for k in range(z):
+        c = 2 * math.pi * (k + 0.5) / z
+        side = [(r, c - psi(r)) for r in rs]
+        flank = ([(rf, c - psi(r0))] if rf < r0 else []) + side + [(r, 2 * c - t) for r, t in reversed(side)] + ([(rf, c + psi(r0))] if rf < r0 else [])
+        pts += [(r * math.cos(t), r * math.sin(t)) for r, t in flank]
+    return pts
+
+def gear(z, x0, x1):         # spur gear about X between x0 and x1
+    return cq.Workplane("YZ").polyline(gear_pts(z)).close().extrude(x1 - x0).translate((x0, 0, 0))
+
+def motor_mount(j):
+    """Face plate for the N20 gearmotor that turns bearing j, with a web back along the upstream part, in the bearing frame.
+    The gearbox screws to the plate (two M1.6); the pinion on its shaft meets the collar's ring gear. The plate is also the
+    homing stop: a lug on the collar runs into its side (STOP_Q)."""
+    r_in = JOINTS[j][2] / 2 + (0.4 if j == 0 else -15.0)          # the duct's stator zone must not be filled; a segment's bore cut trims the rest
+    m = box(PLATE[0], PLATE[1], r_in, CD[j] + 7.5, -7.5, 7.5).union(box(PLATE[0] - 9.0, PLATE[1], r_in, CD[j] - GM["h"] / 2 - 0.4, -1.2, 1.2))
+    h = cyl("x", 2.4, PLATE[0] - 1, PLATE[1] + 1, CD[j], 0)                           # gearbox boss and shaft
+    for sg in (-1, 1): h = h.union(cyl("x", 0.85, PLATE[0] - 1, PLATE[1] + 1, CD[j], sg * GM["hole"] / 2))   # M1.6 screws
+    return rot_x(m, MOTOR_CLOCK[j]), rot_x(h, MOTOR_CLOCK[j])
+
+def motor_env(j, pinion=True):  # the gearmotor itself (bought), bearing frame: for the clash checks and the viewer
+    x1 = PLATE[0]; x0 = x1 - GM["box"] - GM["can"] - GM["enc"]
+    e = box(x0, x1, CD[j] - GM["h"] / 2, CD[j] + GM["h"] / 2, -GM["w"] / 2, GM["w"] / 2)
+    if pinion: e = e.union(cyl("x", (Z_PIN + 2) * MOD / 2, -GEAR_W - 1.0, -0.4, CD[j], 0))
+    return rot_x(e, MOTOR_CLOCK[j])
+
+def lug_clock(j):
+    """Clock angle (bearing frame, nozzle straight) of the collar lug that meets the motor plate at STOP_Q[j]."""
+    r = JOINTS[j][2] / 2 + FL_W                                       # the lug's outer edge sits near the flange rim
+    hp, hl = math.degrees(math.asin(7.5 / r)), math.degrees(math.asin(2.0 / r))
+    s = 1 if STOP_Q[j] > 0 or j == 0 else -1                           # the stop is past the top of the travel for joints 1 and 3
+    return MOTOR_CLOCK[j] - s * (hp + hl) - STOP_Q[j]
+
+def pinion():
+    """Pinion for the N20's 3 mm D shaft. Press on and glue; a brass module-1 14-tooth pinion fits the same."""
+    p = gear(Z_PIN, -GEAR_W - 0.8, -0.4).union(cyl("x", 3.6, PLATE[1] + 0.2, -GEAR_W - 0.7, 0, 0))
+    bore = cyl("x", 1.55, PLATE[1], 1, 0, 0).intersect(box(PLATE[1] - 1, 2, -2, 1.25, -2, 2))
+    return p.cut(bore)
+
+def collar_half(j=1):
+    """Half of a bearing collar. Two halves clamp the pair of flanges; a zip tie in the groove holds them together.
+    The upstream part of the collar is a ring gear (teeth split on a gap); a notch takes the segment's key, so the collar
+    turns with the part downstream of the bearing, and a lug on its upstream face is the homing stop."""
+    rf = R_J1 if j == 0 else R_J
+    o, t, rr = rf + 2.6, FL_T + 2.2, Z_RING[j] * MOD / 2 - 1.25 * MOD
+    c = revolve([(-t, rf - LEG), (-t, rr), (-t + GEAR_W, rr), (-t + GEAR_W, o), (t, o), (t, rf - LEG), (FL_T + COLLAR_PLAY, rf - LEG), (FL_T + COLLAR_PLAY, rf + 0.35),
+                 (-FL_T - COLLAR_PLAY, rf + 0.35), (-FL_T - COLLAR_PLAY, rf - LEG)])
+    c = c.union(gear(Z_RING[j], -t, -t + GEAR_W).cut(cyl("x", rr - 0.3, -t - 1, 0, 0, 0)))
+    l = (lug_clock(j) - SHORT[j] + 90) % 180 - 90                     # lug clock on this half: both halves carry one, 180 degrees apart
+    c = c.union(rot_x(box(-t - 2.4, -t + 0.5, rf - LEG + 0.5, rf + 1.8, -2.0, 2.0), l))
+    cut = annulus(-t + GEAR_W + 0.9, t - 0.9, o - 1.2, o + 0.3)                                            # zip tie
     cut = cut.union(box(FL_T + 0.2, t + 0.1, rf - LEG - 0.1, rf - 0.3, -3.4, 3.4))                         # notch for the key
     return c.cut(cut).intersect(box(-20, 20, 0.15, 200, -200, 200))
 
@@ -241,43 +273,22 @@ def seal_washer(j=1):       # PTFE sheet washer: one between the flange faces, o
     r0, r1 = WASHER(j)
     return annulus(0.0, PTFE_T, r0, r1)
 
-def collar_half_j1(): return collar_half(R_J1, False)    # bearing 1 is on the round duct: smaller, and nothing crosses it
-
-def drive_ring():
-    """Free ring just behind bearing 1. Servo 2 turns it from the body; its second groove carries the cords that work bearing 2."""
-    r0, r1 = RING_ID, R_RING - CORD + G_D
-    c = annulus(0, RING_W, r0, r1)
-    cut = annulus(0.9, 0.9 + G_W, R_RING - CORD, r1 + 1).union(annulus(RING_W - 0.9 - G_W, RING_W - 0.9, R_RING - CORD, r1 + 1))
-    for cl in range(0, 360, 60): cut = cut.union(rot_x(box(0.9, RING_W - 0.9, R_RING - CORD - 0.6, r1 + 1, -2.0, 2.0), cl + 30))   # knot pockets between the grooves
-    return c.cut(cut).translate((RING_X, 0, 0))
-
-def servo_drum():
-    """Cord drum for an MG90S. The stock single-arm horn presses into the recess; the horn screw holds it on."""
-    r1 = DRUM_R - CORD + G_D
-    c = annulus(0, DRUM_T, 0, r1).cut(annulus((DRUM_T - G_W) / 2, (DRUM_T + G_W) / 2, DRUM_R - CORD, r1 + 1))
-    cut = cyl("x", B.HORN_HUB / 2, DRUM_T - 2.9, DRUM_T + 1, 0, 0).union(box(DRUM_T - 2.9, DRUM_T + 1, -B.HORN_LEN, 0, -B.HORN_W / 2, B.HORN_W / 2))
-    cut = cut.union(cyl("x", 1.6, -1, DRUM_T + 1, 0, 0))
-    for i in range(5): cut = cut.union(rot_x(cyl("x", 6.5, -1, DRUM_T + 1, 16.5, 0), 36 + 72 * i))           # lightening holes, clear of the horn arm
-    cut = cut.union(annulus(-1, 1.8, 5.0, DRUM_R - CORD - 2.0))                                              # pocket under the web: pays for the seal washers
-    for cl in (90, 270): cut = cut.union(rot_x(box((DRUM_T - G_W) / 2 - 0.1, DRUM_T + 0.1, DRUM_R - CORD - 0.5, r1 + 1, -0.5, 0.5), cl))   # knot slits
-    return c.cut(cut)
-
 UP, DOWN = [((0, 1, 0), -90)], [((0, 1, 0), 90)]      # stand on the upstream / downstream end
 PARTS = {
     "lift_fan_rotor": (lift_rotor, "liftRotor", DOWN, "lift", "Spinner down, supports under the blade tips only. PETG or PLA+, 0.12 mm layers, 5 walls, 100% infill. Mirror image of the main fan: it turns the other way. Balance it before running."),
     "lift_fan_ring": (lift_ring, "liftRing", DOWN, "lift", "Flared lip on the bed. 2 walls. Press it into the fan bay from the top."),
     "edf_impeller": (impeller, "impeller", DOWN, "base", "Spinner down, supports under the blade tips only. PETG or PLA+, 0.12 mm layers, 5 walls, 100% infill. Balance it before running."),
-    "edf_duct": (fan_duct, "duct", DOWN, "base", "Rear flange on the bed. The motor plate bridges 34 mm."),
+    "edf_duct": (fan_duct, "duct", DOWN, "base", "Rear flange on the bed, supports under the gearmotor plate only. The fan motor plate bridges 34 mm."),
     "edf_tail_cone": (tail_cone, "tailCone", UP, "base", "Open end on the bed. Push fit; take it off to reach the motor screws."),
-    "nozzle_segment_1": (lambda: segment(0), "seg1", UP, "j1", "Bearing-1 flange on the bed, supports on. The sleeve behind the flange must be smooth: the drive ring turns on it."),
-    "nozzle_segment_2": (lambda: segment(1), "seg2", [((0, 0, 1), 0)], "j2", "Lay the upstream bearing face on the bed: rotate 50 degrees in the slicer. Supports on."),
+    "nozzle_segment_1": (lambda: segment(0), "seg1", UP, "j1", "Bearing-1 flange on the bed, supports on. Carries the joint-2 motor plate underneath."),
+    "nozzle_segment_2": (lambda: segment(1), "seg2", [((0, 0, 1), 0)], "j2", "Lay the upstream bearing face on the bed: rotate 50 degrees in the slicer. Supports on. Carries the joint-3 motor plate on top."),
     "nozzle_segment_3": (lambda: segment(2), "seg3", DOWN, "j3", "Exit on the bed, supports under the flange."),
-    "bearing_collar_half": (collar_half, "collar", None, "base", "Flat. Print 4 (bearings 2 and 3). The two bumps carry the cords over the collar."),
-    "bearing_collar_half_j1": (collar_half_j1, "collarJ1", None, "base", "Flat. Print 2 (bearing 1)."),
-    "nozzle_drive_ring": (drive_ring, "driveRing", UP, "ring", "Flat. Slip it over segment 1 from the front before the nozzle goes on the duct."),
+    "bearing_collar_half_j1": (lambda: collar_half(0), "collarJ1", None, "base", "Flat, gear side down. Print 2 (bearing 1). 0.12 mm layers for clean teeth."),
+    "bearing_collar_half_j2": (lambda: collar_half(1), "collar", None, "base", "Flat, gear side down. Print 2 (bearing 2). 0.12 mm layers for clean teeth."),
+    "bearing_collar_half_j3": (lambda: collar_half(2), "collarJ3", None, "base", "Flat, gear side down. Print 2 (bearing 3): the lug is in a different place from bearing 2's."),
+    "nozzle_pinion": (pinion, "pinion", UP, "base", "Teeth up. Print 3 at 0.08 mm layers, 100% infill, or buy brass module-1 14-tooth pinions for a 3 mm D shaft."),
     "seal_washer": (lambda: seal_washer(1), "washer", None, "base", "Not printed: cut 4 from 0.25 mm PTFE sheet (bearings 2 and 3), using the DXF or this file as a template. Silicone grease both sides."),
     "seal_washer_j1": (lambda: seal_washer(0), "washerJ1", None, "base", "Not printed: cut 2 from 0.25 mm PTFE sheet (bearing 1)."),
-    "servo_cord_drum": (servo_drum, "servoDrum", UP, "base", "Flat, horn recess up. Print 2. The stock servo horn presses into the recess; the horn screw goes through the centre."),
 }
 
 def main():
@@ -305,16 +316,15 @@ def main():
         if not s.val().isValid(): print("  WARNING: invalid solid", name)
         report[name] = {"id": tid, "frame": frame, "note": note, "bed": [round(bb.xlen, 1), round(bb.ylen, 1), round(bb.zlen, 1)], "solids": s.solids().size(), "mass": round(mass, 1), "matrix": [round(x, 5) for x in mat]}
         print(f"{name:24s} bed {report[name]['bed']}  solids {report[name]['solids']}  ~{report[name]['mass']} g  ({time.time() - t0:.1f}s)", flush=True)
-    geo = {"alpha": ALPHA, "joints": [j[0] for j in JOINTS], "bore": BORE, "exitX": L1 + L2 + L3, "rotorX": (X_WEB0 + X_WEB1) / 2, "ringX": RING_X,
-           "cord": {"band1": R_BAND1, "ring": R_RING, "collar": R_COLLAR, "drum": DRUM_R},
-           "drive": {"drumX": B.X_J1 - B.NZ["xs"], "drumY": B.NZ["yc"] - B.Y_AX, "drumZ": B.NZ["zd"], "drumT": DRUM_T, "bodyX": B.X_J1 - B.NZ["xc"], "bodyZ": B.NZ["zc"],
-                     "fairX": B.X_J1 - B.X_NOTCH, "bandX": -(3.0 + G_W / 2), "ringX": RING_X + 0.9 + G_W / 2}}
-    print("cord radii: bearing-1 collar %.1f, drive ring %.1f, canted collars %.1f, servo drum %.1f  (must match NOZZLE.cord in site/js/nozzle.js)" % (R_BAND1, R_RING, R_COLLAR, DRUM_R))
+    geo = {"alpha": ALPHA, "joints": [j[0] for j in JOINTS], "bore": BORE, "exitX": L1 + L2 + L3, "rotorX": (X_WEB0 + X_WEB1) / 2,
+           "gear": {"ring": list(Z_RING), "pinion": Z_PIN, "module": MOD, "cd": [round(c, 2) for c in CD], "clock": list(MOTOR_CLOCK), "plate": list(PLATE),
+                    "faceW": GEAR_W, "motor": GM, "stop": list(STOP_Q), "lug": [round(lug_clock(j), 2) for j in range(3)]}}
+    print("gears: rings %s teeth, pinion %d, module %.1f, centre distances %s mm; lugs at clock %s  (must match NOZZLE.gear in site/js/nozzle.js)" % (Z_RING, Z_PIN, MOD, [round(c, 2) for c in CD], [round(lug_clock(j), 1) for j in range(3)]))
     json.dump({"geometry": geo, "parts": {v["id"]: {k: v[k] for k in ("frame", "note", "bed", "mass", "matrix")} | {"file": n} for n, v in report.items()}}, open(os.path.join(out, "kit.json"), "w"))
     json.dump(report, open(os.path.join(here, "kit-report.json"), "w"), indent=1)
     if "--fast" in sys.argv: return                       # geometry only: skip the clash checks
     rings = assembled_rings(solids)
-    names, clashes = [n for n in solids if "collar" not in n and "lift" not in n and "drum" not in n and "ring" not in n and "washer" not in n], []
+    names, clashes = [n for n in solids if "collar" not in n and "lift" not in n and "pinion" not in n and "washer" not in n], []
     def overlap(a, b):
         inter = a.intersect(b); return sum(x.Volume() for x in inter.solids().vals()) if inter.vals() else 0
     for i, a in enumerate(names):
@@ -334,15 +344,21 @@ def main():
         v = overlap(solids[n], motor)
         if v > 1.0: clashes.append((n, "motor", round(v, 1)))
     print("clashes with the nozzle straight (mm^3):", clashes or "none")
-    print("total printed mass ~%.0f g (impeller, duct, cone, 3 segments, 6 collar halves, drive ring, 2 drums, 6 PTFE washers)" % (sum(v["mass"] for k, v in report.items() if "collar" not in k and "drum" not in k and "lift" not in k and "washer" not in k) + 4 * report["seal_washer"]["mass"] + 2 * report["seal_washer_j1"]["mass"] + 4 * report["bearing_collar_half"]["mass"] + 2 * report["bearing_collar_half_j1"]["mass"] + 2 * report["servo_cord_drum"]["mass"]))
-    installed_check(solids, rings)
+    print("total printed mass ~%.0f g (impeller, duct, cone, 3 segments, 6 collar halves, 3 pinions, 6 PTFE washers)" % (sum(v["mass"] for k, v in report.items() if "collar" not in k and "pinion" not in k and "lift" not in k and "washer" not in k) + 4 * report["seal_washer"]["mass"] + 2 * report["seal_washer_j1"]["mass"] + 2 * sum(report["bearing_collar_half_j%d" % j]["mass"] for j in (1, 2, 3)) + 3 * report["nozzle_pinion"]["mass"]))
+    installed_check(solids, {"collar %d" % (j + 1): collar_env(j) for j in range(3)})
 
-def assembled_rings(solids):    # the collars as whole rings on their bearings, and the drive ring, nozzle straight
+def collar_env(j):         # whole collar as a smooth ring out to the gear tips, with its lugs: fast stand-in for the swing checks
+    rf = R_J1 if j == 0 else R_J
+    t, ra = FL_T + 2.2, Z_RING[j] * MOD / 2 + MOD
+    c = annulus(-t, -t + GEAR_W, rf + 0.4, ra).union(annulus(-t + GEAR_W, t, rf + 0.4, rf + 2.6))
+    for k in (0, 180): c = c.union(rot_x(box(-t - 2.4, -t + 0.5, rf - LEG + 0.5, rf + 1.8, -2.0, 2.0), lug_clock(j) + k))
+    return place(c, j)
+
+def assembled_rings(solids):    # the collars as whole rings on their bearings, nozzle straight
     out = {}
     for j in range(3):
-        h = solids["bearing_collar_half" if j else "bearing_collar_half_j1"]
+        h = solids["bearing_collar_half_j%d" % (j + 1)]
         out["collar %d" % (j + 1)] = place(rot_x(h, SHORT[j]).union(rot_x(h, SHORT[j] + 180)), j)
-    out["drive ring"] = solids["nozzle_drive_ring"]
     return out
 
 def installed_check(solids, rings):
@@ -364,14 +380,23 @@ def installed_check(solids, rings):
             "aft bridge": B.aft_bridge(), "ground": box(-700, 100, B.GROUND_Y - 40, B.GROUND_Y, -300, 300)}
     n2, n3 = kit_axis((math.cos(al), math.sin(al), 0)), kit_axis((math.cos(al), -math.sin(al), 0))
     j2, j3 = cq.Vector(JOINTS[1][0], 0, 0), cq.Vector(JOINTS[2][0], 0, 0)
-    worst = {}
+    ovl = lambda p, q: (lambda i: sum(x.Volume() for x in i.solids().vals()) if i.vals() else 0)(p.intersect(q))
+    m1, m1b = motor_env(0), motor_env(0, False)                            # fixed to the duct
+    m2, m3 = place(motor_env(1), 1), place(motor_env(2), 2)                # ride on segments 1 and 2
+    m2b, m3b = place(motor_env(1, False), 1), place(motor_env(2, False), 2)   # without the pinion, which is meant to touch its own collar
+    worst, self_hits = {}, {}
     for d in (0, 30, 60, 90, 100):
         for yaw0 in (-20, 0, 20):
             yaw = yaw0 * (20 - max(0, d - 90) * 1.2) / 20      # same taper as yawLimit() in site/js/nozzle.js
             a, b, c = solve(d, yaw)
+            def hit(name, v):
+                if v > 1 and v > self_hits.get(name, (0,))[0]: self_hits[name] = (round(v), d, round(yaw, 1))
             g3 = solids["nozzle_segment_3"].union(rings["collar 3"]).rotate(j3, j3 + n3, c)       # each collar turns with its downstream part
-            g2 = solids["nozzle_segment_2"].union(rings["collar 2"]).union(g3).rotate(j2, j2 + n2, b)
-            g1 = solids["nozzle_segment_1"].union(rings["collar 1"]).union(rings["drive ring"]).union(g2).rotate((0, 0, 0), (1, 0, 0), a)
+            hit("joint-3 motor vs segment 3", ovl(m3b, g3))
+            g2 = solids["nozzle_segment_2"].union(rings["collar 2"]).union(m3).union(g3).rotate(j2, j2 + n2, b)
+            hit("joint-2 motor vs segments 2, 3", ovl(m2b, g2))
+            g1 = solids["nozzle_segment_1"].union(rings["collar 1"]).union(m2).union(g2).rotate((0, 0, 0), (1, 0, 0), a)
+            hit("joint-1 motor vs nozzle", ovl(m1b, g1))
             moving = to_aircraft(g1)
             bb = moving.val().BoundingBox()
             for name, t in tail.items():
@@ -380,6 +405,8 @@ def installed_check(solids, rings):
             worst["_lowest"] = min(worst.get("_lowest", 1e9), bb.zmin); worst["_widest"] = max(worst.get("_widest", 0), max(abs(bb.ymin), abs(bb.ymax)))
     print("installed nozzle, 15 poses: lowest point y = %.0f mm (ground at %.0f), widest half-width %.0f mm (booms start at %.0f)" % (worst.pop("_lowest"), B.GROUND_Y, worst.pop("_widest"), B.NOTCH_W))
     print("installed clashes (mm^3, at deflection, yaw):", {k: (round(v[0]), v[1], v[2]) for k, v in worst.items()} or "none")
+    print("motors against the nozzle as it moves (mm^3, at deflection, yaw):", self_hits or "none")
+    print("joint-1 motor, aircraft frame: x %.0f to %.0f, half-width %.1f to %.1f" % (lambda b: (b.xmin, b.xmax, min(abs(b.ymin), abs(b.ymax)), max(abs(b.ymin), abs(b.ymax))))(to_aircraft(m1).val().BoundingBox()))
 
 if __name__ == "__main__":
     main()

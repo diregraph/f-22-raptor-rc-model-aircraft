@@ -9,8 +9,8 @@
 #  7  left roll fan ESC          35 motor 3
 #  8  right roll fan ESC         36 motor 4
 #  9  nozzle tilt demand         41 motor tilt (internal: read by f35b_nozzle.lua, no servo plugged in)
-# 10  nozzle servo 1             94 script 1 (bearing-1 collar)
-# 11  nozzle servo 2             95 script 2 (drive ring)
+# 10  nozzle board, deflection   94 script 1 (1000-2000 us = 0-100 deg)
+# 11  nozzle board, yaw swing   95 script 2 (1000-2000 us = -20..+20 deg)
 # 12  landing gear (3 servos)    29 landing gear
 
 Q_ENABLE        1

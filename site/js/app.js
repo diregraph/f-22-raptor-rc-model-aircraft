@@ -57,7 +57,7 @@ async function loadCad() {   // every printed part comes from the CAD build; if 
       const id = idMap[kid] || kid, entry = { geo: L.parse(await r.arrayBuffer()).applyMatrix4(new THREE.Matrix4().fromArray(c.matrix)), material: 'PETG' };
       out[id] = entry;
       const info = { file: 'kit/' + c.file, material: 'PETG', bed: c.bed, mass: c.mass, note: c.note };
-      for (const tid of id === 'collar' ? ['collar2', 'collar3'] : id === 'collarJ1' ? ['collar1'] : id === 'servoDrum' ? ['drum1', 'drum2'] : [id]) MANIFEST[tid] = info;
+      for (const tid of { collarJ1: ['collar1'], collar: ['collar2'], collarJ3: ['collar3'] }[id] || [id]) MANIFEST[tid] = info;
     }));
   } catch { /* no kit: the fan and nozzle will be missing */ }
   return out;
@@ -68,7 +68,7 @@ const NZ = joints.nozzle, XAX = new THREE.Vector3(1, 0, 0);
 function setNozzle(deflection, yaw) {   // three bearing angles from two commands
   const j = solveNozzle(deflection, yaw);
   NZ.g1.quaternion.setFromAxisAngle(XAX, rad(j.a)); NZ.g2.quaternion.setFromAxisAngle(NZ.n2, rad(j.b)); NZ.g3.quaternion.setFromAxisAngle(NZ.n3, rad(j.c));
-  if (NZ.drive) NZ.ring.rotation.x = rad(NZ.drive.update(j).p.ring);
+  if (NZ.drive) NZ.drive.update(j);
   const e = exitDirection(j.a, j.b, j.c);
   return new THREE.Vector3(e[0], -e[1], e[2]);   // thrust direction in aircraft axes (the kit frame faces aft)
 }
@@ -133,7 +133,6 @@ function apply() {
   shellMats.forEach(m => { m.transparent = state.xray || m.userData.t; m.opacity = state.xray ? 0.13 : m.userData.o; m.depthWrite = !state.xray; });
   const cutOn = state.cut < 468; clipPlane.constant = state.cut; renderer.clippingPlanes = cutOn ? [clipPlane] : [];
   ground.visible = state.explode < 0.03 || state.sim;
-  if (NZ.drive) NZ.drive.lines.forEach(l => { l.visible = state.explode < 0.03 && !asm; });   // cords only make sense with everything in place
   // balance
   mp = massProps(state.battX); trim = hoverTrim(mp, state.tilt);
   const hov = state.tilt >= 45, show = state.forces && state.explode < 0.03 && !asm;

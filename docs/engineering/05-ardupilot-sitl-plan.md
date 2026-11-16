@@ -34,10 +34,10 @@ before anything is printed or flown.
    through the nozzle. No stock frame matches. ArduPilot's "Scripting Matrix" frame class (set through
    `Q_FRAME_CLASS`; check the value in the current docs) lets a Lua script give each motor its roll, pitch and yaw factors. The factors come from the
    thruster positions in `site/js/spec.js`.
-3. **The swivel nozzle.** ArduPilot commands a tilt angle and a yaw. The nozzle needs two cord-servo
-   positions, which `solve()` in `site/js/nozzle.js` already computes. Port that function to a Lua
-   script that turns ArduPilot's two commands into the two servo outputs. The reference build does
-   the same step on a separate board.
+3. **The swivel nozzle.** ArduPilot commands a tilt angle and a yaw. As in the reference build, the nozzle has
+   its own board that homes the three joint gearmotors and solves the joint angles (`firmware/nozzle/Nozzle3BSM.h`,
+   the same maths as `solve()` in `site/js/nozzle.js`). A Lua script adds the hover guard and slew limits and sends
+   the board deflection and yaw as two pulses.
 4. **Which tilt settings fit.** ArduPilot's tilt-rotor support (`Q_TILT_*` parameters) is the likely
    starting point. Confirm in SITL which tilt type gives tilt plus yaw on one nozzle; do not assume it.
 
