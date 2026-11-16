@@ -29,7 +29,7 @@ US dollars at the time of writing, not quotes.
 | ESP32 DevKit v1 | 1 | 10 g | Flight controller |
 | MPU6050 gyro board | 1 | 3 g | |
 | FS-iA6B receiver | 1 | 15 g | |
-| 5 V regulator | 1 | 2 g | Servo rail |
+| Adjustable regulator, set to 6 V | 1 | 2 g | Servo rail. 6 V, not 5 V: the nozzle servos need the extra 15% torque (docs/ducted-propulsion.md) |
 | MG90S servo | 2 | 14 g | Nozzle cords |
 | 9 g servo | 2 | 10 g | Stabilators |
 | 8 × 1 mm carbon tube | 1,950 mm | 76 g total | One 676 mm spar, two 637 mm longerons. About $12 of arrow shaft if the leftovers measure short |
