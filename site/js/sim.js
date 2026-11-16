@@ -27,6 +27,7 @@ export const AERO = {
   downwash: 0.45, pitchSpeed: 34,                // tail sees less incidence behind the wing; propeller thrust fades to zero at this airspeed
   kq: 0.015,                                    // propeller reaction torque per newton of thrust (m)
   rotDamp: 0.012, motorTau: 0.07, tiltRate: 150, nozzleRate: 300, tailRate: 400,
+  gearCD: 0.012, gearRate: 0.45,                 // three legs hanging out cost this much drag; and they take about 2 s to fold
 };
 
 export function createSim(batteryX = D.battery.xDefault) {
@@ -35,7 +36,7 @@ export function createSim(batteryX = D.battery.xDefault) {
   const th = THRUSTERS.map(t => ({ id: t.id, r: sub(t.pos.map(c => c / 1000), cg), max: t.maxG / 1000 * G, spin: t.spin === 'CW' ? 1 : -1 }));
   const [F, M, L, R] = th, rest = (mp.cg[1] - D.groundY) / 1000, rollShare = hoverTrim(mp, 90).rollShare;
   const exitAt = d => { const e = nozzleExit(d); return { r: sub(e.pos.map(c => c / 1000), cg), eff: e.eff }; };   // where the jet leaves and how much thrust the bends cost
-  const s = { t: 0, p: [0, rest, 0], v: [0, 0, 0], q: [0, 0, 0, 1], w: [0, 0, 0], T: [0, 0, 0, 0], tilt: 90, nozzle: 0, tailL: 0, tailR: 0,
+  const s = { t: 0, p: [0, rest, 0], v: [0, 0, 0], q: [0, 0, 0, 1], w: [0, 0, 0], T: [0, 0, 0, 0], tilt: 90, nozzle: 0, tailL: 0, tailR: 0, gear: 0,
     iVy: 0, iPitch: 0, iAtt: [0, 0, 0], onGround: true, att: { roll: 0, pitch: 0, heading: 0 }, alpha: 0, speed: 0, cmd: [0, 0, 0, 0], armed: false };
 
   function attitude(q) {
@@ -43,11 +44,11 @@ export function createSim(batteryX = D.battery.xDefault) {
     return { pitch: Math.asin(clamp(f[1], -1, 1)), heading: Math.atan2(-f[2], f[0]), roll: Math.atan2(-r[1], u[1]), up: u[1] };
   }
   // lift/drag of one flat surface: velocity seen at the surface (body axes), incidence offset, area
-  function surface(vb, inc, S, wash = 0) {
+  function surface(vb, inc, S, wash = 0, cd0 = AERO.CD0) {
     const vx = vb[0], vy = vb[1], V2 = vx * vx + vy * vy;
     if (V2 < 1e-4) return [0, 0, 0];
     const V = Math.sqrt(V2), a0 = Math.atan2(-vy, vx), a = (Math.abs(a0) < 0.5 ? a0 * (1 - wash) : a0) + inc, wgt = 1 / (1 + Math.exp((Math.abs(a) - AERO.alphaStall) / 0.035));
-    const cla = AERO.CLa * a, CL = wgt * cla + (1 - wgt) * 1.1 * Math.sin(2 * a), CD = AERO.CD0 + wgt * cla * cla / AERO.kInduced + (1 - wgt) * 1.3 * Math.sin(a) ** 2;
+    const cla = AERO.CLa * a, CL = wgt * cla + (1 - wgt) * 1.1 * Math.sin(2 * a), CD = cd0 + wgt * cla * cla / AERO.kInduced + (1 - wgt) * 1.3 * Math.sin(a) ** 2;
     const qS = 0.5 * RHO * V2 * S, dx = vx / V, dy = vy / V;
     return [qS * (-CL * dy - CD * dx), qS * (CL * dx - CD * dy), 0];
   }
@@ -102,7 +103,11 @@ export function createSim(batteryX = D.battery.xDefault) {
     for (let i = 0; i < 4; i++) s.T[i] += (cmd[i] - s.T[i]) * Math.min(1, dt / AERO.motorTau);
     // With the nozzle straight nothing aft of the balance point can hold the tail up, so until the wing is flying the
     // controller keeps the nozzle at least partly down, whatever the pilot asks for.
-    const dMin = s.onGround ? 0 : 35 * (1 - sstep(3, 12, vb[0]));
+    // Until the fins have airspeed, the only thing that can yaw the aircraft is the bent jet, so the controller keeps the
+    // nozzle part way down well past the point where the wing could carry it.
+    const dMin = s.onGround ? 0 : 35 * (1 - sstep(6, 17, vb[0]));
+    const gearUp = inp.gear !== undefined ? inp.gear : (s.gear > 0.5 ? (vb[0] > 8 ? 1 : 0) : (vb[0] > 11 && !s.onGround ? 1 : 0));
+    s.gear += clamp(gearUp - s.gear, -AERO.gearRate * dt, AERO.gearRate * dt);
     s.tilt = slew(s.tilt, clamp(Math.max(inp.tilt, dMin), 0, 100), AERO.tiltRate); s.nozzle = slew(s.nozzle, nozzleD, AERO.nozzleRate);
     s.tailL = slew(s.tailL, tailLD, AERO.tailRate); s.tailR = slew(s.tailR, tailRD, AERO.tailRate);
 
@@ -116,7 +121,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     Tb = add(Tb, [0, AERO.kq * (F.spin * s.T[0] + L.spin * s.T[2] + R.spin * s.T[3]), 0]); Tb = add(Tb, mul(mDir, AERO.kq * M.spin * s.T[1]));
     const at = (r) => add(vb, cross(s.w, r));
     for (const sg of [-1, 1]) {
-      const rw = [AERO.wingX - cg[0], 0, sg * AERO.wingZ]; push(surface(at(rw), AERO.camber, AERO.wingS / 2), rw);
+      const rw = [AERO.wingX - cg[0], 0, sg * AERO.wingZ]; push(surface(at(rw), AERO.camber, AERO.wingS / 2, 0, AERO.CD0 + AERO.gearCD * (1 - s.gear)), rw);
       const rt = [AERO.tailX - cg[0], 0, sg * AERO.tailZ]; push(surface(at(rt), (sg < 0 ? s.tailL : s.tailR) * DEG, AERO.tailS / 2, AERO.downwash), rt);
     }
     { const rf = [AERO.finX - cg[0], 0.05, 0], vf = at(rf), V2 = vf[0] * vf[0] + vf[2] * vf[2];

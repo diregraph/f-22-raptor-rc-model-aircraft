@@ -15,7 +15,7 @@ from build import box, cyl, W_, naca
 # ------------------------------------------------------------------ parameters
 BORE = 80.0                 # fan diameter
 TIP_GAP = 0.6               # blade tip to shroud
-SHROUD_ID, WALL = BORE + 2 * TIP_GAP, 2.2
+SHROUD_ID, WALL = BORE + 2 * TIP_GAP, 1.6
 HUB_R = 17.0                # rotor hub radius (covers the 28.6 mm motor bell)
 BELL_R = 15.3               # clearance bore over the bell
 N_BLADES, N_VANES = 7, 5
@@ -24,7 +24,7 @@ X_ROTOR0, X_WEB0, X_WEB1, X_SKIRT1 = -97.0, -76.0, -68.0, -46.0
 X_MOTOR_FACE, X_STATOR1, X_DUCT0 = -44.0, -14.0, -100.0
 ALPHA = 40.0                # cant of bearings 2 and 3  (site/js/nozzle.js NOZZLE.alpha)
 DJ = BORE / math.sqrt(math.cos(math.radians(ALPHA)))   # bore at a canted bearing: same flow area as the round duct
-NW = 1.3                    # nozzle wall
+NW = 1.0                    # nozzle wall
 FL_W, FL_T, LEG = 6.0, 3.0, 3.5  # bearing flange width and thickness; how far the collar legs reach down the flange faces
 L1, L2, L3 = 58.0, 104.0, 56.0     # long enough that the canted bearings and their collars clear each other on the short side of each wedge
 JOINTS = [(0.0, 0.0, BORE + 2 * TIP_GAP), (L1, ALPHA, DJ), (L1 + L2, -ALPHA, DJ)]   # x, tilt about Z, bore

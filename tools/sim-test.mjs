@@ -8,7 +8,7 @@ function run(name, script, T) {
     sim.step(DT, inp);
     if (!Number.isFinite(s.p[1])) { console.log(name, 'DIVERGED at', t.toFixed(2)); return null; }
     if (t > 5) { maxAtt = Math.max(maxAtt, Math.abs(s.att.roll), Math.abs(s.att.pitch)); minAlt = Math.min(minAlt, s.p[1]); }
-    if (Math.abs(t % 2) < DT) log.push(`t${t.toFixed(0)} alt ${s.p[1].toFixed(2)} v ${s.speed.toFixed(1)} roll ${deg(s.att.roll)} pitch ${deg(s.att.pitch)} hdg ${deg(s.att.heading)} tilt ${s.tilt.toFixed(0)} T ${s.T.map(x => x.toFixed(1)).join('/')}`);
+    if (Math.abs(t % 2) < DT) log.push(`t${t.toFixed(0)} alt ${s.p[1].toFixed(2)} v ${s.speed.toFixed(1)} roll ${deg(s.att.roll)} pitch ${deg(s.att.pitch)} hdg ${deg(s.att.heading)} tilt ${s.tilt.toFixed(0)} gear ${s.gear.toFixed(1)} T ${s.T.map(x => x.toFixed(1)).join('/')}`);
   }
   console.log(`\n== ${name}\n` + log.join('\n'));
   return { s, maxAtt, minAlt, sim };
@@ -32,9 +32,12 @@ check('yaw: heading changed 60-200 deg, roll and pitch stay within 10 deg', Math
 r = run('transition to forward flight and back', (t, s) => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : t < 14 ? 90 - (t - 8) * 15 : t < 26 ? 0 : Math.min(90, (t - 26) * 15), pitch: t > 31 && s.v[0] * Math.cos(s.att.heading) - s.v[2] * Math.sin(s.att.heading) > 1.5 ? 0.6 : 0 }), 60);   // pilot holds the nose up to brake
 check('transition: no ground strike', r.minAlt > 1);
 check('transition: back to a slow hover within 34 s of tilting up', r.s.speed < 3 && r.s.tilt > 85 && r.s.T[0] > 3);
+check('transition: heading holds within 20 deg', Math.abs(r.s.att.heading) < 20 * Math.PI / 180);
 let c = run('cruise', t => ({ thr: t < 3 ? 0.9 : 0.5, tilt: t < 8 ? 90 : Math.max(0, 90 - (t - 8) * 15) }), 38);   // the hand-over from fans to wing takes about 25 s in this layout
 check('cruise: wing-borne above 12 m/s with lift fans off', c.s.speed > 12 && c.s.T[0] < 0.2);
 check('cruise: holds height (vertical speed < 0.5 m/s)', c.minAlt > 1 && Math.abs(c.s.v[1]) < 0.5);
+check('cruise: legs folded up', c.s.gear > 0.95);
+check('hover: legs down', run('hover with the legs', t => ({ thr: t < 2.5 ? 0.8 : 0.5 }), 8).s.gear < 0.05);
 
 console.log(`\n${results.filter(Boolean).length}/${results.length} checks passed`);
 process.exit(results.every(Boolean) ? 0 : 1);

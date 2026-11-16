@@ -9,7 +9,7 @@ import { buildModel } from './build.js';
 
 const $ = s => document.querySelector(s);
 const rad = d => d * Math.PI / 180;
-const state = { sim: false, explode: 0, tilt: 90, tiltTarget: 90, yaw: 0, elev: 0, battX: D.battery.xDefault, cut: 470, spin: false, xray: false, forces: true, mode: 'hover', step: 1, selected: null, hidden: new Set(), hover: null };
+const state = { sim: false, explode: 0, tilt: 90, tiltTarget: 90, yaw: 0, elev: 0, gear: 0, battX: D.battery.xDefault, cut: 470, spin: false, xray: false, forces: true, mode: 'hover', step: 1, selected: null, hidden: new Set(), hover: null };
 
 // ---------- renderer / scene
 const canvas = $('#c');
@@ -102,6 +102,7 @@ function apply() {
   }
   let mDir = null;
   if (!state.sim) { mDir = setNozzle(state.tilt, state.yaw); joints.stabs.forEach(s => s.rotation.z = rad(state.elev)); }
+  for (const g of joints.gear || []) g.carrier.rotation[g.axis] = rad(g.sign * g.deg * state.gear);   // 0 = down, 1 = folded into the belly
   parts.forEach((o, id) => {
     o.visible = partVisible(id);
     const sel = id === state.selected, hov = id === state.hover, cur = asm && PART[id].step === state.step;
@@ -255,6 +256,7 @@ let lastEx = 0;
 const syncers = [
   bind('explode', 'explode', v => Math.round(v * 100) + '%', () => { const d = camera.position.clone().sub(controls.target), k = (1 + 0.75 * state.explode) / (1 + 0.75 * lastEx); camera.position.copy(controls.target).add(d.multiplyScalar(k)); lastEx = state.explode; }),
   bind('tilt', 'tilt', v => Math.round(v) + '°', () => { state.tiltTarget = state.tilt; }),
+  bind('gear', 'gear', v => (v > 0.5 ? 'up' : 'down')),
   bind('yaw', 'yaw', v => v + '°'),
   bind('elev', 'elev', v => v + '°'),
   bind('batt', 'battX', v => v + ' mm'),
