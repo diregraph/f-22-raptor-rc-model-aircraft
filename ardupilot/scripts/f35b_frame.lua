@@ -4,15 +4,15 @@
 -- Roll and pitch factors give a pure moment with no change in total lift, so the unequal fans mix correctly.
 -- Yaw factors are zero: the fans' torque is too weak to steer with. Hover yaw comes from swinging the nozzle
 -- jet sideways (firmware/nozzle/nozzle_3bsm.lua reads the yaw demand). Throttle factors set each fan's share of the hover lift
--- from the static trim (lift fan and roll pair at 60%, nozzle at 25% of full thrust).
+-- from the static trim (lift fan and roll pair at 59%, nozzle at 27% of full thrust).
 -- Motor 2 is the one that tilts: Q_TILT_MASK = 2.
 
-MotorsMatrix:add_motor_raw(0, 0.0000, 0.1485, 0, 1)   -- motor 1: lift fan
-MotorsMatrix:add_motor_raw(1, 0.0000, -0.1500, 0, 2)   -- motor 2: main fan (swivel nozzle)
-MotorsMatrix:add_motor_raw(2, 0.3209, -0.0470, 0, 3)   -- motor 3: roll fan left
-MotorsMatrix:add_motor_raw(3, -0.3209, -0.0470, 0, 4)   -- motor 4: roll fan right
+MotorsMatrix:add_motor_raw(0, 0.0000, 0.1550, 0, 1)   -- motor 1: lift fan
+MotorsMatrix:add_motor_raw(1, 0.0000, -0.1539, 0, 2)   -- motor 2: main fan (swivel nozzle)
+MotorsMatrix:add_motor_raw(2, 0.3209, -0.0594, 0, 3)   -- motor 3: roll fan left
+MotorsMatrix:add_motor_raw(3, -0.3209, -0.0594, 0, 4)   -- motor 4: roll fan right
 assert(MotorsMatrix:set_throttle_factor(0, 1.0000), "f35b: throttle factor 0")
-assert(MotorsMatrix:set_throttle_factor(1, 0.4170), "f35b: throttle factor 1")
+assert(MotorsMatrix:set_throttle_factor(1, 0.4632), "f35b: throttle factor 1")
 assert(MotorsMatrix:set_throttle_factor(2, 1.0000), "f35b: throttle factor 2")
 assert(MotorsMatrix:set_throttle_factor(3, 1.0000), "f35b: throttle factor 3")                                    -- throttle factors must be set before init()
 assert(MotorsMatrix:init(4), "f35b: MotorsMatrix init failed")

@@ -4,8 +4,8 @@ import { OrbitControls } from '../vendor/OrbitControls.js';
 import { RoomEnvironment } from '../vendor/RoomEnvironment.js';
 import { STLLoader } from '../vendor/STLLoader.js';
 import { NOZZLE, solve, exitDirection } from './nozzle.js';
-import { makeDrive } from './cords.js';
-import { servoTorque, thrustEnvelope, kgcm, SERVOS, LOADS } from './nozzle-loads.js';
+import { makeDrive } from './gears.js';
+import { motorTorque, kgcm, MOTORS, LOADS } from './nozzle-loads.js';
 
 const $ = s => document.querySelector(s), rad = d => d * Math.PI / 180;
 const canvas = $('#c');
@@ -25,7 +25,7 @@ const grid = new THREE.GridHelper(2000, 40, 0x3d566e, 0x22313f); grid.position.y
 const kit = await (await fetch('cad/kit/kit.json')).json(), G = kit.geometry, loader = new STLLoader(), geo = {};
 await Promise.all(Object.entries(kit.parts).map(async ([id, p]) => { geo[id] = loader.parse(await (await fetch(`cad/kit/${p.file}.stl`)).arrayBuffer()).applyMatrix4(new THREE.Matrix4().fromArray(p.matrix)); }));
 const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.42, metalness: 0.02, side: THREE.DoubleSide });
-const COL = { duct: 0x8a949e, tailCone: 0x8a949e, impeller: 0x18c7b3, seg1: 0xf47216, seg2: 0xf9a03f, seg3: 0xf47216, collar: 0x2b2e33, collarJ1: 0x2b2e33, driveRing: 0xe8eef4, servoDrum: 0xe8eef4, washer: 0xf4f7fa, washerJ1: 0xf4f7fa };
+const COL = { duct: 0x8a949e, tailCone: 0x8a949e, impeller: 0x18c7b3, seg1: 0xf47216, seg2: 0xf9a03f, seg3: 0xf47216, collar: 0x2b2e33, collarJ1: 0x2b2e33, collarJ3: 0x2b2e33, pinion: 0xe8eef4, washer: 0xf4f7fa, washerJ1: 0xf4f7fa };
 const mesh = (id, g = geo[id]) => { const m = new THREE.Mesh(g, M(COL[id])); m.castShadow = m.receiveShadow = true; return m; };
 const group = (parent, pos = [0, 0, 0]) => { const g = new THREE.Group(); g.position.set(...pos); parent.add(g); return g; };
 
@@ -44,39 +44,36 @@ const motor = new THREE.Mesh(new THREE.CylinderGeometry(14.3, 14.3, 19, 32).rota
 const frames = [group(g1), group(g2), group(g3)];
 frames[1].rotation.z = a2; frames[2].rotation.z = -a2;
 frames.forEach((f, j) => {
-  for (const half of [0, 1]) { const c = mesh(j ? 'collar' : 'collarJ1'); const h = group(f); h.add(c); h.rotation.x = half * Math.PI; h.userData.home = h.position.clone(); h.userData.ex = new THREE.Vector3(0, half ? -70 : 70, 0); explodable.push(h); }
+  for (const half of [0, 1]) { const c = mesh(['collarJ1', 'collar', 'collarJ3'][j]); const h = group(f); h.add(c); h.rotation.x = half * Math.PI; h.userData.home = h.position.clone(); h.userData.ex = new THREE.Vector3(0, half ? -70 : 70, 0); explodable.push(h); }
 });
 // PTFE seal washers: one between the flange faces, one behind the upstream flange (3 mm flange + the first washer)
 frames.forEach((f, j) => { for (const x of [0, -3.25]) { if (!geo[j ? 'washer' : 'washerJ1']) break; const w = mesh(j ? 'washer' : 'washerJ1'); w.position.x = x; w.userData.home = w.position.clone(); w.userData.ex = new THREE.Vector3(x ? -40 : 40, 0, 0); f.add(w); explodable.push(w); } });
-const ring = group(base); ring.add(mesh('driveRing'));          // the free drive ring, turned by servo 2
-const servoBox = () => { const m = new THREE.Mesh(new THREE.BoxGeometry(22.8, 12.2, 22.7), new THREE.MeshStandardMaterial({ color: 0x3b2a22, roughness: 0.3 })); m.castShadow = true; return m; };
-const drive = makeDrive(base, G, { drumMesh: () => mesh('servoDrum'), servoMesh: servoBox });
+// a gearmotor on the part upstream of each bearing: the duct, segment 1, segment 2
+const drive = makeDrive([{ parent: base, x: x1, tilt: 0 }, { parent: g1, x: x2 - x1, tilt: G.alpha }, { parent: g2, x: x3 - x2, tilt: -G.alpha }], G, { pinionMesh: () => mesh('pinion') });
 const jet = new THREE.Group(); g3.add(jet); jet.position.set(G.exitX - x3, 0, 0);
 const jetMesh = new THREE.Mesh(new THREE.ConeGeometry(34, 1, 32, 1, true).rotateZ(Math.PI / 2).translate(0.5, 0, 0), new THREE.MeshBasicMaterial({ color: 0x4aa3ff, transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false })); jet.add(jetMesh);
 
-const ENV = thrustEnvelope();
 const state = { d: 0, y: 0, f: 40, e: 0 };
 let dirty = 3; controls.addEventListener('change', () => dirty = 2);
 function apply() {
-  const j = solve(state.d, state.y), e = exitDirection(j.a, j.b, j.c), { p, s } = drive.update(j);
+  const j = solve(state.d, state.y), e = exitDirection(j.a, j.b, j.c); drive.update(j);
   g1.quaternion.setFromAxisAngle(X, rad(j.a)); g2.quaternion.setFromAxisAngle(n2, rad(j.b)); g3.quaternion.setFromAxisAngle(n3, rad(j.c));
-  ring.rotation.x = rad(p.ring);
   explodable.forEach(m => m.position.copy(m.userData.home).addScaledVector(m.userData.ex, state.e));
-  const us = v => Math.round(1500 + v / 90 * 1000);
-  $('#jrows').innerHTML = [['1 · square', j.a, s.s1], ['2 · canted', j.b, s.s2], ['3 · canted', j.c, null]].map(([n, t, v]) => `<tr><td>${n}</td><td>${t.toFixed(1)}°</td>${v === null ? '<td colspan="2">no servo: follows 2</td>' : `<td>${v.toFixed(0)}°</td><td>${us(v)} µs</td>`}</tr>`).join('');
+  const turns = [j.a, j.b, j.c].map((q, i) => (q - NOZZLE.gear.stop[i]) * NOZZLE.gear.ring[i] / NOZZLE.gear.pinion / 360);
+  $('#jrows').innerHTML = [['1 · square', j.a], ['2 · canted', j.b], ['3 · canted', j.c]].map(([n, t], i) => `<tr><td>${n}</td><td>${t.toFixed(1)}°</td><td>${Math.abs(turns[i]).toFixed(2)}</td></tr>`).join('');
   const down = Math.atan2(-e[1], e[0]) * 180 / Math.PI, side = Math.asin(e[2]) * 180 / Math.PI;
   $('#kexit').textContent = `${down.toFixed(0)}° below straight aft, ${Math.abs(side).toFixed(0)}° to the ${side >= 0 ? 'right' : 'left'}.`;
   const t = 850 * (state.f / 100) ** 2 * (1 - LOADS.loss90 * state.d / 90);
   $('#kthrust').textContent = `About ${Math.round(t)} g: 850 g at full speed straight, less roughly 25% when bent 90° (two 45° mitred joints). Both figures are guesses until measured.`;
-  const sv = SERVOS.mg90s_6v, budget = sv.stall * sv.budget, cap = ENV[Math.round(state.d / 5)][1];
-  const ld = servoTorque(state.d, state.y, Math.max(t / (1 - LOADS.loss90 * state.d / 90), 1)), worst = kgcm(Math.max(ld.s1, ld.s2));
-  $('#kload').innerHTML = `Servo 1 ${kgcm(ld.s1).toFixed(2)}, servo 2 ${kgcm(ld.s2).toFixed(2)} kg cm, against ${budget.toFixed(2)} allowed (70% of an MG90S on 6 V)${worst > budget ? ' <b class="bad">over</b>' : ''}. At this deflection the controller caps the fan at ${cap} g. Model: <code>site/js/nozzle-loads.js</code>, friction guessed until the bench measures it.`;
+  const mo = MOTORS.n20_100, budget = mo.stall * mo.budget;
+  const ld = motorTorque(state.d, state.y, Math.max(t / (1 - LOADS.loss90 * state.d / 90), 1)).m.map(kgcm), worst = Math.max(...ld);
+  $('#kload').innerHTML = `Motors 1 / 2 / 3: ${ld.map(v => v.toFixed(2)).join(' / ')} kg cm at the gearbox shaft, against ${budget.toFixed(2)} allowed (half the stall torque of an N20 100:1 on 6 V)${worst > budget ? ' <b class="bad">over</b>' : ''}. Model: <code>site/js/nozzle-loads.js</code>, friction guessed until the bench measures it.`;
   jetMesh.scale.set(40 + 2.2 * state.f, 1, 1); jetMesh.visible = state.f > 0 && state.e < 0.05;
   $('#oD').textContent = state.d + '°'; $('#oY').textContent = state.y + '°'; $('#oF').textContent = state.f + '%'; $('#oE').textContent = Math.round(state.e * 100) + '%';
   dirty = 2;
 }
 for (const [id, k] of [['sD', 'd'], ['sY', 'y'], ['sF', 'f'], ['sE', 'e']]) $('#' + id).addEventListener('input', ev => { state[k] = +ev.target.value; apply(); });
-const QTY = { collar: 4, collarJ1: 2, servoDrum: 2, washer: 4, washerJ1: 2 };
+const QTY = { collar: 2, collarJ1: 2, collarJ3: 2, pinion: 3, washer: 4, washerJ1: 2 };
 $('#klist').innerHTML = Object.entries(kit.parts).map(([id, p]) => `<div class="kp"><b>${p.file.replace(/_/g, ' ')}${QTY[id] ? ' × ' + QTY[id] : ''}</b><span>${p.bed.map(v => Math.round(v)).join(' × ')} mm · about ${Math.round(p.mass)} g · ${p.note}</span><a class="tog" href="cad/kit/${p.file}.stl" download>Download STL</a></div>`).join('');
 $('#kcount').textContent = Object.keys(kit.parts).length + ' files';
 function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.setViewOffset(innerWidth, innerHeight, 0, innerWidth > 900 ? 60 : 40, innerWidth, innerHeight); camera.updateProjectionMatrix(); dirty = 3; }

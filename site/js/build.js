@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from '../vendor/BufferGeometryUtils.js';
 import { D, PART } from './spec.js';
-import { makeDrive } from './cords.js';
+import { makeDrive } from './gears.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const rad = d => d * Math.PI / 180;
@@ -357,18 +357,16 @@ export function buildModel(cad = {}) {
     seg('seg1', g1, kx1, [0, 0, 0]); seg('seg2', g2, kx2, [70, 0, 0]); seg('seg3', g3, kx3, [140, 0, 0]);
     const frames = [sub(g1, 0), sub(g2, 0), sub(g3, 0)]; frames[1].rotation.z = a2; frames[2].rotation.z = -a2;   // each collar is keyed to the part downstream of it
     frames.forEach((f, j) => {
-      const c = grp(); for (const half of [0, 1]) { const h = kitMesh(j ? 'collar' : 'collarJ1', MAT.dark()); h.rotation.x = half * Math.PI; c.add(h); }
+      const c = grp(); for (const half of [0, 1]) { const h = kitMesh(['collarJ1', 'collar', 'collarJ3'][j], MAT.dark()); h.rotation.x = half * Math.PI; c.add(h); }
       add('collar' + (j + 1), c, [0, 110, 0], f);
     });
-    nozzle.ring = sub(kitRoot, 0); add('driveRing', kitMesh('driveRing', MAT.white()), [30, -120, 0], nozzle.ring);
-    if (K.drive) {   // two servos buried in the body, a cord drum on each, and the cords to the nozzle
-      const tmp = new THREE.Group();
-      nozzle.drive = makeDrive(kitRoot, K, {
-        drumMesh: i => add('drum' + (i + 1), kitMesh('servoDrum', MAT.white()), [0, -150, 0], tmp),
-        servoMesh: (i, side) => { const sv = servo(true); sv.rotation.x = -side * Math.PI / 2; return add('nzServo' + (i + 1), grp(sv), [0, -100, 0], tmp); },
+    if (K.gear) {    // a gearmotor on the part upstream of each bearing: the duct, segment 1, segment 2
+      nozzle.drive = makeDrive([{ parent: kitRoot, x: kx1, tilt: 0 }, { parent: g1, x: kx2 - kx1, tilt: K.alpha }, { parent: g2, x: kx3 - kx2, tilt: -K.alpha }], K, {
+        pinionMesh: () => { const p = kitMesh('pinion', MAT.white()); p.userData.noPick = true; return p; },   // kept out of the mesh merge: it spins
+        wrap: (i, unit) => { const holder = grp(); add('nzMotor' + (i + 1), unit, [0, i ? (i === 1 ? -90 : 90) : 0, i ? 0 : 90], holder); return holder; },
       });
     }
-    for (const [id, sd] of [['fairleadR', 1], ['fairleadL', -1]]) add(id, mesh(box(4, 60, 9, -256, -7, sd * 53), MAT.petg()), [-60, 0, 0]);
+    add('nzBoard', grp(mesh(box(40, 24, 8, -227, -6, -62), MAT.pcbB()), mesh(box(18, 6, 3, -234, 3, -59), MAT.dark())), [0, -120, -60]);
   }
   // --- tail
   const stabs = [];
@@ -434,7 +432,7 @@ export function buildModel(cad = {}) {
       for (const sd of [-1, 1]) three([[332, -18, sd * 22], ...duct(sd).reverse(), [-60, -22, sd * 80], [sx + 10, -17.6, sd * 84], [sx, -17.6, sd * 112], [sx, -17.6, sd * (RZ - 30)], [sx - 6, -22, sd * (RZ - 12)], [D.rollX + 8, -29, sd * (RZ - 5)]], 'x');   // roll motors: along the spar
       const lead = (pts) => [0x7a3b12, R, 0xf08a1c].forEach((c, i) => h.add(tube0(pts, 0.55, c, [0, (i - 1) * 1.15, 0])));
       for (const sd of [-1, 1]) {
-        lead([[-204, -8, sd * 74], [-190, -14, sd * 74], [-140, -14, sd * 72], ...duct(sd), [334, -8, sd * 8]]);                    // nozzle servos
+        if (sd < 0) lead([[-207, -6, -66], [-190, -14, -74], [-140, -14, -72], ...duct(sd), [334, -8, -8]]);                           // nozzle board
         lead([[-383, -22, sd * 96], [-340, -14, sd * 92], [-262, -13, sd * 88], [-190, -16, sd * 80], [-140, -17, sd * 76], ...duct(sd), [336, -8, sd * 12]]);   // tail servos
       }
       add('harness', h, [0, 250, 0]); }

@@ -3,10 +3,6 @@
 // Pure maths, no rendering: runs in the browser and in Node (see tools/sim-test.mjs).
 // SI units inside. Body axes match the twin: +X nose, +Y up, +Z right wing.
 import { D, THRUSTERS, massProps, hoverTrim, nozzleExit } from './spec.js';
-import { thrustEnvelope, LOADS } from './nozzle-loads.js';
-// The cord servos can only hold so much jet: the nozzle controller caps the main fan by deflection (firmware/nozzle).
-const ENV = thrustEnvelope();
-const mainCap = d => { const x = Math.min(Math.max(d, 0), 100) / 5, i = Math.min(Math.floor(x), ENV.length - 2), f = x - i; return (ENV[i][1] + (ENV[i + 1][1] - ENV[i][1]) * f) / LOADS.thrustMax; };
 
 const G = 9.81, RHO = 1.2, DEG = Math.PI / 180;
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -30,7 +26,7 @@ export const AERO = {
   CLa: 2.0, camber: 0.07, alphaStall: 0.40, CD0: 0.04, kInduced: 7.3,
   downwash: 0.45, pitchSpeed: 34,                // tail sees less incidence behind the wing; propeller thrust fades to zero at this airspeed
   kq: 0.015,                                    // propeller reaction torque per newton of thrust (m)
-  rotDamp: 0.012, motorTau: 0.07, tiltRate: 150, nozzleRate: 300, tailRate: 400,
+  rotDamp: 0.012, motorTau: 0.07, tiltRate: 150, nozzleRate: 100, tailRate: 400,     // nozzle slew rates: inside what the joint gearmotors turn under load (tools/nozzle-loads.mjs)
   gearCD: 0.012, gearRate: 0.45,                 // three legs hanging out cost this much drag; and they take about 2 s to fold
 };
 
@@ -96,7 +92,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     }
     c = Math.max(c, 0);
     const tL = (c + u[0] / zArm) * fans, tR = (c - u[0] / zArm) * fans; tF *= fans;
-    const cmd = armed ? [clamp(tF, 0, F.max), clamp(tM, 0, M.max * mainCap(s.tilt)), clamp(tL, 0, L.max), clamp(tR, 0, R.max)] : [0, 0, 0, 0];
+    const cmd = armed ? [clamp(tF, 0, F.max), clamp(tM, 0, M.max), clamp(tL, 0, L.max), clamp(tR, 0, R.max)] : [0, 0, 0, 0];
     s.cmd = cmd;
     const nozzleD = clamp(Math.asin(clamp(u[1] / (-ex.r[0] * Math.max(s.T[1] * ex.eff, 1.5) * Math.max(sinT, 0.3)), -1, 1)) / DEG, -20, 20);   // yaw: swing the bent jet sideways
     const qbar = 0.5 * RHO * Math.max(V * V, 9);

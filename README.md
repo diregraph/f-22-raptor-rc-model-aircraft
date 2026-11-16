@@ -19,8 +19,8 @@ sized around parts on hand.
   tubes, servos, propeller discs, battery and each other. Then run
   `python3 tools/sync-mass.py` to copy the mass estimates into the spec.
 - `cad/propulsion.py` — bench kit: a printed 80 mm ducted fan for the EMAX 2306 and a
-  three-bearing swivel nozzle that sits flush with the body, pulled by cords from two MG90S
-  servos buried beside the fan duct. Interactive model at `/nozzle.html`;
+  three-bearing swivel nozzle with a ring gear on each bearing, each turned by a small
+  gearmotor and homed by its own nozzle board (`firmware/nozzle/`). Interactive model at `/nozzle.html`;
   joint maths in `site/js/nozzle.js`. Read `docs/ducted-propulsion.md` first: it is an
   untested design with a thrust-stand gate before any airframe change.
 - Layout history and open problems: `docs/engineering/` (latest: `06-scale-shape.md`;

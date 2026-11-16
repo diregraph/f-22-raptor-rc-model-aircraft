@@ -7,12 +7,12 @@
 import dgram from 'node:dgram';
 import { createWriteStream } from 'node:fs';
 import { createSim } from '../site/js/sim.js';
-import { NOZZLE, jointCentres, exitDirection, ringRatio } from '../site/js/nozzle.js';
+import { solve, exitDirection } from '../site/js/nozzle.js';
 
 const args = process.argv.slice(2), logPath = args.includes('--log') ? args[args.indexOf('--log') + 1] : null;
 const log = logPath ? createWriteStream(logPath) : null;
 const G = 9.81, DEG = 180 / Math.PI, EXPO = 0.65;
-const sim = createSim(), s = sim.s, jc = jointCentres(), K = ringRatio();
+const sim = createSim(), s = sim.s;
 const ch = n => n - 1;                                   // output numbers as in ardupilot/f35b.parm
 const OUT = { elevL: ch(1), elevR: ch(2), F: ch(5), M: ch(6), L: ch(7), R: ch(8), s1: ch(10), s2: ch(11), gear: ch(12) };
 const TAIL_SIGN = -1;                                    // ArduPilot: higher PWM = trailing edge down? set from the first cruise test
@@ -21,12 +21,11 @@ const TAIL_SIGN = -1;                                    // ArduPilot: higher PW
 // Q_M_THST_EXPO in f35b.parm). The real numbers come from the thrust stand; until then the autopilot's model of its motors is exact.
 const SPIN_MIN = 0.12, SPIN_MAX = 0.95;
 const thrust = (pwm, max) => { const t = Math.min(Math.max(((pwm - 1000) / 1000 - SPIN_MIN) / (SPIN_MAX - SPIN_MIN), 0), 1); return max * ((1 - EXPO) * t + EXPO * t * t); };
-// nozzle servo PWM -> joint angles -> direction the jet pushes the aircraft (sim body axes) -> tilt and side swing
+// nozzle-board pulses (deflection, yaw) -> joint angles, as the board solves them -> direction the jet pushes the aircraft
+// (sim body axes) -> tilt and side swing. The board's joints follow within a degree (tools/nozzle-firmware-test.mjs).
 function nozzleFromServos(p1, p2) {
-  const US_PER_DEG = 1000 / 90;                          // as firmware/nozzle/nozzle_3bsm.lua (cfg.usPerDeg, trims 0)
-  const s1 = (p1 - 1500) / US_PER_DEG, s2 = (p2 - 1500) / US_PER_DEG, c = NOZZLE.cord;
-  const a = s1 * c.drum / c.band1 + jc.band, ring = s2 * c.drum / c.ring + jc.ring, b = (ring - a) / K;
-  const e = exitDirection(a, b, -b), t = [e[0], -e[1], -e[2]];         // flow leaves aft-down; the push is the opposite way
+  const defl = Math.min(Math.max((p1 - 1000) / 10, 0), 100), yaw = Math.min(Math.max((p2 - 1500) / 25, -20), 20);   // Nozzle3BSM.h decode()
+  const j = solve(defl, yaw), e = exitDirection(j.a, j.b, j.c), t = [e[0], -e[1], -e[2]];   // flow leaves aft-down; the push is the opposite way
   return { tilt: Math.atan2(Math.hypot(t[1], t[2]), t[0]) * DEG, nozzle: Math.atan2(t[2], t[1]) * DEG };
 }
 function rotm(q) {                                       // body -> world, sim axes, q = [x, y, z, w]
