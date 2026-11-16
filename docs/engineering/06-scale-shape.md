@@ -32,3 +32,19 @@ now about 6 g, so further shape work has to be weight-neutral.
   there is no weight for them until the thrust stand shows a margin.
 - **The aerodynamic model was not re-run** for the taller spine and canopy. They sit in the body's wake region and the
   vortex-lattice model does not see them; drag in forward flight will be a little higher than modelled.
+
+## Addendum: the ArduPilot flight controller (same day)
+
+The H743 wing board (22 g) replaces the ESP32, the gyro board and the regulator (15 g in the parts list), so the
+aircraft gains 7 g in the nose. With the battery left where it was the hardest-working fan went to 60.2%, over the
+limit. Sliding the battery default another 9 mm aft, to 18 mm behind the datum, brings it back:
+
+| Requirement | Target | Now |
+|---|---|---|
+| All-up weight | 2,000 g or less | 1,996 g |
+| Hardest-working fan in the hover | 60% or less | 59.9% |
+| Pitch stability margin | +5 to +12% | +5.8% |
+
+Every target is still met, but the weight margin is now spent: 4 g to the weight limit and a tenth of a point on the
+fan. The next gram has to be paid for. The cheapest candidate is a micro receiver on the same radio link in place of
+the 15 g FS-iA6B, which saves about 13 g for about $10. The GPS module (4 g) is not fitted and does not fit until then.

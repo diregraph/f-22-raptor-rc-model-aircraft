@@ -12,7 +12,7 @@ MotorsMatrix:add_motor_raw(1, 0.0000, -0.1500, 0, 2)   -- motor 2: main fan (swi
 MotorsMatrix:add_motor_raw(2, 0.3209, -0.0470, 0, 3)   -- motor 3: roll fan left
 MotorsMatrix:add_motor_raw(3, -0.3209, -0.0470, 0, 4)   -- motor 4: roll fan right
 assert(MotorsMatrix:set_throttle_factor(0, 1.0000), "f35b: throttle factor 0")
-assert(MotorsMatrix:set_throttle_factor(1, 0.4147), "f35b: throttle factor 1")
+assert(MotorsMatrix:set_throttle_factor(1, 0.4170), "f35b: throttle factor 1")
 assert(MotorsMatrix:set_throttle_factor(2, 1.0000), "f35b: throttle factor 2")
 assert(MotorsMatrix:set_throttle_factor(3, 1.0000), "f35b: throttle factor 3")                                    -- throttle factors must be set before init()
 assert(MotorsMatrix:init(4), "f35b: MotorsMatrix init failed")

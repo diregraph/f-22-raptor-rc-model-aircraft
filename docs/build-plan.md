@@ -125,7 +125,7 @@ ESP32 + madflight plan. It was flown first in simulation against this aircraft's
 - Hardware: an ArduPilot H743 wing board with a built-in power board, for example the Matek
   H743-WLITE (22 g, 12 outputs, barometer, 6 V servo supply; marked end-of-life, so check stock or
   its successor). It replaces the ESP32, the MPU6050, the 5 V regulator and the 6 V servo regulator
-  (17 g), so the aircraft gains about 5 g. A 1 MB F405 board will not do: the motor layout and the
+  (17 g against a parts list that carried 15 g of them), so the aircraft as drawn gains 7 g. A 1 MB F405 board will not do: the motor layout and the
   nozzle need Lua scripting.
 - Receiver: the FS-iA6B in PPM mode works with ArduPilot as it is.
 - GPS: needed for position hold (QLOITER) and automatic missions. A 4 g M10 module without a
