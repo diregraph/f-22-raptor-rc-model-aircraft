@@ -413,10 +413,12 @@ export function buildModel(cad = {}) {
       g.add(mesh(cylX(1.1, 28, -160, 13, 92, 8), MAT.tin()), mesh(cylZ(1.1, 28, -150, 9.5, 20, 8), MAT.tin()));
       addB('rx', g, [0, 170, 40], 404, 22, -55); }
     addB('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 58), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 58, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 58)), [0, 60, 60], 488, 25, -58);
-    // four speed controllers lie flat on the nose-bay floor, two deep
-    for (const [id, y, sd] of [['escF', -17, -1], ['escL', -9, -1], ['escM', -17, 1], ['escR', -9, 1]]) {
-      const e = esc(); e.rotation.y = Math.PI; e.position.set(367, y, sd * 13); add(id, e, [0, 90, sd * 60]);
+    // the lift-fan controller stays in the nose; the other three and the power board lie beside the battery
+    { const e = esc(); e.rotation.y = Math.PI; e.position.set(360, -10, 0); add('escF', e, [0, 90, 0]); }
+    for (const [id, z] of [['escM', 43], ['escR', 65], ['escL', -43]]) {
+      const e = esc(); e.rotation.y = Math.PI; e.position.set(D.escBay.x, D.escBay.y, z); add(id, e, [0, 90, Math.sign(z) * 60]);
     }
+    add('pdb', grp(mesh(rbox(30, 5, 24, 1.5, D.escBay.x, D.escBay.y, -65), MAT.pcbK()), mesh(rbox(16, 8.2, 16, 1.5, D.escBay.x + 20, D.escBay.y + 2, -65), MAT.yellow())), [0, 90, -60]);
     // wiring loom
     { const h = grp(), R = 0xc81e1e, K2 = 0x101010, sx = D.sparX, RZ = D.rollZ, bx = -52, BX = D.battery.xDefault + 52;
       const sh = pts => pts.map(p => p[0] > -141 ? [p[0] + BX, p[1], p[2]] : p), tube0 = tube; { }
@@ -435,19 +437,37 @@ export function buildModel(cad = {}) {
       }
       add('harness', h, [0, 250, 0]); }
   }
-  // --- skids: sprung bows clipped to both longerons
-  for (const [id, x] of [['skidF', 10], ['skidR', -150]]) {
-    const m = MAT.petg('x'), g = grp(), gy = D.groundY;
-    for (const s of [-1, 1]) {
-      const z = s * (W + 5), sh = new THREE.Shape();
-      sh.moveTo(-5, 6); sh.lineTo(5, 6); sh.lineTo(5, -T); sh.quadraticCurveTo(6, gy + 22, 22, gy + 4); sh.lineTo(40, gy + 4); sh.lineTo(40, gy); sh.lineTo(-40, gy); sh.lineTo(-40, gy + 4); sh.lineTo(-22, gy + 4); sh.quadraticCurveTo(-6, gy + 22, -5, -T); sh.closePath();
-      g.add(mesh(new THREE.ExtrudeGeometry(sh, { depth: 5, bevelEnabled: false, curveSegments: 12 }).translate(x, 0, z - 2.5), m));
-      g.add(mesh(box(12, 4, 20, x, 5, s * (W - 5)), m), mesh(box(12, 4, 8, x, -7.2, s * LZ), m));
+  // --- retractable legs. Each leg hangs in a carrier at its hinge, so state.gear can swing it; geometry is drawn about the hinge.
+  const gear = [];
+  { const g = D.gear, m = MAT.petg('x'), L = (len, lean) => {        // blade in the X-Y plane, hinge at the origin
+      const bl = grp(mesh(box(17, len - 12, 6, lean * 0.5, -(len - 12) / 2 - 6, 0), m), mesh(cylZ(9, 6, 0, 0, 0, 16), m),
+        mesh(box(22, 9, 20, lean, -len + 4.5, 0), m), mesh(box(10, 9, 3.2, 0, -23.5, 4.6), m));
+      return bl; };
+    const nose = carrier(V(g.noseX, g.noseY, 0), [0, -260, 0]);
+    add('gearNose', L(g.noseY - D.groundY, 0), [0, 0, 0], nose); gear.push({ carrier: nose, axis: 'z', sign: -1, deg: g.retractDeg });
+    for (const [id, i, sd] of [['gearMainR', 0, 1], ['gearMainL', 1, -1]]) {
+      const y = g.mainY[i], len = Math.hypot(y - D.groundY, g.footZ - g.mainZ), splay = Math.atan2(g.footZ - g.mainZ, y - D.groundY);
+      const c = carrier(V(g.mainX[i], y, sd * g.mainZ), [0, -260, 0]);
+      const leg = L(len, 0); leg.rotation.y = Math.PI / 2; leg.rotation.z = 0;
+      const holder = grp(leg); holder.rotation.x = -sd * splay;
+      add(id, holder, [0, 0, 0], c); gear.push({ carrier: c, axis: 'x', sign: sd, deg: g.retractDeg + splay * 180 / Math.PI });
     }
-    g.add(mesh(box(8, 3.2, 2 * W + 12, x, -T - 2.4, 0), m));
-    add(id, g, [0, -260, 0]);
+    for (const [id, i, sd] of [['gearBktR', 0, 1], ['gearBktL', 1, -1]]) {
+      const x = g.mainX[i], y = g.mainY[i];
+      add(id, grp(mesh(box(8, 4, 20, x - 8, y, sd * 86), m), mesh(box(8, Math.abs(y) - 8, 6, x - 8, (y - 6) / 2, sd * 88), m), clip(x - 8, sd * LZ, 8, m)), [0, -150, 0]);
+    }
+    add('gearMountN', mesh(box(22, 10, 36, g.noseX, g.noseY + 4, 0), m), [0, -150, 0]);
+    for (const [id, x, sd] of [['gearServoN', 398, 0], ['gearServoR', -67, 1], ['gearServoL', -105, -1]]) {
+      const sv = servo(false); sv.rotation.z = Math.PI / 2; sv.position.set(x, sd === 0 ? -8 : -11, sd * 58);
+      add(id, grp(sv), [0, -120, sd * 40]);
+    }
+  }
+  // --- raceway covers, flush in the belly
+  { const wc = D.wireCh, m = MAT.lw('x');
+    for (const [id, x0, x1, sd] of [['coverRF', 120, wc.x1, 1], ['coverRA', wc.x0, 120, 1], ['coverLF', 120, wc.x1, -1], ['coverLA', wc.x0, 120, -1]])
+      add(id, mesh(box(x1 - x0, 4, wc.z1 - wc.z0, (x0 + x1) / 2, -42, sd * (wc.z0 + wc.z1) / 2), m), [0, -120, sd * 40]);
   }
 
-  const shells = ['nose', 'noseCone', 'canopy', 'fanbay', 'tray', 'hatch', 'aftBridge', 'boomL', 'boomR', 'wingInL', 'wingInR', 'wingOutL', 'wingOutR', 'stabL', 'stabR', 'finL', 'finR'];
-  return { root, parts, movers, props, fans, joints: { nozzle, stabs, battG }, shells };   // stabs = [right, left]
+  const shells = ['nose', 'noseCone', 'canopy', 'fanbay', 'tray', 'hatch', 'aftBridge', 'boomL', 'boomR', 'wingInL', 'wingInR', 'wingOutL', 'wingOutR', 'stabL', 'stabR', 'finL', 'finR', 'coverRF', 'coverRA', 'coverLF', 'coverLA'];
+  return { root, parts, movers, props, fans, joints: { nozzle, stabs, battG, gear }, shells };   // stabs = [right, left]
 }

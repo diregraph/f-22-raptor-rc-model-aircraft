@@ -94,12 +94,12 @@
   "frame": "base",
   "note": "Rear flange on the bed. The motor plate bridges 34 mm.",
   "bed": [
-   97.6,
-   97.6,
+   96.4,
+   96.4,
    100.0
   ],
   "solids": 1,
-  "mass": 76.3,
+  "mass": 61.4,
   "matrix": [
    0.0,
    1.0,
@@ -159,7 +159,7 @@
    91.2
   ],
   "solids": 1,
-  "mass": 40.2,
+  "mass": 37.1,
   "matrix": [
    0.0,
    -1.0,
@@ -186,10 +186,10 @@
   "bed": [
    170.5,
    103.4,
-   82.0
+   81.8
   ],
   "solids": 1,
-  "mass": 39.9,
+  "mass": 33.1,
   "matrix": [
    1.0,
    0.0,
@@ -219,7 +219,7 @@
    89.2
   ],
   "solids": 1,
-  "mass": 20.7,
+  "mass": 17.1,
   "matrix": [
    0.0,
    1.0,

@@ -2,30 +2,30 @@
  "s_ref_m2": 0.1584,
  "span_m": 0.69,
  "aspect_ratio": 3.01,
- "wing_loading_g_dm2": 122.3,
- "CL_per_deg": 0.0435,
- "neutral_point_mm_behind_datum": 36,
- "static_margin_pct": 7.2,
- "CL_max_est": 1.03,
- "stall_speed_m_s": 13.8,
- "best_L_over_D": 12.2,
+ "wing_loading_g_dm2": 122.5,
+ "CL_per_deg": 0.044,
+ "neutral_point_mm_behind_datum": 39,
+ "static_margin_pct": 2.2,
+ "CL_max_est": 1.08,
+ "stall_speed_m_s": 13.5,
+ "best_L_over_D": 11.9,
  "alpha_best_deg": 3,
  "cruise_14ms": {
   "CL": 1.0,
-  "alpha_deg": 21.7,
-  "drag_N": 5.65,
-  "thrust_power_W": 79.0
+  "alpha_deg": 21.6,
+  "drag_N": 6.03,
+  "thrust_power_W": 84.0
  },
  "cruise_18ms": {
-  "CL": 0.6,
-  "alpha_deg": 12.7,
-  "drag_N": 4.51,
-  "thrust_power_W": 81.0
+  "CL": 0.61,
+  "alpha_deg": 12.6,
+  "drag_N": 4.87,
+  "thrust_power_W": 88.0
  },
  "cruise_24ms": {
   "CL": 0.34,
   "alpha_deg": 6.6,
-  "drag_N": 3.16,
-  "thrust_power_W": 76.0
+  "drag_N": 3.42,
+  "thrust_power_W": 82.0
  }
 }

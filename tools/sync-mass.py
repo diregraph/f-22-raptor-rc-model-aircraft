@@ -1,7 +1,13 @@
-"""Copy estimated masses from cad/report.json into site/js/spec.js. Run after cad/build.py."""
+"""Copy estimated masses from the CAD reports into site/js/spec.js. Run after cad/build.py and cad/propulsion.py."""
 import json, re, os
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 mass = {v["twin_id"]: v["mass_est_g"] for v in json.load(open(os.path.join(root, "cad", "report.json"))).values()}
+kit = os.path.join(root, "cad", "kit-report.json")
+if os.path.exists(kit):
+    for v in json.load(open(kit)).values(): mass[v["id"]] = v["mass"]
+    mass["collar1"] = mass["collar2"] = mass["collar3"] = round(2 * mass.pop("collar", 0), 1)      # two halves make one collar
+    mass["collar1"] = round(2 * mass.pop("collarJ1", mass["collar1"] / 2), 1)
+    mass["drum1"] = mass["drum2"] = mass.pop("servoDrum", 10)
 p = os.path.join(root, "site", "js", "spec.js"); out = []
 for line in open(p).read().split("\n"):
     m = re.match(r"(  \['(\w+)', '[^']*', '[^']*', '[^']*', '[^']*', )([\d.]+)(, .*)", line)

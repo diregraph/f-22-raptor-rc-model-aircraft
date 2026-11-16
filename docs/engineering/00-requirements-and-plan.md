@@ -1,7 +1,8 @@
 # Engineering plan: requirements, tools, first findings
 
-Status: phase 1 (requirements) drafted, phase 2 (sizing) started. Deadline relaxed by the
-owner: do it properly. Nothing printed or measured yet.
+Status: requirements at version 2 (revised after the fourth loop). The aircraft is fully drawn in the
+CAD and meets every target on paper. Deadline relaxed by the owner: do it properly. Nothing printed or
+measured yet, and the two thrust figures the design leans on are still models.
 
 ## Decisions taken
 
@@ -12,18 +13,45 @@ owner: do it properly. Nothing printed or measured yet.
 | Structure | Printed airframe on carbon tubes left over from the Super Stingray VTOL build (lengths to be measured) |
 | Schedule | No fixed date. Simulate, then bench-test, then print the airframe |
 
-## Draft requirements (to be agreed)
+## Requirements, version 2
 
-| ID | Requirement | Target | Today (estimate) | Met? |
+Revised after the fourth loop (`docs/engineering/04-shape-legs-and-wiring.md`), which drew the wiring and
+the landing gear for the first time. "Today" is the aircraft as drawn in the CAD, measured by
+`analysis/as_drawn.py` and `analysis/layout_v5.py`.
+
+| ID | Requirement | Target | Today | Met? |
 |---|---|---|---|---|
-| R1 | All-up weight | 1,900 g or less | 1,892 g | Yes, no margin |
-| R2 | Hover thrust margin: each fan at or below this share of its maximum | 60% | 60 / 64 / 64% | No |
-| R3 | Pitch stability in forward flight (static margin: how far the balance point sits ahead of the point where lift acts, as % of wing chord) | +5 to +12% | -14 to -24% | **No** |
-| R4 | Stall speed | 12 m/s or less | 13.5 m/s | No |
-| R5 | Hover time | 3 min | not yet computed | ? |
+| R1 | All-up weight | **2,000 g or less** (was 1,900) | 1,981 g | Yes |
+| R2 | Hover thrust margin: each fan at or below this share of its maximum | 60% | 59.6% | Yes, nothing to spare |
+| R3 | Pitch stability in forward flight (static margin: how far the balance point sits ahead of the point where lift acts, as % of wing chord) | +5 to +12% | +6.5% | Yes |
+| R4 | Stall speed | 12 m/s or less | 11.5 m/s | Yes |
+| R5 | Hover time | 3 min | 3.4 min (±20%) | Yes |
 | R6 | Largest part fits the K1C bed (220 x 220 x 250 mm) | all parts | all parts | Yes |
 | R7 | Assembly by clips and pins, no glue on parts that are replaced after a crash | all crash parts | most | Partly |
 | R8 | Outline matches the F-35B in plan and side view | within 5% of proportions | see `docs/shape-check.md` | Yes |
+| R9 | **Nothing in the airflow on the ground** | legs retract and the bays close flush | three retracting legs | Yes |
+| R10 | **Wiring the owner can service** | every run in a moulded channel, a connector at each end, no loom | 25 runs, 2 raceways, 4 covers | Yes |
+| R11 | **Cost of parts still to buy** | as low as the other targets allow | about $90 | See `docs/bill-of-materials.md` |
+| R12 | **Transition holds height and heading** | height within 1 m, heading within 20° | passes in `tools/sim-test.mjs` | Yes, in the simple simulator |
+
+### Why R1 moved from 1,900 g to 2,000 g
+
+The 1,900 g figure was set before anything was drawn. Two things the owner asked for turned out to weigh
+more than the first draft assumed:
+
+- **Wiring: 45 g assumed, 132 g real.** Measured run by run along the real channels, with a connector at
+  each end so any component can be removed. A single soldered loom would be lighter and would break the
+  requirement.
+- **Retracting legs: +36 g of servos.** Two fixed skids were lighter, and sat in the airflow.
+
+The choice was to keep the number and drop one of the two, or to keep both and raise the number. Both buy
+something the requirements ask for, so the number moved. R2 to R5 were all held at their original values
+at the heavier weight, which is what the loop had to prove.
+
+### New requirements in version 2
+
+R9, R10 and R11 come from the owner directly. R12 was added because the transition, not the hover, is where
+the earlier simulator runs lost height and heading, and nothing had been written down to hold it to account.
 
 ## Tool chain
 

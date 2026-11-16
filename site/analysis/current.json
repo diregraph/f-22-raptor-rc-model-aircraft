@@ -1,22 +1,22 @@
 {
  "now": {
-  "mass": 1938,
-  "cg": -18.6,
-  "np": -36,
-  "margin": 7.2,
-  "hover_worst": 0.777,
+  "mass": 1981,
+  "cg": -23.3,
+  "np": -39,
+  "margin": 6.5,
+  "hover_worst": 0.598,
   "hover": {
-   "F": 0.777,
-   "M": 0.276,
-   "R": 0.777
+   "F": 0.598,
+   "M": 0.238,
+   "R": 0.598
   },
-  "stall": 11.6,
+  "stall": 11.5,
   "thrust_g": {
-   "lift": 1206.0,
+   "lift": 1344.0,
    "nozzle_down": 814,
-   "roll_pair": 1000.0
+   "roll_pair": 1646.0
   },
-  "ideal_equal_load": 0.642
+  "ideal_equal_load": 0.521
  },
  "first": {
   "mass": 1892,
@@ -27,39 +27,44 @@
  },
  "changes": [
   [
-   "Lift fan",
-   "140 mm, 7 fine blades, moved 80 mm forward",
-   "more thrust within the motor's current limit; longer arm ahead of the balance point"
+   "Roll motors and propellers",
+   "5 in propellers in 137 mm ducts, 44 mm forward of the spar",
+   "the pair makes 1,646 g instead of 816 g, which is what brings the hardest-working fan under 60%"
   ],
   [
-   "Wide centre body",
-   "70 mm longer at the front",
-   "room for the larger fan; costs stability, because a wide flat forebody lifts"
+   "Lift-fan motor",
+   "2807 size, about 1,500 KV",
+   "the fan is torque-limited at 35 A, so a lower KV gives 1,344 g instead of 1,206 g"
   ],
   [
-   "Wing and roll motors",
-   "75 mm aft, SD7062 section",
-   "moves the point where lift acts aft; lower stall speed"
+   "Landing gear",
+   "three retractable legs in place of two tall skids",
+   "nothing in the airflow; 36 g of servos is the price"
   ],
   [
-   "Spar",
-   "30 mm aft, 600 mm long, crosses the main fan inlet",
-   "the fan duct blocks any position further aft"
+   "Wiring",
+   "25 separate runs in two belly raceways, a connector at each end",
+   "honest mass is 132 g, not the 45 g the first draft assumed"
   ],
   [
-   "Battery",
-   "68 mm forward, directly behind the lift fan",
-   "balance"
-  ],
-  [
-   "Speed controllers, flight controller, receiver",
-   "into the nose, under a lift-off canopy",
-   "the only move that made the as-drawn aircraft stable"
+   "Speed controllers",
+   "three of the four beside the battery, under the hatch",
+   "shorter motor runs and a balance point the battery can still trim"
   ],
   [
    "Tailplane",
-   "unchanged",
-   "it sits in the wing's wake: 40% more area moved the lift point 2 mm"
+   "1.5x area",
+   "trim at 18 m/s took 19.5 of the 25 degrees available, leaving nothing for manoeuvre"
+  ],
+  [
+   "Tubes",
+   "8 x 1 mm carbon in place of 8 mm aluminium",
+   "24 g, and stiffer"
+  ],
+  [
+   "Battery",
+   "4-cell 2,700 mAh",
+   "2,200 mAh met every target but hover time; 3,300 mAh is too heavy for the fan margin"
   ]
  ]
 }
