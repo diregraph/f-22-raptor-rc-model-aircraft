@@ -5,7 +5,7 @@ import { RoomEnvironment } from '../vendor/RoomEnvironment.js';
 import { STLLoader } from '../vendor/STLLoader.js';
 import { NOZZLE, solve, exitDirection } from './nozzle.js';
 import { makeDrive } from './cords.js';
-import { servoTorque, thrustEnvelope, kgcm, SERVOS } from './nozzle-loads.js';
+import { servoTorque, thrustEnvelope, kgcm, SERVOS, LOADS } from './nozzle-loads.js';
 
 const $ = s => document.querySelector(s), rad = d => d * Math.PI / 180;
 const canvas = $('#c');
@@ -66,10 +66,10 @@ function apply() {
   $('#jrows').innerHTML = [['1 · square', j.a, s.s1], ['2 · canted', j.b, s.s2], ['3 · canted', j.c, null]].map(([n, t, v]) => `<tr><td>${n}</td><td>${t.toFixed(1)}°</td>${v === null ? '<td colspan="2">no servo: follows 2</td>' : `<td>${v.toFixed(0)}°</td><td>${us(v)} µs</td>`}</tr>`).join('');
   const down = Math.atan2(-e[1], e[0]) * 180 / Math.PI, side = Math.asin(e[2]) * 180 / Math.PI;
   $('#kexit').textContent = `${down.toFixed(0)}° below straight aft, ${Math.abs(side).toFixed(0)}° to the ${side >= 0 ? 'right' : 'left'}.`;
-  const t = 850 * (state.f / 100) ** 2 * (1 - 0.15 * state.d / 90);
-  $('#kthrust').textContent = `About ${Math.round(t)} g: 850 g at full speed straight, less roughly 15% when bent 90°. Both figures are guesses until measured.`;
+  const t = 850 * (state.f / 100) ** 2 * (1 - LOADS.loss90 * state.d / 90);
+  $('#kthrust').textContent = `About ${Math.round(t)} g: 850 g at full speed straight, less roughly 25% when bent 90° (two 45° mitred joints). Both figures are guesses until measured.`;
   const sv = SERVOS.mg90s_6v, budget = sv.stall * sv.budget, cap = ENV[Math.round(state.d / 5)][1];
-  const ld = servoTorque(state.d, state.y, Math.max(t / (1 - 0.15 * state.d / 90), 1)), worst = kgcm(Math.max(ld.s1, ld.s2));
+  const ld = servoTorque(state.d, state.y, Math.max(t / (1 - LOADS.loss90 * state.d / 90), 1)), worst = kgcm(Math.max(ld.s1, ld.s2));
   $('#kload').innerHTML = `Servo 1 ${kgcm(ld.s1).toFixed(2)}, servo 2 ${kgcm(ld.s2).toFixed(2)} kg cm, against ${budget.toFixed(2)} allowed (70% of an MG90S on 6 V)${worst > budget ? ' <b class="bad">over</b>' : ''}. At this deflection the controller caps the fan at ${cap} g. Model: <code>site/js/nozzle-loads.js</code>, friction guessed until the bench measures it.`;
   jetMesh.scale.set(40 + 2.2 * state.f, 1, 1); jetMesh.visible = state.f > 0 && state.e < 0.05;
   $('#oD').textContent = state.d + '°'; $('#oY').textContent = state.y + '°'; $('#oF').textContent = state.f + '%'; $('#oE').textContent = Math.round(state.e * 100) + '%';

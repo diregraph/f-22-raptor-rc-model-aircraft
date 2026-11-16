@@ -18,7 +18,7 @@ TIP_GAP = 0.6               # blade tip to shroud
 SHROUD_ID, WALL = BORE + 2 * TIP_GAP, 1.6
 HUB_R = 17.0                # rotor hub radius (covers the 28.6 mm motor bell)
 BELL_R = 15.3               # clearance bore over the bell
-N_BLADES, N_VANES = 7, 5
+N_BLADES, N_VANES = 7, 7      # vanes: one straight wide one that carries the motor wires, six cambered ones that take the swirl out
 RPM, V_AXIAL = 18000.0, 37.6    # design point: about 0.7 kg static thrust
 X_ROTOR0, X_WEB0, X_WEB1, X_SKIRT1 = -97.0, -76.0, -68.0, -46.0
 X_MOTOR_FACE, X_STATOR1, X_DUCT0 = -44.0, -14.0, -100.0
@@ -29,7 +29,10 @@ FL_W, FL_T, LEG = 6.0, 3.0, 3.5  # bearing flange width and thickness; how far t
 L1, L2, L3 = 58.0, 104.0, 56.0     # long enough that the canted bearings and their collars clear each other on the short side of each wedge
 JOINTS = [(0.0, 0.0, BORE + 2 * TIP_GAP), (L1, ALPHA, DJ), (L1 + L2, -ALPHA, DJ)]   # x, tilt about Z, bore
 BELL = 6.0                  # bellmouth flare
-NECK_UP, NECK_DN = 10.0, 7.0    # straight length of tube each side of a canted bearing, so collars and cord bands sit on a true cylinder
+NECK_UP, NECK_DN = 6.0, 6.0      # straight length of tube each side of a canted bearing, so collars sit on a true cylinder. Only as long as the
+                                 # collar (5.2 mm + play): a longer tilted neck makes a step inside the bore (it was 10 mm, an 11 mm ramp in the wall)
+SWIRL_K = 12.5                   # swirl leaving the rotor, as Vtheta * r / Vaxial in mm (free vortex, from analysis/fan_bem.py at full power)
+VANE_T = 1.6                     # cambered stator vane thickness
 R_J1, R_J = (BORE + 2 * TIP_GAP) / 2 + FL_W, DJ / 2 + FL_W     # flange radius at bearing 1 and at the canted bearings
 G_W, G_D, CORD = 1.4, 1.2, 0.3  # cord groove width and depth; the cord centre rides 0.3 above the groove floor
 R_BAND1 = R_J1 + 2.6 - G_D + CORD          # cord radius on the bearing-1 collar            (NOZZLE.cord.band1)
@@ -153,14 +156,29 @@ def post(x0, x1, r0, r1, clock, w=5.0):      # eyelet post: the cord runs throug
 
 def annulus(x0, x1, r0, r1): return revolve([(x0, r0), (x0, r1), (x1, r1), (x1, r0)])
 
+def stator_vane(x0, x1, r_in, r_out, n=14):
+    """Cambered stator vane at clock angle 0. The leading edge meets the swirling flow head-on (angle atan(SWIRL_K / r) from
+    the axis, toward -phi: the rotor turns toward -phi) and the camber line turns it back to axial by the trailing edge."""
+    c = x1 - x0; secs = []
+    for r in [r_in, (r_in + r_out) / 2 - 6, (r_in + r_out) / 2 + 6, r_out]:
+        tb = SWIRL_K / max(r, HUB_R)                                   # tan of the swirl angle at this radius
+        us = [(1 - math.cos(math.pi * i / n)) / 2 for i in range(n + 1)]
+        mid = lambda u: -tb * c * (u - u * u / 2)                       # camber line, tangential offset in mm: slope -tb at the LE, 0 at the TE
+        half = lambda u: naca(u, VANE_T / c) * c                        # half-thickness, rounded leading edge
+        def pt(u, side):
+            t = mid(u) + side * half(u); phi = t / r
+            return cq.Vector(x0 + u * c, -r * math.sin(phi), r * math.cos(phi))
+        secs.append(cq.Wire.makePolygon([pt(u, 1) for u in us] + [pt(u, -1) for u in us[-2:0:-1]], close=True))
+    return W_(cq.Solid.makeLoft(secs, True))
+
 def fan_duct():
     r0, r1 = SHROUD_ID / 2, SHROUD_ID / 2 + WALL
     shell = revolve([(X_DUCT0, r0 + BELL), (X_DUCT0 + BELL, r0), (0, r0), (0, r1), (X_DUCT0 + BELL + 3, r1), (X_DUCT0, r1 + BELL)])   # 45 degree bellmouth
     hubcup = revolve([(X_MOTOR_FACE, 0), (X_MOTOR_FACE, HUB_R), (X_STATOR1, HUB_R), (X_STATOR1, HUB_R - 2.2), (X_MOTOR_FACE + 3.5, HUB_R - 2.2), (X_MOTOR_FACE + 3.5, 0)])
     body = shell.union(hubcup)
-    for i in range(N_VANES):                                                    # straightening vanes; the widest one carries the wires
-        t = 5.0 if i == 0 else 2.4
-        v = box(X_MOTOR_FACE + 1, X_STATOR1 - 1, HUB_R - 1, r0 + 1, -t / 2, t / 2)
+    for i in range(N_VANES):                                                    # stator vanes; the first, straight and wide, carries the wires
+        if i == 0: v = box(X_MOTOR_FACE + 1, X_STATOR1 - 1, HUB_R - 1, r0 + 1, -2.5, 2.5)
+        else: v = stator_vane(X_MOTOR_FACE + 1, X_STATOR1 - 1, HUB_R - 1, r0 + 1)
         body = body.union(rot_x(v, 360.0 * i / N_VANES + 36))
     body = body.union(flange(0, -1))
     body = body.cut(counterbore(0))
@@ -169,9 +187,14 @@ def fan_duct():
     cut = cut.union(rot_x(box(X_MOTOR_FACE + 5, X_STATOR1 - 5, 8, r1 + 3, -1.6, 1.6), 36))      # wire slot through the wide vane
     return body.cut(cut)
 
+TAIL_L = 64.0                 # tail cone length behind the stators: reaches into segment 1, which stays coaxial whatever the nozzle does
 def tail_cone():
-    c = revolve([(X_STATOR1 - 6, HUB_R - 2.5), (X_STATOR1, HUB_R - 2.5), (X_STATOR1, HUB_R), (X_STATOR1 + 16, 11), (X_STATOR1 + 28, 3), (X_STATOR1 + 30, 1.2), (X_STATOR1 + 30, 0), (X_STATOR1 - 6, 0)])
-    return c.cut(revolve([(X_STATOR1 - 7, 0), (X_STATOR1 - 7, HUB_R - 4.3), (X_STATOR1 + 12, 9), (X_STATOR1 + 22, 1.2), (X_STATOR1 + 22, 0)]))
+    """Fairing behind the motor: tapers the 34 mm hub to a point at about 15 degrees, so the flow stays attached
+    (the first one closed it in 30 mm, about 30 degrees, and the flow would have broken away). Thin shell, push fit."""
+    n = 16; outer = [(X_STATOR1 + TAIL_L * i / n, max(1.0, HUB_R * (1 - (i / n) ** 1.15))) for i in range(n + 1)]
+    inner = [(x, r - 0.9) for x, r in outer if r - 0.9 > 1.0]
+    c = revolve([(X_STATOR1 - 6, HUB_R - 2.5), (X_STATOR1, HUB_R - 2.5)] + outer + [(outer[-1][0], 0), (X_STATOR1 - 6, 0)])
+    return c.cut(revolve([(X_STATOR1 - 7, 0), (X_STATOR1 - 7, HUB_R - 4.3), (X_STATOR1, HUB_R - 4.3)] + inner[1:] + [(inner[-1][0], 0)]))
 
 def segment(k):
     """nozzle segment k (0, 1, 2): downstream half of bearing k, upstream half of bearing k + 1 (or the exit).
