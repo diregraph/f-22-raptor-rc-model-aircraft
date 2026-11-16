@@ -1,0 +1,18 @@
+{
+ "hover": {
+  "scenario": "hover",
+  "flew": true,
+  "airborne_s": 85.2,
+  "max_height_m": 5.5,
+  "max_speed_ms": 0.4,
+  "max_roll_deg": 2.1,
+  "max_pitch_deg": 1.7,
+  "hover_fan_load_mean_pct": 60.8,
+  "hover_fan_load_peak_pct": 91.2,
+  "landed": true,
+  "hold_height_band_m": 0.09,
+  "hold_drift_m": 0.61,
+  "hold_heading_band_deg": 11.2,
+  "hold_nozzle_swing_deg": 6.2
+ }
+}

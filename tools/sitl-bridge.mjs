@@ -17,7 +17,10 @@ const ch = n => n - 1;                                   // output numbers as in
 const OUT = { elevL: ch(1), elevR: ch(2), F: ch(5), M: ch(6), L: ch(7), R: ch(8), s1: ch(10), s2: ch(11), gear: ch(12) };
 const TAIL_SIGN = -1;                                    // ArduPilot: higher PWM = trailing edge down? set from the first cruise test
 
-const thrust = (pwm, max) => { const t = Math.min(Math.max((pwm - 1000) / 1000, 0), 1); return max * ((1 - EXPO) * t + EXPO * t * t); };
+// Motor model: no thrust below 12% throttle, full thrust at 95%, curved between (matches Q_M_SPIN_MIN, Q_M_SPIN_MAX and
+// Q_M_THST_EXPO in f35b.parm). The real numbers come from the thrust stand; until then the autopilot's model of its motors is exact.
+const SPIN_MIN = 0.12, SPIN_MAX = 0.95;
+const thrust = (pwm, max) => { const t = Math.min(Math.max(((pwm - 1000) / 1000 - SPIN_MIN) / (SPIN_MAX - SPIN_MIN), 0), 1); return max * ((1 - EXPO) * t + EXPO * t * t); };
 // nozzle servo PWM -> joint angles -> direction the jet pushes the aircraft (sim body axes) -> tilt and side swing
 function nozzleFromServos(p1, p2) {
   const s1 = (p1 - 1500) / 500 * NOZZLE.servoTravel / 2, s2 = (p2 - 1500) / 500 * NOZZLE.servoTravel / 2, c = NOZZLE.cord;
@@ -45,14 +48,14 @@ sock.on('message', (buf, rinfo) => {
   lastFrame = frame;
   const dt = Math.min(1 / Math.max(rate, 1), 1 / 200), th = sim.thrusters, nz = nozzleFromServos(pwm[OUT.s1], pwm[OUT.s2]);
   const tail = p => TAIL_SIGN * (p - 1500) / 500 * 25;
-  sim.physics(dt, { T: [thrust(pwm[OUT.F], th[0].max), thrust(pwm[OUT.M], th[1].max), thrust(pwm[OUT.L], th[2].max), thrust(pwm[OUT.R], th[3].max)],
+  sim.physics(dt, { T: [OUT.F, OUT.M, OUT.L, OUT.R].map((c, i) => thrust(pwm[c], th[i].max) * thrustScale[i]),
     tilt: nz.tilt, nozzle: nz.nozzle, tailL: tail(pwm[OUT.elevL]), tailR: tail(pwm[OUT.elevR]), gear: pwm[OUT.gear] > 1500 ? 1 : 0 });
   const aw = s.onGround ? [0, 0, 0] : s.v.map((v, i) => (v - vPrev[i]) / dt); vPrev = s.v.slice();
   const Rw = rotm(s.q), sf = mmul(T(Rw), [[aw[0]], [aw[1] + G], [aw[2]]]).map(r => r[0]);   // specific force, body axes
   const Rn = mmul(mmul(P, Rw), T(P));
   s.out = { sf, Rn, pwm };
-  if (log && frame % 20 === 0) log.write(JSON.stringify({ t: +s.t.toFixed(3), p: s.p.map(v => +v.toFixed(3)), q: s.q.map(v => +v.toFixed(4)), v: s.v.map(v => +v.toFixed(2)),
-    T: s.T.map(v => +v.toFixed(2)), tilt: +s.tilt.toFixed(1), nozzle: +s.nozzle.toFixed(1), tailL: +s.tailL.toFixed(1), tailR: +s.tailR.toFixed(1), gear: +s.gear.toFixed(2) }) + '\n');
+  if (log && frame % 60 === 0) log.write(JSON.stringify({ t: +s.t.toFixed(3), p: s.p.map(v => +v.toFixed(3)), q: s.q.map(v => +v.toFixed(4)), v: s.v.map(v => +v.toFixed(2)),
+    T: s.T.map(v => +v.toFixed(2)), tilt: +s.tilt.toFixed(1), nozzle: +s.nozzle.toFixed(1), tailL: +s.tailL.toFixed(1), tailR: +s.tailR.toFixed(1), gear: +s.gear.toFixed(2), pwm: [1, 2, 5, 6, 7, 8, 9, 10, 11, 12].map(c => pwm[c - 1]) }) + '\n');
   reply(rinfo);
 });
 function reply(rinfo) {
@@ -65,6 +68,11 @@ function reply(rinfo) {
   sock.send('\n' + JSON.stringify(msg) + '\n', rinfo.port, rinfo.address);
 }
 // optional stick input from the scenario driver on UDP 9003: {"rc_1":1500,...}
-const ctl = dgram.createSocket('udp4'); ctl.on('message', b => { try { rc = JSON.parse(b.toString()); } catch {} }); ctl.bind(9003);
+// Scenario control on UDP 9003 from tools/sitl-run.py: {"rc": {...}, "wind": [n, e, d] m/s, "thrustScale": [F, M, L, R]}
+let thrustScale = [1, 1, 1, 1];
+const ctl = dgram.createSocket('udp4');
+ctl.on('message', b => { try { const m = JSON.parse(b.toString()); if (m.rc) rc = m.rc;
+  if (m.wind) s.wind = [m.wind[0], -m.wind[2], m.wind[1]]; if (m.thrustScale) thrustScale = m.thrustScale; } catch {} });
+ctl.bind(9003);
 sock.bind(9002, () => console.log('sitl-bridge: waiting for ArduPilot on UDP 9002'));
 process.on('SIGINT', () => { log?.end(); process.exit(0); });

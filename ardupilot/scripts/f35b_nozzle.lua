@@ -4,13 +4,14 @@
 -- Inputs : SERVOn_FUNCTION 41 (motor tilt, 0 = jet straight down, 1000 = straight aft) and motors:get_yaw() (-1..1).
 -- Outputs: SERVOn_FUNCTION 94 (Script1) = servo 1, bearing-1 collar; 95 (Script2) = servo 2, drive ring.
 -- Yaw: ArduPilot's positive yaw is nose right. A jet pushed to the right at the tail swings the nose left, so
--- nose right needs the jet swung left: swing = -yaw x the swing limit at this deflection.
+-- the sign is set by YAW_SIGN below, found by test in SITL.
 
 local ALPHA, MAXDEF, MAXYAW = 40, 100, 20
 local BAND1, RING, COLLAR, DRUM = 48.3, 50, 53.4, 27.5
 local HALF_TRAVEL = 85                 -- degrees each side of centre for 1000..2000 us
 local CENTRE_BAND, CENTRE_RING = -104.8858, -65.8637   -- pulley mid-travel (nozzle.js jointCentres)
 local K = COLLAR / RING
+local YAW_SIGN = 1                                  -- checked in SITL: +1 turns the nose the way ArduPilot asks
 local RAD = math.pi / 180
 local K_TILT, K_S1, K_S2 = 41, 94, 95
 
@@ -56,7 +57,7 @@ function update()
   local deflection = 90 * (1 - clamp(tilt, 0, 1))
   local yaw = 0
   if quadplane:in_vtol_mode() or quadplane:in_assisted_flight() then yaw = motors:get_yaw() end
-  local a, b = solve(deflection, -yaw * yaw_limit(deflection))
+  local a, b = solve(deflection, YAW_SIGN * yaw * yaw_limit(deflection))
   local s1 = (a - CENTRE_BAND) * BAND1 / DRUM
   local s2 = (a + K * b - CENTRE_RING) * RING / DRUM
   SRV_Channels:set_output_pwm(K_S1, pwm(s1))

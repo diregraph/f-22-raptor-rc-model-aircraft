@@ -117,7 +117,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     s.gear += clamp(act.gear - s.gear, -AERO.gearRate * dt, AERO.gearRate * dt);
     s.tilt = slew(s.tilt, act.tilt, AERO.tiltRate); s.nozzle = slew(s.nozzle, act.nozzle, AERO.nozzleRate);
     s.tailL = slew(s.tailL, act.tailL, AERO.tailRate); s.tailR = slew(s.tailR, act.tailR, AERO.tailRate);
-    const vb = qrot(qinv(s.q), s.v);
+    const vb = qrot(qinv(s.q), s.wind ? sub(s.v, s.wind) : s.v);   // air velocity in body axes (s.wind: world m/s, optional)
     s.att = attitude(s.q); s.speed = Math.hypot(...s.v); s.alpha = Math.hypot(vb[0], vb[1]) > 1 ? Math.atan2(-vb[1], vb[0]) : 0;
 
     // ---- forces and torques in body axes ----------------------------------

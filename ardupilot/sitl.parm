@@ -1,6 +1,6 @@
 # Simulation-only settings, loaded after f35b.parm when running SITL with tools/sitl-bridge.mjs. Never load on the aircraft.
 ARMING_CHECK    0
-SIM_RATE_HZ     400
+SIM_RATE_HZ     1200
 THR_FAILSAFE    0
 FS_GCS_ENABL    0
 RC_PROTOCOLS    1
