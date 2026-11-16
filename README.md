@@ -5,6 +5,10 @@ sized around parts on hand.
 
 - `site/` — interactive digital twin (three.js, no build step). Explode, inspect
   parts, section cut, assembly steps, balance and thrust overlay, sim JSON export.
+  Opens in a scale-paint finish; the "Scale finish" button switches to filament colours.
+  `/story.html` is the build journal: how it flies, the four design loops, the
+  reference build, and next steps. `/?shot` renders the model without panels (used for
+  the stills in `site/img/`).
 - `site/js/spec.js` — single source of truth: dimensions, parts, masses,
   thrusters, joints. A later simulator should read this file.
 - `site/js/sim.js` — first-pass flight physics and flight-controller model (also runs in Node).
@@ -20,6 +24,7 @@ sized around parts on hand.
   joint maths in `site/js/nozzle.js`. Read `docs/ducted-propulsion.md` first: it is an
   untested design with a thrust-stand gate before any airframe change.
 - Layout history and open problems: `docs/engineering/` (latest: `04-shape-legs-and-wiring.md`;
+  proposed next: `05-ardupilot-sitl-plan.md`, flying ArduPilot against this model in simulation;
   requirements v2 in `00-requirements-and-plan.md`).
 - `docs/bill-of-materials.md` — what is owned, what is printed, and the roughly $90 still to buy.
 - `analysis/` — engineering studies (AeroSandbox, JSBSim, blade-element fan model, topology

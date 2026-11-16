@@ -13,7 +13,8 @@ const std = (o) => { const m = new THREE.MeshStandardMaterial(o); m.side = THREE
 // FDM look: fine layer lines along the print axis, fading out with distance so they never shimmer
 function printed(m, axis = 'y', pitch = 0.7, depth = 1) {
   m.onBeforeCompile = sh => {
-    sh.uniforms.uAxis = { value: AX[axis] || axis }; sh.uniforms.uPitch = { value: pitch }; sh.uniforms.uDepth = { value: depth };
+    m.userData.shader = sh;   // the viewer turns layer lines off for the scale finish
+    sh.uniforms.uAxis = { value: AX[axis] || axis }; sh.uniforms.uPitch = { value: pitch }; sh.uniforms.uDepth = { value: m.userData.noLayers ? 0 : depth }; m.userData.depth = depth;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform vec3 uAxis; varying float vLayer; varying vec3 vAxisV;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLayer = dot(position, uAxis); vAxisV = normalize(normalMatrix * uAxis);');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uPitch; uniform float uDepth; varying float vLayer; varying vec3 vAxisV;')
@@ -27,16 +28,17 @@ function printed(m, axis = 'y', pitch = 0.7, depth = 1) {
   m.customProgramCacheKey = () => 'printed'; m.userData.printed = true;
   return m;
 }
+const kind = (m, k) => { m.userData.kind = k; return m; };
 const MAT = {
-  lw: (axis = 'y') => printed(std({ color: 0x7e8891, roughness: 0.9, metalness: 0 }), axis, 0.75, 1),
-  petg: (axis = 'y') => printed(std({ color: 0xf47216, roughness: 0.32, metalness: 0 }), axis, 0.6, 0.8),
+  lw: (axis = 'y') => kind(printed(std({ color: 0x7e8891, roughness: 0.9, metalness: 0 }), axis, 0.75, 1), 'lw'),
+  petg: (axis = 'y') => kind(printed(std({ color: 0xf47216, roughness: 0.32, metalness: 0 }), axis, 0.6, 0.8), 'petg'),
   alu: () => std({ color: 0xcdd2d6, roughness: 0.34, metalness: 1 }),
   steel: () => std({ color: 0x9a9da1, roughness: 0.3, metalness: 1 }),
   dark: () => std({ color: 0x16181b, roughness: 0.5, metalness: 0.2 }),
   gun: () => std({ color: 0x2b2e33, roughness: 0.33, metalness: 0.85 }),
   copper: () => std({ color: 0xc67a3c, roughness: 0.45, metalness: 0.85 }),
   mag: () => std({ color: 0x8d9094, roughness: 0.35, metalness: 0.9 }),
-  prop: () => std({ color: 0x18c7b3, roughness: 0.28, metalness: 0, transparent: true, opacity: 0.9 }),
+  prop: () => kind(std({ color: 0x18c7b3, roughness: 0.28, metalness: 0, transparent: true, opacity: 0.9 }), 'prop'),
   disc: () => new THREE.MeshBasicMaterial({ color: 0x1fd1bd, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
   canopy: () => { const m = new THREE.MeshPhysicalMaterial({ color: 0xa8843a, roughness: 0.05, metalness: 0.35, transparent: true, opacity: 0.4, clearcoat: 1 }); m.side = THREE.DoubleSide; return m; },
   wrap: () => std({ color: 0x0e0f11, roughness: 0.38 }),

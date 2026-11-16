@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>F-35B VTOL Build Journal</title>
+<meta name="description" content="A 3D-printed F-35B model that hovers on three fans and a swivel nozzle, then flies on its wing. How it works, what changed in four design loops, and what comes next.">
+<meta name="theme-color" content="#070b10">
+<meta property="og:title" content="F-35B VTOL model · build journal">
+<meta property="og:description" content="Designed in code, checked in simulation, printed next.">
+<meta property="og:image" content="img/hero-hover.jpg">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+:root {
+  --bg0: #070b10; --bg1: #121b26; --card: #0e151e; --line: rgba(160, 190, 220, .16); --ink: #e8eef4; --mute: #94a3b3;
+  --acc: #ff7a1a; --acc2: #1fd1bd; --blue: #4aa3ff; --warn: #fab219; --good: #3ccf7a; --r: 14px;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg0); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+a { color: #7db4f5; }
+h1, h2, h3, p { margin: 0; }
+img, svg { display: block; max-width: 100%; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+
+/* top bar */
+.bar { position: sticky; top: 0; z-index: 5; background: rgba(7, 11, 16, .82); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 52px; }
+.brand { display: flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: .08em; font-size: 14px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.brand i { width: 8px; height: 26px; border-radius: 3px; background: linear-gradient(var(--acc), #ffb066); box-shadow: 0 0 14px rgba(255, 122, 26, .5); }
+.bar nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.bar nav a { color: var(--mute); text-decoration: none; font-size: 13px; padding: 6px 9px; border-radius: 8px; white-space: nowrap; }
+.bar nav a:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
+
+/* hero */
+.hero { position: relative; background: radial-gradient(120% 90% at 50% 20%, #1b2a3b 0%, var(--bg1) 38%, var(--bg0) 100%); overflow: hidden; }
+.hero img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; object-position: 50% 40%; max-height: 72vh; }
+.hero .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 60px 0 22px; background: linear-gradient(transparent, rgba(7, 11, 16, .92)); }
+.kicker { font: 600 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--acc); }
+.hero h1 { font-size: clamp(28px, 6vw, 54px); line-height: 1.05; letter-spacing: -.01em; margin: 6px 0 8px; }
+.hero p { color: #cfd9e3; max-width: 56ch; font-size: clamp(15px, 2.2vw, 18px); }
+.ctas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.btn { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 9px 16px; color: var(--ink); text-decoration: none; font-size: 14px; background: rgba(14, 21, 30, .7); }
+.btn.main { background: var(--acc); border-color: var(--acc); color: #1a0d00; font-weight: 600; }
+.btn:hover { border-color: rgba(255, 255, 255, .4); }
+
+/* sections */
+section { padding: 56px 0 8px; }
+section > .wrap > h2 { font-size: clamp(22px, 3.6vw, 30px); margin: 4px 0 8px; }
+.lead { color: #cfd9e3; max-width: 64ch; }
+.mute { color: var(--mute); }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; margin-top: 18px; }
+.stack { display: grid; gap: 14px; align-content: start; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; margin-top: 18px; }
+
+/* fact sheet */
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 18px 24px; margin-top: 18px; }
+.facts h3 { font: 600 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
+.facts ul { margin: 0; padding: 0; list-style: none; }
+.facts li { padding: 3px 0; color: #cfd9e3; font-size: 15px; }
+
+/* number tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; margin-top: 18px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.tile b { display: block; font: 600 26px var(--mono); letter-spacing: -.02em; }
+.tile span { font-size: 13px; color: var(--mute); }
+.tile small { display: block; font-size: 12px; color: var(--good); margin-top: 2px; }
+
+/* figures */
+figure { margin: 0; }
+figure img { border-radius: var(--r); border: 1px solid var(--line); width: 100%; height: auto; }
+figcaption { font-size: 13.5px; color: var(--mute); margin-top: 8px; }
+.svgfig svg { width: 100%; height: auto; }
+.svgfig text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+/* timeline */
+.tl { position: relative; margin: 22px 0 0; padding: 0; list-style: none; }
+.tl::before { content: ""; position: absolute; left: 11px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--acc), rgba(255, 122, 26, .1)); }
+.tl li { position: relative; padding: 0 0 26px 40px; }
+.tl li::before { content: ""; position: absolute; left: 4px; top: 4px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg0); border: 3px solid var(--acc); }
+.tl li.next::before { border-color: var(--mute); border-style: dashed; }
+.tl .when { font: 12px var(--mono); color: var(--mute); letter-spacing: .06em; }
+.tl h3 { font-size: 18px; margin: 2px 0 4px; }
+.tl p { color: #cfd9e3; max-width: 68ch; font-size: 15px; }
+.tl .lesson { margin-top: 6px; font-size: 14px; color: var(--ink); }
+.tl .lesson b { color: var(--acc); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip { font: 12px var(--mono); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: #cfd9e3; }
+
+/* tables */
+.tbl { overflow-x: auto; margin-top: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 0; }
+th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--mute); font-weight: 500; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+details { margin-top: 10px; font-size: 14px; } summary { cursor: pointer; color: var(--mute); }
+
+/* media slots */
+.slot { aspect-ratio: 16 / 9; border: 1px dashed rgba(160, 190, 220, .35); border-radius: var(--r); display: grid; place-items: center; text-align: center; padding: 14px; background: repeating-linear-gradient(135deg, rgba(255, 255, 255, .015) 0 12px, transparent 12px 24px); }
+.slot b { display: block; font-size: 15px; }
+.slot span { font-size: 13px; color: var(--mute); }
+
+/* steps */
+.steps { counter-reset: s; margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.steps li::before { content: counter(s); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font: 600 15px var(--mono); background: rgba(255, 122, 26, .14); color: var(--acc); }
+.steps b { display: block; }
+.steps span { font-size: 14px; color: var(--mute); }
+
+footer { margin-top: 64px; border-top: 1px solid var(--line); padding: 22px 0 40px; font-size: 13px; color: var(--mute); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; }
+
+@media (max-width: 420px) { .loops th:last-child, .loops td:last-child { display: none; } }
+@media (max-width: 640px) {
+  .bar nav { display: none; }
+  .hero .cap { position: static; background: none; padding: 18px 0 4px; }
+  .hero img { max-height: none; }
+  section { padding-top: 44px; }
+  th, td { padding: 7px 6px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="wrap">
+  <a class="brand" href="story.html"><i></i>F-35B VTOL</a>
+  <nav aria-label="Sections">
+    <a href="#how">How it flies</a><a href="#journey">Journey</a><a href="#reference">Reference build</a><a href="#media">Tests</a><a href="#next">Next</a>
+    <a href="index.html">3D model</a><a href="analysis.html">Analysis</a>
+  </nav>
+</div></div>
+
+<header class="hero">
+  <img src="img/hero-hover.jpg" alt="Rendered 3D model of the printed F-35B in hover configuration, landing gear down, painted low-visibility grey" width="1600" height="900">
+  <div class="cap"><div class="wrap">
+    <div class="kicker">Build journal · started 15 Nov 2026</div>
+    <h1>A printed F-35B that hovers, then flies on its wing</h1>
+    <p>Three fans and a swivel nozzle lift it. A wing carries it. Every part is drawn in code, checked in simulation, and printed next.</p>
+    <div class="ctas"><a class="btn main" href="index.html">Explore the 3D model</a><a class="btn" href="analysis.html">Engineering analysis</a><a class="btn" href="nozzle.html">Swivel nozzle</a></div>
+  </div></div>
+</header>
+
+<section id="facts"><div class="wrap">
+  <div class="facts">
+    <div><h3>Goal</h3><ul><li>Hover, transition to wing-borne flight, and come back to a hover</li><li>Keep the F-35B outline; hide the engineering inside it</li></ul></div>
+    <div><h3>Status</h3><ul><li>Designed and simulated: every target met on paper</li><li>Nothing printed or measured yet</li><li>Next gate: fan on the thrust stand</li></ul></div>
+    <div><h3>Methods</h3><ul><li>Parametric CAD in code (CadQuery)</li><li>Vortex-lattice aerodynamics (AeroSandbox)</li><li>Pitch dynamics (JSBSim), blade-element fan model</li><li>Browser flight simulator, 13 automated checks</li></ul></div>
+    <div><h3>Built from</h3><ul><li>LW-PLA shells, PETG structure</li><li>Carbon-tube backbone</li><li>Motors and electronics from an earlier VTOL build</li><li>About $90 still to buy</li></ul></div>
+  </div>
+  <div class="tiles" aria-label="Key numbers, as drawn">
+    <div class="tile"><b>1,981 g</b><span>all-up weight</span><small>target ≤ 2,000 g</small></div>
+    <div class="tile"><b>59.6%</b><span>hardest-working fan in hover</span><small>target ≤ 60%</small></div>
+    <div class="tile"><b>3.4 min</b><span>hover time (±20%)</span><small>target ≥ 3 min</small></div>
+    <div class="tile"><b>11.5 m/s</b><span>stall speed</span><small>target ≤ 12 m/s</small></div>
+    <div class="tile"><b>+6.5%</b><span>pitch stability margin</span><small>target +5 to +12%</small></div>
+    <div class="tile"><b>78</b><span>printed parts</span><small>all fit a 220 mm bed</small></div>
+  </div>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <div class="kicker">How it flies</div>
+  <h2>Four thrusters share the weight in a hover</h2>
+  <div class="grid2">
+    <figure class="svgfig card">
+      <svg viewBox="0 0 360 210" role="img" aria-labelledby="hovT">
+        <title id="hovT">Side view: lift fan near the nose, roll pair at the wing, swivel nozzle at the tail; all push up around the balance point</title>
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1fd1bd"/></marker>
+          <marker id="aw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fab219"/></marker></defs>
+        <path d="M18 128 Q30 112 70 110 L150 104 L300 104 Q330 106 344 120 Q330 130 300 132 L70 134 Q30 134 18 128 Z" fill="#2c333a"/>
+        <path d="M44 110 L58 70 L76 70 L84 108 Z" fill="#3b4147"/>
+        <ellipse cx="300" cy="111" rx="22" ry="7" fill="#c9a960" opacity=".55"/>
+        <line x1="250" y1="102" x2="250" y2="64" stroke="#1fd1bd" stroke-width="5" marker-end="url(#ah)"/>
+        <line x1="128" y1="104" x2="128" y2="68" stroke="#1fd1bd" stroke-width="5" marker-end="url(#ah)"/>
+        <line x1="30" y1="126" x2="30" y2="110" stroke="#1fd1bd" stroke-width="4" marker-end="url(#ah)"/>
+        <line x1="170" y1="118" x2="170" y2="178" stroke="#fab219" stroke-width="4" marker-end="url(#aw)"/>
+        <circle cx="170" cy="118" r="6" fill="#fab219"/>
+        <g font-size="12" fill="#e8eef4">
+          <text x="250" y="16" text-anchor="middle">Lift fan</text><text x="250" y="31" text-anchor="middle" fill="#94a3b3" font-size="11">801 g</text>
+          <text x="128" y="20" text-anchor="middle">Roll pair</text><text x="128" y="35" text-anchor="middle" fill="#94a3b3" font-size="11">981 g</text>
+          <text x="30" y="62" text-anchor="middle">Nozzle</text><text x="30" y="77" text-anchor="middle" fill="#94a3b3" font-size="11">200 g</text>
+          <text x="182" y="196" fill="#fab219">Weight 1,981 g</text>
+        </g>
+      </svg>
+      <div class="tbl"><table><thead><tr><th>Thruster</th><th class="n">Share of weight</th><th class="n">Effort</th></tr></thead><tbody>
+        <tr><td>Lift fan, 140 mm, behind the cockpit</td><td class="n">801 g</td><td class="n">60% of max</td></tr>
+        <tr><td>Roll pair, 5 in props buried in the wings</td><td class="n">981 g</td><td class="n">60% of max</td></tr>
+        <tr><td>Main fan through the swivel nozzle</td><td class="n">200 g</td><td class="n">25% of max</td></tr>
+      </tbody></table></div>
+      <figcaption>Hover trim from the fourth design loop. The nozzle idles in a hover, so it has authority to spare for pitch and yaw.</figcaption>
+    </figure>
+    <div class="stack">
+      <figure><img src="img/fly-gear-up.jpg" alt="Rendered model in forward flight: nozzle straight aft, legs folded into the belly" width="1600" height="900" loading="lazy"><figcaption>Forward flight: the nozzle swings straight aft and the three legs fold flush into the belly.</figcaption></figure>
+      <figure><img src="img/exploded-print.jpg" alt="Exploded view of all printed parts in their filament colours: grey LW-PLA shells and orange PETG structure" width="1600" height="900" loading="lazy"><figcaption>Inside: grey LW-PLA shells snap onto orange PETG structure and two carbon tubes. No glue on crash parts.</figcaption></figure>
+    </div>
+  </div>
+</div></section>
+
+<section id="journey"><div class="wrap">
+  <div class="kicker">Journey</div>
+  <h2>Four design loops, and what each one got wrong</h2>
+  <figure class="svgfig card" style="margin-top:18px">
+    <svg viewBox="0 0 360 190" role="img" aria-labelledby="loopT">
+      <title id="loopT">Hardest-working fan in hover per loop: 74, 78, 60, 59.6 percent against a 60 percent limit</title>
+      <line x1="40" y1="10" x2="40" y2="150" stroke="rgba(160,190,220,.25)"/>
+      <line x1="40" y1="150" x2="350" y2="150" stroke="rgba(160,190,220,.25)"/>
+      <line x1="40" y1="80" x2="350" y2="80" stroke="#3ccf7a" stroke-dasharray="4 4"/>
+      <text x="350" y="75" text-anchor="end" font-size="11" fill="#3ccf7a">60% limit</text>
+      <g font-size="11" fill="#94a3b3" text-anchor="end"><text x="34" y="154">40%</text><text x="34" y="84">60%</text><text x="34" y="14">80%</text></g>
+      <rect x="62" y="31.0" width="44" height="119.0" rx="6" fill="#d95926"/><text x="84" y="26" text-anchor="middle" font-size="12" fill="#e8eef4">74%</text>
+      <rect x="134" y="17.0" width="44" height="133.0" rx="6" fill="#d95926"/><text x="156" y="12" text-anchor="middle" font-size="12" fill="#e8eef4">78%</text>
+      <rect x="206" y="80.0" width="44" height="70.0" rx="6" fill="#7a8694"/><text x="228" y="75" text-anchor="middle" font-size="12" fill="#e8eef4">60%</text>
+      <rect x="278" y="81.4" width="44" height="68.6" rx="6" fill="#3ccf7a"/><text x="300" y="76" text-anchor="middle" font-size="12" fill="#e8eef4">59.6%</text>
+      <g font-size="11" fill="#94a3b3" text-anchor="middle"><text x="84" y="168">Loop 1</text><text x="156" y="168">Loop 2</text><text x="228" y="168">Loop 3</text><text x="300" y="168">Loop 4</text>
+        <text x="84" y="182">1,892 g</text><text x="156" y="182">1,938 g</text><text x="228" y="182">1,717 g*</text><text x="300" y="182">1,981 g</text></g>
+    </svg>
+    <div class="tbl"><table class="loops"><thead><tr><th>Loop</th><th class="n">Weight</th><th class="n">Hardest fan</th><th class="n">Stability</th><th>Drawn?</th></tr></thead><tbody>
+      <tr><td>1 · first sizing</td><td class="n">1,892 g</td><td class="n">74%</td><td class="n">−23.6%</td><td>Yes (before the fix)</td></tr>
+      <tr><td>2 · layout applied</td><td class="n">1,938 g</td><td class="n">78%</td><td class="n">+7.2%</td><td>Yes</td></tr>
+      <tr><td>3 · hover margin</td><td class="n">1,717 g*</td><td class="n">60%</td><td class="n">+5.5%</td><td>No, paper study</td></tr>
+      <tr><td>4 · shape, legs, wiring</td><td class="n">1,981 g</td><td class="n">59.6%</td><td class="n">+6.5%</td><td>Yes, current</td></tr>
+    </tbody></table></div>
+    <figcaption>* Loop 3 was never drawn. Drawing it in loop 4 added 264 g, mostly real wiring, and the fan margin still held.</figcaption>
+  </figure>
+
+  <ol class="tl">
+    <li><div class="when">15 Nov 2026 · Loop 0</div><h3>An F-35B outline around parts already on the shelf</h3>
+      <p>The first model was a snap-together F-35B shape on two tubes, sized around motors, speed controllers and a battery left over from an earlier VTOL build. It looked right and was badly balanced.</p>
+      <div class="chips"><span class="chip">78 parts in CAD</span><span class="chip">outline checked against reference drawings</span></div></li>
+    <li><div class="when">15 Nov 2026 · Loop 1</div><h3>The simulation said it would tumble</h3>
+      <p>Aerodynamic analysis put the balance point far behind where lift acts: −23.6% stability, an aircraft that flips nose-up. The fix was to move the wing and roll motors 75 mm aft and the lift fan 80 mm forward.</p>
+      <p class="lesson"><b>Lesson.</b> No battery position alone gives both a stable flight and a balanced hover. The wing itself has to move.</p></li>
+    <li><div class="when">15 Nov 2026 · Loop 2</div><h3>The bigger lift fan did not fit</h3>
+      <p>Applying loop 1 to the real geometry failed twice. The nose was too narrow for the larger fan, so the body grew 70 mm. The longer flat body lifted, and stability went negative again. A bigger tail did almost nothing, because it sits in the wing's wake. Moving the electronics into the nose worked.</p>
+      <p class="lesson"><b>Lesson.</b> Check every paper answer on the drawn part. Two of three proposals did not survive.</p></li>
+    <li><div class="when">16 Nov 2026 · Loop 3</div><h3>Hover margin: from 78% to 60%, one change at a time</h3>
+      <p>The fans worked too hard in a hover. A stronger lift-fan motor, roll motors moved in front of the spar, a smaller pack and 119 g of weight savings brought the hardest fan to 60%.</p>
+      <div class="chips"><span class="chip">−221 g</span><span class="chip">78% → 60%</span><span class="chip">paper only</span></div></li>
+    <li><div class="when">16 Nov 2026 · Loop 4</div><h3>Blended body, retracting legs, wiring inside</h3>
+      <p>The fuselage became one blended shell with a flush nozzle. Three legs fold into the belly. Every wire runs in two moulded channels under flush covers, with a connector at each end. Drawing it honestly cost weight: real wiring is 132 g, not the 45 g assumed.</p>
+      <p class="lesson"><b>Lesson.</b> Record the weight as it is, not as hoped. Every target is still met, with nothing to spare.</p></li>
+    <li class="next"><div class="when">Next · Gate</div><h3>The thrust stand decides</h3>
+      <p>The design leans on two thrust figures that are still models: the printed 80 mm fan and the 140 mm lift fan. Both go on a thrust stand before any airframe part is printed.</p></li>
+  </ol>
+</div></section>
+
+<section id="reference"><div class="wrap">
+  <div class="kicker">Reference build</div>
+  <h2>Measured against a model that already flies</h2>
+  <p class="lead">Eric Maglio of Lofted Aero has flown a VTOL F-35B through full transitions. His build is the benchmark this project learns from. <a href="https://www.ericmaglio.com/f-35b-vtol" rel="noopener">His project page</a>.</p>
+  <div class="tbl card" style="margin-top:16px"><table>
+    <thead><tr><th></th><th>Lofted Aero F-35B</th><th>This model</th></tr></thead>
+    <tbody>
+      <tr><td>Status</td><td>Flies, with full transitions</td><td>Designed and simulated</td></tr>
+      <tr><td>Weight</td><td>About 2.7 kg</td><td>1,981 g</td></tr>
+      <tr><td>Lift</td><td>Two 70 mm ducted fans, wing-tip roll motors</td><td>140 mm lift fan, 80 mm main fan, roll motors buried in the wings</td></tr>
+      <tr><td>Nozzle</td><td>Three-bearing swivel, three servos and a custom controller board</td><td>Three-bearing swivel, two servos pulling cords</td></tr>
+      <tr><td>Flight control</td><td>ArduPilot, modified for this layout</td><td>Own mixer on an ESP32 today; <a href="#next">ArduPilot path planned</a></td></tr>
+      <tr><td>Airframe</td><td>Foam with printed key parts</td><td>Fully printed, snap-together</td></tr>
+      <tr><td>Battery</td><td>6-cell, 4,000 mAh</td><td>4-cell, 2,700 mAh</td></tr>
+      <tr><td>Hover time</td><td>About 2.5 min</td><td>3.4 min (simulated)</td></tr>
+    </tbody></table></div>
+  <p class="mute" style="font-size:13.5px;margin-top:8px">Reference figures as stated in a published video of his build.</p>
+</div></section>
+
+<section id="media"><div class="wrap">
+  <div class="kicker">Tests</div>
+  <h2>Proof goes here as it happens</h2>
+  <div class="grid3">
+    <div class="slot"><div><b>Thrust stand: 80 mm main fan</b><span>Target 958 g at 30 A</span></div></div>
+    <div class="slot"><div><b>Swivel nozzle on the bench</b><span>0° to 100° with yaw, two servos</span></div></div>
+    <div class="slot"><div><b>Tethered hover</b><span>All four thrusters, legs down</span></div></div>
+    <div class="slot"><div><b>First transition</b><span>Hover → wing → hover</span></div></div>
+  </div>
+</div></section>
+
+<section id="next"><div class="wrap">
+  <div class="kicker">Next</div>
+  <h2>From simulation to flight, in order</h2>
+  <ol class="steps">
+    <li><div><b>Print the fan and nozzle kit; put it on a thrust stand</b><span>The gate. If thrust comes in low, the 2,200 mAh pack buys back weight at the cost of hover time.</span></div></li>
+    <li><div><b>Fly the real autopilot in simulation</b><span>Run ArduPilot's software-in-the-loop simulator against this model's physics before any hardware flies. No hardware needed for this step.</span></div></li>
+    <li><div><b>Print the airframe and build the harness</b><span>78 parts, about 1.3 kg of filament with waste.</span></div></li>
+    <li><div><b>Tethered hover, then free hover</b><span>Tune the hover with the legs down and a tether on.</span></div></li>
+    <li><div><b>Transition</b><span>Nozzle aft, legs up, wing-borne, and back.</span></div></li>
+  </ol>
+</div></section>
+
+<footer><div class="wrap">
+  <span>F-35B VTOL model · an open design study. Numbers are simulations, not measurements.</span>
+  <span><a href="index.html">3D model</a> · <a href="analysis.html">Analysis</a> · <a href="nozzle.html">Nozzle</a></span>
+</div></footer>
+</body>
+</html>

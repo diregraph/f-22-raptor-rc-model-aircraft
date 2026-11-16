@@ -9,7 +9,7 @@ import { buildModel } from './build.js';
 
 const $ = s => document.querySelector(s);
 const rad = d => d * Math.PI / 180;
-const state = { sim: false, explode: 0, tilt: 90, tiltTarget: 90, yaw: 0, elev: 0, gear: 0, battX: D.battery.xDefault, cut: 470, spin: false, xray: false, forces: true, mode: 'hover', step: 1, selected: null, hidden: new Set(), hover: null };
+const state = { sim: false, explode: 0, tilt: 90, tiltTarget: 90, yaw: 0, elev: 0, gear: 0, battX: D.battery.xDefault, cut: 470, spin: false, xray: false, forces: false, scale: true, mode: 'hover', step: 1, selected: null, hidden: new Set(), hover: null };
 
 // ---------- renderer / scene
 const canvas = $('#c');
@@ -75,6 +75,27 @@ const partMats = new Map();
 parts.forEach((o, id) => { const ms = new Set(); o.traverse(c => { if (c.isMesh && c.material.emissive) ms.add(c.material); }); partMats.set(id, [...ms]); });
 const shellMats = shells.flatMap(id => { const a = []; parts.get(id).traverse(c => { if (c.isMesh) a.push(c.material); }); return a; });
 shellMats.forEach(m => { m.userData.o = m.opacity; m.userData.t = m.transparent; });
+
+// ---------- finish: printed filament (engineering view) or scale paint (how the finished model should look)
+// Scale paint: low-visibility grey skin, gloss-white gear legs, burnt-metal nozzle, dark grey hardware. Layer lines off.
+const SCALE = { lw: [0x3b4147, 0.52, 0.3], gear: [0xe4e6e8, 0.35, 0.05], nozzle: [0x3a3633, 0.32, 0.85], petg: [0x30353a, 0.45, 0.55], prop: [0x202326, 0.4, 0.2] };
+const finishMats = [];
+parts.forEach((o, id) => o.traverse(c => {
+  if (!c.isMesh || !c.material.userData.kind) return;
+  const m = c.material, k = m.userData.kind === 'lw' || m.userData.kind === 'prop' ? m.userData.kind : /^gear(Nose|Main)/.test(id) ? 'gear' : PART[id]?.group === 'Main fan & nozzle' ? 'nozzle' : 'petg';
+  if (m.userData.print) return;
+  m.userData.print = [m.color.getHex(), m.roughness, m.metalness]; m.userData.scale = SCALE[k]; finishMats.push(m);
+}));
+function applyFinish() {
+  for (const m of finishMats) {
+    const [c, r, me] = state.scale ? m.userData.scale : m.userData.print;
+    m.color.setHex(c); m.roughness = r; m.metalness = me;
+    m.userData.noLayers = state.scale; const sh = m.userData.shader; if (sh && m.userData.depth != null) sh.uniforms.uDepth.value = state.scale ? 0 : m.userData.depth;
+  }
+  scene.environmentIntensity = state.scale ? 0.75 : 0.42;
+  document.body.classList.toggle('scale', state.scale);
+  dirty = Math.max(dirty, 3);
+}
 
 // ---------- balance & thrust overlay
 const overlay = new THREE.Group(); model.root.add(overlay);   // body frame, so it follows the aircraft in the simulator
@@ -265,7 +286,7 @@ const syncers = [
 function syncUI() {
   syncers.forEach(f => f());
   $('#mHover').classList.toggle('on', state.mode === 'hover'); $('#mFwd').classList.toggle('on', state.mode === 'fwd'); $('#mAsm').classList.toggle('on', state.mode === 'asm');
-  $('#tSim').setAttribute('aria-pressed', state.sim); $('#tSpin').setAttribute('aria-pressed', state.spin); $('#tXray').setAttribute('aria-pressed', state.xray); $('#tForces').setAttribute('aria-pressed', state.forces);
+  $('#tSim').setAttribute('aria-pressed', state.sim); $('#tSpin').setAttribute('aria-pressed', state.spin); $('#tXray').setAttribute('aria-pressed', state.xray); $('#tForces').setAttribute('aria-pressed', state.forces); $('#tFinish').setAttribute('aria-pressed', state.scale);
   document.querySelectorAll('.p-row').forEach(r => { r.classList.toggle('sel', r.dataset.id === state.selected); r.classList.toggle('off', !partVisible(r.dataset.id)); });
   $('#stepper').hidden = state.mode !== 'asm';
   if (state.mode === 'asm') { const s = STEPS[state.step - 1]; $('#sBody').innerHTML = `<div class="n">STEP ${s.n} / ${STEPS.length}</div><h3>${s.title}</h3><p>${s.text}</p><div class="bar"><i style="width:${100 * s.n / STEPS.length}%"></i></div>`; }
@@ -277,6 +298,7 @@ $('#sNext').onclick = () => { state.step = Math.min(STEPS.length, state.step + 1
 $('#tSpin').onclick = () => { state.spin = !state.spin; apply(); };
 $('#tXray').onclick = () => { state.xray = !state.xray; apply(); };
 $('#tForces').onclick = () => { state.forces = !state.forces; apply(); };
+$('#tFinish').onclick = () => { state.scale = !state.scale; applyFinish(); apply(); };
 $('#bReset').onclick = () => homeView();
 
 // ---------- flight simulator
@@ -386,6 +408,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-resize(); homeView(false); buildTree(); inspector(); apply(); showTab(innerWidth <= 900 ? null : 'controls');
+if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');   // clean render for stills: no panels
+resize(); homeView(false); buildTree(); inspector(); applyFinish(); apply(); showTab(innerWidth <= 900 ? null : 'controls');
 requestAnimationFrame(frame);
 window.__twin = { state, apply, select, focus, setMode, setSim, getSim: () => sim, keys, homeView, camera, controls, parts, massProps: () => mp, trim: () => trim };
