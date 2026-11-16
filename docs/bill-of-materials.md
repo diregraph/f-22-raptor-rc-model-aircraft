@@ -2,7 +2,7 @@
 
 Every part of the aircraft as it is now drawn, split into what is already on the shelf and what
 still has to be bought. Masses come from `site/js/spec.js`, which is generated from the CAD, so
-they match the 1,989 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
+they match the 1,996 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
 US dollars at the time of writing, not quotes.
 
 **To buy: about $190**, of which $100 is the flight controller (ArduPilot, decided 2026-11-16). Everything else is either owned or printed.
@@ -16,7 +16,7 @@ US dollars at the time of writing, not quotes.
 | 9 g metal-gear servo (landing gear) | 3 | 10 g | 6 | 18 | One per leg. Plastic gears strip on a hard landing |
 | 5 in three-blade propeller | 2 | 6 g | 6 | 12 | Roll motors. Buried in the wing ducts, so they are consumables |
 | Connector and wire set: XT60 pair, 10 MR30 pairs, servo plugs, 14/16/18/20 AWG silicone wire | 1 | in the 132 g harness | 14 | 14 | Every run gets a connector at each end, which is what makes a component removable |
-| ArduPilot H743 wing board, e.g. Matek H743-WLITE | 1 | 22 g | 100 | 100 | ArduPilot with Lua scripting (needs 2 MB flash). Replaces the ESP32, gyro board and both regulators: +5 g net. About £80 in the UK |
+| ArduPilot H743 wing board, e.g. Matek H743-WLITE | 1 | 22 g | 100 | 100 | ArduPilot with Lua scripting (needs 2 MB flash). Replaces the ESP32, gyro board and the regulator: +7 g net against the parts list. About £80 in the UK |
 | | | | **Total** | **$190** | |
 
 ## Already owned

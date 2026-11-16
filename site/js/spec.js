@@ -14,7 +14,7 @@ export const D = {
   groundY: -150,
   nozzle: { xJ1: -272, yAx: 2, L: [58, 104, 56], loss90: 0.15 },   // main fan + swivel nozzle (cad/propulsion.py kit frame sits here, turned to face aft)
   lift: { y0: -60 },
-  battery: { xDefault: -9, xMin: -73, xMax: 16 },
+  battery: { xDefault: -18, xMin: -73, xMax: 16 },
   noseBay: { x0: 344, x1: 414, floor: -14 },
   escBay: { x: 65, y: -18.5, z: [43, 65] },
   gear: { noseX: 437, noseY: -25.7, mainX: [-83, -121], mainZ: 80, mainY: [-32.1, -31.4], footZ: 128, retractDeg: 90 },
@@ -122,13 +122,11 @@ const rows = [
   ['nzServo1', 'Nozzle servo 1', 'Main fan & nozzle', 'Bought', 'Owned', 14, [-216, -4, 72], 7, 'Goes up into its pocket from the belly with the drum already on it; a dab of hot glue on each ear.', 'TowerPro MG90S, buried beside the fan duct. Turns the whole nozzle about the duct axis and swings it for yaw.'],
   ['nzServo2', 'Nozzle servo 2', 'Main fan & nozzle', 'Bought', 'Owned', 14, [-216, -4, -72], 7, 'Same pocket on the left side.', 'TowerPro MG90S. Bends the nozzle: it works bearing 2 through the drive ring, and bearing 3 follows by its own cord loop.'],
   // ---- Electronics
-  ['battery', 'Battery, 4-cell 2700 mAh', 'Electronics', 'Bought', 'Buy', 306, [-9, -3, 0], 10, 'Hook-and-loop strap on the tray.', 'Heaviest part. 2,700 mAh is the smallest pack that gives 3 minutes of hover at this weight; it slides from +16 (forward stop, against the lift-fan bay) back to -73 to trim balance, and sits at +8.'],
-  ['batteryTray', 'Battery tray', 'Electronics', 'PETG', 'Print', 14, [-9, -19, 0], 4, 'Sits on the bay floor and slides fore and aft; hook-and-loop underneath.', 'Lets you shift the battery to trim balance without tools.'],
-  ['fcSled', 'Flight-controller sled', 'Electronics', 'PETG', 'Print', 6, [367, -4, 0], 5, 'Stands on the bay floor on two feet; hook-and-loop underneath.', 'Carries the ESP32 and gyro so the whole brain lifts out for bench work.'],
-  ['esp32', 'ESP32 DevKit v1', 'Electronics', 'Bought', 'Owned', 10, [355, 0, 0], 5, 'Pin headers into the sled socket.', 'Runs madflight. Reads the gyro and receiver, drives 4 motors and 4 servos.'],
-  ['imu', 'Gyro board (MPU6050)', 'Electronics', 'Bought', 'Buy', 3, [398, -1, 0], 5, 'Foam tape on the sled.', 'Sits close to the balance point so it feels rotation, not sideways shake.'],
+  ['battery', 'Battery, 4-cell 2700 mAh', 'Electronics', 'Bought', 'Buy', 306, [-18, -3, 0], 10, 'Hook-and-loop strap on the tray.', 'Heaviest part. 2,700 mAh is the smallest pack that gives 3 minutes of hover at this weight; it slides from +16 (forward stop, against the lift-fan bay) back to -73 to trim balance, and sits at +8.'],
+  ['batteryTray', 'Battery tray', 'Electronics', 'PETG', 'Print', 14, [-18, -19, 0], 4, 'Sits on the bay floor and slides fore and aft; hook-and-loop underneath.', 'Lets you shift the battery to trim balance without tools.'],
+  ['fcSled', 'Flight-controller sled', 'Electronics', 'PETG', 'Print', 6, [367, -4, 0], 5, 'Stands on the bay floor on two feet; hook-and-loop underneath.', 'Carries the flight controller so the whole brain lifts out for bench work.'],
+  ['esp32', 'Flight controller, H743 wing board', 'Electronics', 'Bought', 'Buy', 22, [355, 0, 0], 5, 'Four screws into the sled.', 'Runs ArduPilot with two Lua scripts. Gyro, barometer and the 6 V servo supply are on the board, so it replaces the ESP32, the separate gyro board and the regulator: 7 g heavier in all. The part id is still esp32 so older studies keep running.'],
   ['rx', 'Receiver FS-iA6B', 'Electronics', 'Bought', 'Owned', 15, [352, 14, 0], 5, 'Snap clip.', 'Set to PPM output: one wire carries all channels.'],
-  ['ubec', '5 V regulator', 'Electronics', 'Bought', 'Buy', 2, [392, 12, 0], 5, 'Snap clip.', '2 g buck board, 5 V 3 A. Feeds eight servos and the ESP32 from the flight battery.'],
   ['escF', 'Speed controller, lift fan', 'Electronics', 'Bought', 'Buy', 15, [360, -10, 0], 5, 'Hook-and-loop on the nose-bay floor.', '45 A bare board, 4-cell rated. It stays in the nose because nose weight is what keeps the aircraft stable.'],
   ['escM', 'Speed controller, main fan', 'Electronics', 'Bought', 'Buy', 15, [65, -18, 43], 5, 'Hook-and-loop on the battery-bay floor, beside the battery.', '45 A bare board. Moving it out of the nose shortened its motor run from 585 to 283 mm.'],
   ['escL', 'Speed controller, left roll', 'Electronics', 'Bought', 'Buy', 15, [65, -18, -43], 5, 'Hook-and-loop beside the battery, left.', '45 A bare board.'],
@@ -209,27 +207,25 @@ export const CAD = {
 export const PRINT_LW = 'LW-PLA: the files are solid bodies. Slice with 1 wall (0.5 mm), 4% gyroid infill, 3 bottom layers and 0 top layers so each shell prints hollow and light. Foaming temperature per your filament (about 240 C); calibrate flow first.';
 export const PRINT_PETG = 'PETG, 0.2 mm layers, 4 walls, 40% gyroid, 240 C nozzle / 80 C bed. Snap bores are 8.2 mm for an 8.0 mm tube: print one clip first and adjust CLIP_ID in cad/build.py if it is loose or will not snap.';
 
-// Suggested wiring. ESP32 pin numbers are a starting map; set the same numbers in the madflight config.
-// [from part, to part, what, wire, ESP32 pin or note]
+// Suggested wiring. Output numbers are set in ardupilot/f35b.parm, not here.
+// [from part, to part, what, wire, note]
 export const WIRING = [
   ['battery', 'pdb', 'Battery power', 'XT60, 14 AWG pair, 141 mm', '14.8 V. The only heavy run in the aircraft.'],
   ['pdb', 'escM', 'Power', '16 AWG pair, 50 mm', ''], ['pdb', 'escL', 'Power', '16 AWG pair, 50 mm', ''], ['pdb', 'escR', 'Power', '16 AWG pair, 50 mm', ''],
   ['pdb', 'escF', 'Power', '16 AWG pair, 352 mm, right raceway', 'MR30 at both ends'],
-  ['pdb', 'ubec', 'Power', '20 AWG pair', '14.8 V in, 5 V out'],
+  ['pdb', 'esp32', 'Power', '20 AWG pair, 352 mm, right raceway', '14.8 V in. The board makes 5 V for itself and the receiver, and 6 V for the servos.'],
   ['escF', 'motorF', '3 phase wires', '16 AWG x 3, 210 mm', 'MR30. Swap any two to reverse.'],
   ['escM', 'motorM', '3 phase wires', '16 AWG x 3, 343 mm', 'MR30, down the left raceway'],
   ['escL', 'motorL', '3 phase wires', '18 AWG x 3, 408 mm', 'MR30, left raceway then along the spar'],
   ['escR', 'motorR', '3 phase wires', '18 AWG x 3, 408 mm', 'MR30, right raceway then along the spar'],
-  ['esp32', 'escF', 'Throttle signal', 'servo lead, 40 mm', 'GPIO 32'], ['esp32', 'escM', 'Throttle signal', 'servo lead, 342 mm', 'GPIO 33'],
-  ['esp32', 'escL', 'Throttle signal', 'servo lead, 342 mm', 'GPIO 25'], ['esp32', 'escR', 'Throttle signal', 'servo lead, 342 mm', 'GPIO 26'],
-  ['esp32', 'nzServo1', 'Servo signal', 'servo lead, 649 mm', 'GPIO 16'], ['esp32', 'nzServo2', 'Servo signal', 'servo lead, 649 mm', 'GPIO 17'],
-  ['esp32', 'stabServoL', 'Servo signal', 'servo lead, 809 mm', 'GPIO 18'], ['esp32', 'stabServoR', 'Servo signal', 'servo lead, 809 mm', 'GPIO 19'],
-  ['esp32', 'gearServoN', 'Servo signal', 'servo lead, 87 mm', 'GPIO 27: all three legs can share one channel'],
-  ['esp32', 'gearServoR', 'Servo signal', 'servo lead, 525 mm', 'GPIO 14'], ['esp32', 'gearServoL', 'Servo signal', 'servo lead, 525 mm', 'GPIO 12'],
-  ['rx', 'esp32', 'PPM (all channels)', '1 signal wire + 5 V + ground', 'GPIO 35 (input only)'],
-  ['imu', 'esp32', 'I2C data / clock', '4 wires: 3.3 V, ground, SDA, SCL', 'SDA 21, SCL 22'],
-  ['ubec', 'esp32', '5 V supply', 'red/black', 'VIN and GND'],
-  ['ubec', 'harness', '5 V servo rail', 'red/black to all eight servo plugs', 'servos must not be fed from the ESP32 3.3 V pin'],
+  ['esp32', 'escF', 'Throttle signal', 'servo lead, 40 mm', 'servo output'], ['esp32', 'escM', 'Throttle signal', 'servo lead, 342 mm', 'servo output'],
+  ['esp32', 'escL', 'Throttle signal', 'servo lead, 342 mm', 'servo output'], ['esp32', 'escR', 'Throttle signal', 'servo lead, 342 mm', 'servo output'],
+  ['esp32', 'nzServo1', 'Servo signal', 'servo lead, 649 mm', 'servo output'], ['esp32', 'nzServo2', 'Servo signal', 'servo lead, 649 mm', 'servo output'],
+  ['esp32', 'stabServoL', 'Servo signal', 'servo lead, 809 mm', 'servo output'], ['esp32', 'stabServoR', 'Servo signal', 'servo lead, 809 mm', 'servo output'],
+  ['esp32', 'gearServoN', 'Servo signal', 'servo lead, 87 mm', 'servo output, shared by all three legs'],
+  ['esp32', 'gearServoR', 'Servo signal', 'servo lead, 525 mm', 'servo output'], ['esp32', 'gearServoL', 'Servo signal', 'servo lead, 525 mm', 'servo output'],
+  ['rx', 'esp32', 'PPM (all channels)', '1 signal wire + 5 V + ground', 'RC input pad'],
+  ['esp32', 'harness', '6 V servo rail', 'red/black to all nine servo plugs', 'from the board servo supply, jumper set to 6 V'],
 ];
 // Every run above is cut to length, gets a connector at each end, and drops into one of the two belly raceways.
 // Lengths are measured along the channels by analysis/design_v4.py, which also sets the harness mass (133 g).

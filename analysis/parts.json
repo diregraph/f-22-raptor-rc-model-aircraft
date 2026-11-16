@@ -69,7 +69,7 @@
    "y0": -60
   },
   "battery": {
-   "xDefault": -9,
+   "xDefault": -18,
    "xMin": -73,
    "xMax": 16
   },
@@ -623,7 +623,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 17,
+   "mass": 18,
    "cg": [
     -462,
     2,
@@ -636,7 +636,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 8,
+   "mass": 9,
    "cg": [
     -272,
     2,
@@ -649,7 +649,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 10,
+   "mass": 11,
    "cg": [
     -330,
     2,
@@ -662,7 +662,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 10,
+   "mass": 11,
    "cg": [
     -434,
     2,
@@ -688,7 +688,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 10,
+   "mass": 8,
    "cg": [
     -222,
     -4,
@@ -701,7 +701,7 @@
    "group": "Main fan & nozzle",
    "material": "PETG",
    "process": "Print",
-   "mass": 10,
+   "mass": 8,
    "cg": [
     -222,
     -4,
@@ -768,7 +768,7 @@
    "process": "Buy",
    "mass": 306,
    "cg": [
-    -9,
+    -18,
     -3,
     0
    ]
@@ -781,7 +781,7 @@
    "process": "Print",
    "mass": 14,
    "cg": [
-    -9,
+    -18,
     -19,
     0
    ]
@@ -801,27 +801,14 @@
   },
   {
    "id": "esp32",
-   "name": "ESP32 DevKit v1",
-   "group": "Electronics",
-   "material": "Bought",
-   "process": "Owned",
-   "mass": 10,
-   "cg": [
-    355,
-    0,
-    0
-   ]
-  },
-  {
-   "id": "imu",
-   "name": "Gyro board (MPU6050)",
+   "name": "Flight controller, H743 wing board",
    "group": "Electronics",
    "material": "Bought",
    "process": "Buy",
-   "mass": 3,
+   "mass": 22,
    "cg": [
-    398,
-    -1,
+    355,
+    0,
     0
    ]
   },
@@ -835,19 +822,6 @@
    "cg": [
     352,
     14,
-    0
-   ]
-  },
-  {
-   "id": "ubec",
-   "name": "5 V regulator",
-   "group": "Electronics",
-   "material": "Bought",
-   "process": "Buy",
-   "mass": 2,
-   "cg": [
-    392,
-    12,
     0
    ]
   },
@@ -1163,10 +1137,10 @@
    "maxG": 823
   }
  ],
- "mass": 1989,
+ "mass": 1996,
  "cg": [
-  -24.58169934640523,
-  -7.166918049270991,
-  0.22875816993464052
+  -25.100701402805612,
+  -7.140280561122244,
+  0.2279559118236473
  ]
 }

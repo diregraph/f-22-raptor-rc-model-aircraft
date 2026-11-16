@@ -102,7 +102,8 @@ def layout(lift, roll, cap, esc, v4=True, margin_target=6.0, battery_x=None, ele
         _, hg, hx = harness(elec, roll); ps["harness"] = dict(m=float(hg), x=float(hx))
         for i, k in (("escF", "F"), ("escM", "M"), ("escL", "R"), ("escR", "R")): ps[i]["x"] = ELEC[elec][k]
         if elec == "centre":
-            for i in ("esp32", "rx", "ubec", "imu", "fcSled"): ps[i]["x"] = ELEC[elec]["fc"]
+            for i in ("esp32", "rx", "ubec", "imu", "fcSled"):
+                if i in ps: ps[i]["x"] = ELEC[elec]["fc"]
             ps["canopy"]["m"] = 9.0; ps["nose"]["m"] -= 6.0                     # no hatch in the nose: thinner canopy, no bay walls
         for _, changes, new in FIXED:
             for pid, (dm, x) in changes.items():

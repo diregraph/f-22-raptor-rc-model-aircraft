@@ -408,13 +408,13 @@ export function buildModel(cad = {}) {
       addB('esp32', g, [0, 130, -40], 407, 8.5, 55); }
     { const g = grp(mesh(box(21, 1.6, 16, -98, -11, -55), MAT.pcbB()), mesh(box(4, 1, 4, -99, -9.7, -55), MAT.dark()), mesh(box(2.5, 2.5, 20.3, -107, -9.2, -55), MAT.dark()));
       for (let i = 0; i < 8; i++) g.add(mesh(box(0.64, 8, 0.64, -107, -9.5, -63.9 + i * 2.54), MAT.gold()));
-      addB('imu', g, [0, 200, -40], 496, 9, 55); }
+      if (PART.imu) addB('imu', g, [0, 200, -40], 496, 9, 55); }
     { const g = grp(mesh(rbox(47, 15, 26, 1.5, -52, -8, 55), MAT.dark()), label([['FlySky', 3.4], ['FS-iA6B  2.4G', 2.4, 400]], 30, 13, '#101214', '#e8e8e8', -57, -0.42, 55), mesh(box(9, 12, 20, -31.5, -8.5, 55), MAT.dark()));
       for (let i = 0; i < 7; i++) for (let j = 0; j < 3; j++) g.add(mesh(box(5, 0.64, 0.64, -26.5, -12.5 + j * 2.54, 47.4 + i * 2.54), MAT.gold()));
       g.add(tube([[-75, -5, 61], [-95, -2, 68], [-120, 8, 84], [-150, 13, 92]], 0.6, 0x1a1a1a), tube([[-75, -5, 49], [-100, -3, 44], [-128, 2, 60], [-150, 9, 30]], 0.6, 0x1a1a1a));
       g.add(mesh(cylX(1.1, 28, -160, 13, 92, 8), MAT.tin()), mesh(cylZ(1.1, 28, -150, 9.5, 20, 8), MAT.tin()));
       addB('rx', g, [0, 170, 40], 404, 22, -55); }
-    addB('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 58), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 58, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 58)), [0, 60, 60], 488, 25, -58);
+    if (PART.ubec) addB('ubec', grp(mesh(rbox(36, 9, 17, 2, -95, -13, 58), MAT.shrink(0x1a1c1f)), mesh(cylY(5, 6, -101, -9, 58, 20), MAT.dark()), label([['5V 3A UBEC', 2.4]], 17, 6, '#e3e5e8', '#111', -88, -8.4, 58)), [0, 60, 60], 488, 25, -58);
     // the lift-fan controller stays in the nose; the other three and the power board lie beside the battery
     { const e = esc(); e.rotation.y = Math.PI; e.position.set(360, -10, 0); add('escF', e, [0, 90, 0]); }
     for (const [id, z] of [['escM', 43], ['escR', 65], ['escL', -43]]) {
