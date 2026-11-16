@@ -53,7 +53,8 @@ export function createSim(batteryX = D.battery.xDefault) {
     return [qS * (-CL * dy - CD * dx), qS * (CL * dx - CD * dy), 0];
   }
 
-  function step(dt, inp) {
+  // The controller: pilot inputs -> actuator targets. ArduPilot replaces this in tools/sitl-bridge.mjs.
+  function control(dt, inp) {
     const att = attitude(s.q); s.att = att;
     const vb = qrot(qinv(s.q), s.v), V = Math.hypot(vb[0], vb[1]);
     const wingW = sstep(15, 20, vb[0]), hoverW = 1 - wingW;          // 0 = fans carry the weight, 1 = wing-borne
@@ -98,18 +99,26 @@ export function createSim(batteryX = D.battery.xDefault) {
     const dP = -2.5 * u[2] / (qbar * AERO.tailS * AERO.CLa * -AERO.tailX), dA = 2 * u[0] / (qbar * AERO.tailS * AERO.CLa * AERO.tailZ);
     const tailLD = clamp((dP + dA) / DEG, -25, 25), tailRD = clamp((dP - dA) / DEG, -25, 25);
 
-    // ---- actuators ---------------------------------------------------------
-    const slew = (v, tgt, rate) => v + clamp(tgt - v, -rate * dt, rate * dt);
-    for (let i = 0; i < 4; i++) s.T[i] += (cmd[i] - s.T[i]) * Math.min(1, dt / AERO.motorTau);
+    // ---- actuator targets ----------------------------------------------------
     // With the nozzle straight nothing aft of the balance point can hold the tail up, so until the wing is flying the
     // controller keeps the nozzle at least partly down, whatever the pilot asks for.
     // Until the fins have airspeed, the only thing that can yaw the aircraft is the bent jet, so the controller keeps the
     // nozzle part way down well past the point where the wing could carry it.
     const dMin = s.onGround ? 0 : 35 * (1 - sstep(6, 17, vb[0]));
     const gearUp = inp.gear !== undefined ? inp.gear : (s.gear > 0.5 ? (vb[0] > 8 ? 1 : 0) : (vb[0] > 11 && !s.onGround ? 1 : 0));
-    s.gear += clamp(gearUp - s.gear, -AERO.gearRate * dt, AERO.gearRate * dt);
-    s.tilt = slew(s.tilt, clamp(Math.max(inp.tilt, dMin), 0, 100), AERO.tiltRate); s.nozzle = slew(s.nozzle, nozzleD, AERO.nozzleRate);
-    s.tailL = slew(s.tailL, tailLD, AERO.tailRate); s.tailR = slew(s.tailR, tailRD, AERO.tailRate);
+    return { T: cmd, tilt: clamp(Math.max(inp.tilt, dMin), 0, 100), nozzle: nozzleD, tailL: tailLD, tailR: tailRD, gear: gearUp };
+  }
+
+  // The physics: actuator targets (thrust N per fan, nozzle deflection and yaw swing deg, tail angles deg, gear 0..1)
+  // -> motion. Motors lag, servos slew at their rated speed, then forces are integrated.
+  function physics(dt, act) {
+    const slew = (v, tgt, rate) => v + clamp(tgt - v, -rate * dt, rate * dt);
+    for (let i = 0; i < 4; i++) s.T[i] += (act.T[i] - s.T[i]) * Math.min(1, dt / AERO.motorTau);
+    s.gear += clamp(act.gear - s.gear, -AERO.gearRate * dt, AERO.gearRate * dt);
+    s.tilt = slew(s.tilt, act.tilt, AERO.tiltRate); s.nozzle = slew(s.nozzle, act.nozzle, AERO.nozzleRate);
+    s.tailL = slew(s.tailL, act.tailL, AERO.tailRate); s.tailR = slew(s.tailR, act.tailR, AERO.tailRate);
+    const vb = qrot(qinv(s.q), s.v);
+    s.att = attitude(s.q); s.speed = Math.hypot(...s.v); s.alpha = Math.hypot(vb[0], vb[1]) > 1 ? Math.atan2(-vb[1], vb[0]) : 0;
 
     // ---- forces and torques in body axes ----------------------------------
     let Fb = [0, 0, 0], Tb = [0, 0, 0];
@@ -131,6 +140,7 @@ export function createSim(batteryX = D.battery.xDefault) {
 
     // ---- integrate ---------------------------------------------------------
     const Fw = add(qrot(s.q, Fb), [0, -m * G, 0]);
+    s.Fb = Fb;                                                     // body-axis force without gravity: what an accelerometer feels in the air
     s.v = add(s.v, mul(Fw, dt / m));
     const Iw = [I[0] * s.w[0], I[1] * s.w[1], I[2] * s.w[2]], gyro = cross(s.w, Iw);
     s.w = [s.w[0] + (Tb[0] - gyro[0]) / I[0] * dt, s.w[1] + (Tb[1] - gyro[1]) / I[1] * dt, s.w[2] + (Tb[2] - gyro[2]) / I[2] * dt];
@@ -151,6 +161,7 @@ export function createSim(batteryX = D.battery.xDefault) {
     s.t += dt;
     return s;
   }
+  const step = (dt, inp) => physics(dt, control(dt, inp));
   function reset() { Object.assign(s, { t: 0, p: [0, rest, 0], v: [0, 0, 0], q: [0, 0, 0, 1], w: [0, 0, 0], T: [0, 0, 0, 0], tilt: 90, nozzle: 0, tailL: 0, tailR: 0, iVy: 0, iPitch: 0, iAtt: [0, 0, 0], onGround: true, impact: 0 }); }
-  return { s, step, reset, cg, rest, m, thrusters: th, hoverThrottle: () => (m * G) / (F.max + M.max) };
+  return { s, step, control, physics, reset, cg, rest, m, thrusters: th, hoverThrottle: () => (m * G) / (F.max + M.max) };
 }

@@ -1,0 +1,66 @@
+# F-35B VTOL model: ArduPlane 4.7 QuadPlane parameters. Loaded on the real board AND in simulation.
+# Simulation-only overrides live in sitl.parm. Tuned values are written back here after each SITL tuning run.
+#
+# Outputs                        function
+#  1  left all-moving tail       77 elevon left
+#  2  right all-moving tail      78 elevon right
+#  5  lift fan ESC               33 motor 1
+#  6  main fan ESC               34 motor 2 (tilts with the nozzle)
+#  7  left roll fan ESC          35 motor 3
+#  8  right roll fan ESC         36 motor 4
+#  9  nozzle tilt demand         41 motor tilt (internal: read by f35b_nozzle.lua, no servo plugged in)
+# 10  nozzle servo 1             94 script 1 (bearing-1 collar)
+# 11  nozzle servo 2             95 script 2 (drive ring)
+# 12  landing gear (3 servos)    29 landing gear
+
+Q_ENABLE        1
+Q_FRAME_CLASS   15
+Q_FRAME_TYPE    0
+SCR_ENABLE      1
+SCR_HEAP_SIZE   100000
+
+# the nozzle is the only thing that tilts: continuous tilt on motor 2
+Q_TILT_ENABLE   1
+Q_TILT_MASK     2
+Q_TILT_TYPE     0
+Q_TILT_MAX      45
+Q_TILT_RATE_UP  40
+Q_TILT_RATE_DN  20
+
+SERVO1_FUNCTION 77
+SERVO2_FUNCTION 78
+SERVO3_FUNCTION 0
+SERVO4_FUNCTION 0
+SERVO5_FUNCTION 33
+SERVO6_FUNCTION 34
+SERVO7_FUNCTION 35
+SERVO8_FUNCTION 36
+SERVO9_FUNCTION 41
+SERVO10_FUNCTION 94
+SERVO11_FUNCTION 95
+SERVO12_FUNCTION 29
+
+# hover motors
+Q_M_PWM_TYPE    0
+Q_M_PWM_MIN     1000
+Q_M_PWM_MAX     2000
+Q_M_THST_EXPO   0.65
+Q_M_SPIN_ARM    0.08
+Q_M_SPIN_MIN    0.12
+Q_M_THST_HOVER  0.6
+Q_M_HOVER_LEARN 2
+
+# forward flight: stall 11.5 m/s (requirements v2)
+AIRSPEED_MIN    14
+AIRSPEED_CRUISE 17
+AIRSPEED_MAX    24
+AIRSPEED_STALL  12
+ARSPD_TYPE      0
+Q_ASSIST_SPEED  12
+Q_TRANSITION_MS 6000
+MIXING_GAIN     0.5
+KFF_RDDRMIX     0
+
+# landing gear: up above 8 m, down below 5 m
+LGR_DEPLOY_ALT  5
+LGR_RETRACT_ALT 8
