@@ -1,0 +1,2180 @@
+{
+ "need": {
+  "roll_pair_g": 1426,
+  "lift_g": 1528,
+  "mass_g": 1711,
+  "both_pct": 10.3
+ },
+ "roll_sweep": [
+  [
+   700,
+   0.714
+  ],
+  [
+   750,
+   0.705
+  ],
+  [
+   800,
+   0.696
+  ],
+  [
+   850,
+   0.687
+  ],
+  [
+   900,
+   0.679
+  ],
+  [
+   950,
+   0.67
+  ],
+  [
+   1000,
+   0.662
+  ],
+  [
+   1050,
+   0.654
+  ],
+  [
+   1100,
+   0.646
+  ],
+  [
+   1150,
+   0.639
+  ],
+  [
+   1200,
+   0.631
+  ],
+  [
+   1250,
+   0.624
+  ],
+  [
+   1300,
+   0.617
+  ],
+  [
+   1350,
+   0.61
+  ],
+  [
+   1400,
+   0.603
+  ],
+  [
+   1450,
+   0.597
+  ],
+  [
+   1500,
+   0.59
+  ]
+ ],
+ "package": {
+  "kv": 1500,
+  "roll": "B",
+  "cap": 2700
+ },
+ "now": {
+  "kv": 1700,
+  "roll": "A",
+  "cap": 3300,
+  "battery_x": 16,
+  "mass": 1938,
+  "cg": -18.6,
+  "margin": 7.2,
+  "stall": 11.6,
+  "hover_worst": 0.777,
+  "hover": {
+   "F": 0.777,
+   "M": 0.276,
+   "R": 0.777
+  },
+  "thrust_g": {
+   "lift": 1206,
+   "nozzle_down": 814,
+   "roll_pair": 1000
+  },
+  "thrust_centre": -85.5,
+  "roll_arm": 1.0,
+  "time": {
+   "minutes": 4.0,
+   "watts": 584,
+   "amps": 39.5,
+   "lift_W": 268,
+   "main_W": 68,
+   "roll_W": 242
+  },
+  "ok": {
+   "hover": false,
+   "mass": false,
+   "margin": true,
+   "stall": true,
+   "time": true
+  }
+ },
+ "steps": [
+  {
+   "step": "As drawn",
+   "kv": 1700,
+   "roll": "A",
+   "cap": 3300,
+   "battery_x": 16,
+   "mass": 1938,
+   "cg": -18.6,
+   "margin": 7.2,
+   "stall": 11.6,
+   "hover_worst": 0.777,
+   "hover": {
+    "F": 0.777,
+    "M": 0.276,
+    "R": 0.777
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.0,
+    "watts": 584,
+    "amps": 39.5,
+    "lift_W": 268,
+    "main_W": 68,
+    "roll_W": 242
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Balance point to +6% (battery 15 mm aft)",
+   "kv": 1700,
+   "roll": "A",
+   "cap": 3300,
+   "battery_x": 0.5,
+   "mass": 1938,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.771,
+   "hover": {
+    "F": 0.771,
+    "M": 0.292,
+    "R": 0.771
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.0,
+    "watts": 584,
+    "amps": 39.5,
+    "lift_W": 266,
+    "main_W": 73,
+    "roll_W": 239
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Lift-fan motor 1,500 KV",
+   "kv": 1500,
+   "roll": "A",
+   "cap": 3300,
+   "battery_x": -8.2,
+   "mass": 1952,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.713,
+   "hover": {
+    "F": 0.713,
+    "M": 0.344,
+    "R": 0.713
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.1,
+    "watts": 578,
+    "amps": 39.1,
+    "lift_W": 266,
+    "main_W": 93,
+    "roll_W": 213
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Roll motors in front of the spar",
+   "kv": 1500,
+   "roll": "B",
+   "cap": 3300,
+   "battery_x": -18.5,
+   "mass": 1952,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.685,
+   "hover": {
+    "F": 0.685,
+    "M": 0.427,
+    "R": 0.685
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 4.0,
+    "watts": 583,
+    "amps": 39.4,
+    "lift_W": 249,
+    "main_W": 128,
+    "roll_W": 200
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Battery 2,700 mAh",
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2700,
+   "battery_x": -17.8,
+   "mass": 1888,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.662,
+   "hover": {
+    "F": 0.662,
+    "M": 0.413,
+    "R": 0.662
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.5,
+    "watts": 555,
+    "amps": 37.5,
+    "lift_W": 237,
+    "main_W": 121,
+    "roll_W": 191
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  }
+ ],
+ "combos": [
+  {
+   "kv": 1700,
+   "roll": "A",
+   "cap": 3300,
+   "battery_x": 0.5,
+   "mass": 1938,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.771,
+   "hover": {
+    "F": 0.771,
+    "M": 0.292,
+    "R": 0.771
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.0,
+    "watts": 584,
+    "amps": 39.5,
+    "lift_W": 266,
+    "main_W": 73,
+    "roll_W": 239
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "A",
+   "cap": 3000,
+   "battery_x": 2.6,
+   "mass": 1906,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.758,
+   "hover": {
+    "F": 0.758,
+    "M": 0.287,
+    "R": 0.758
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.7,
+    "watts": 570,
+    "amps": 38.5,
+    "lift_W": 259,
+    "main_W": 71,
+    "roll_W": 234
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "A",
+   "cap": 2700,
+   "battery_x": 5.2,
+   "mass": 1874,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.4,
+   "hover_worst": 0.745,
+   "hover": {
+    "F": 0.745,
+    "M": 0.283,
+    "R": 0.745
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.4,
+    "watts": 557,
+    "amps": 37.6,
+    "lift_W": 253,
+    "main_W": 70,
+    "roll_W": 228
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "A",
+   "cap": 2200,
+   "battery_x": 10.6,
+   "mass": 1822,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.725,
+   "hover": {
+    "F": 0.725,
+    "M": 0.275,
+    "R": 0.725
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -85.5,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 2.9,
+    "watts": 534,
+    "amps": 36.1,
+    "lift_W": 242,
+    "main_W": 68,
+    "roll_W": 218
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": false
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "B",
+   "cap": 3300,
+   "battery_x": -9.7,
+   "mass": 1938,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.737,
+   "hover": {
+    "F": 0.737,
+    "M": 0.384,
+    "R": 0.737
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -71.0,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 4.0,
+    "watts": 588,
+    "amps": 39.7,
+    "lift_W": 248,
+    "main_W": 110,
+    "roll_W": 224
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "B",
+   "cap": 3000,
+   "battery_x": -8.6,
+   "mass": 1906,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.725,
+   "hover": {
+    "F": 0.725,
+    "M": 0.377,
+    "R": 0.725
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -71.0,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.7,
+    "watts": 572,
+    "amps": 38.7,
+    "lift_W": 242,
+    "main_W": 106,
+    "roll_W": 218
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "B",
+   "cap": 2700,
+   "battery_x": -7.2,
+   "mass": 1874,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.4,
+   "hover_worst": 0.713,
+   "hover": {
+    "F": 0.713,
+    "M": 0.371,
+    "R": 0.713
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -71.0,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.4,
+    "watts": 559,
+    "amps": 37.8,
+    "lift_W": 236,
+    "main_W": 104,
+    "roll_W": 213
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "B",
+   "cap": 2200,
+   "battery_x": -4.3,
+   "mass": 1822,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.693,
+   "hover": {
+    "F": 0.693,
+    "M": 0.361,
+    "R": 0.693
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -71.0,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 2.9,
+    "watts": 534,
+    "amps": 36.1,
+    "lift_W": 225,
+    "main_W": 99,
+    "roll_W": 204
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": false
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "C",
+   "cap": 3300,
+   "battery_x": -14.1,
+   "mass": 1938,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.723,
+   "hover": {
+    "F": 0.723,
+    "M": 0.421,
+    "R": 0.723
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -64.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 4.0,
+    "watts": 589,
+    "amps": 39.8,
+    "lift_W": 240,
+    "main_W": 125,
+    "roll_W": 218
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "C",
+   "cap": 3000,
+   "battery_x": -13.4,
+   "mass": 1906,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.711,
+   "hover": {
+    "F": 0.711,
+    "M": 0.414,
+    "R": 0.711
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -64.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.7,
+    "watts": 575,
+    "amps": 38.9,
+    "lift_W": 236,
+    "main_W": 121,
+    "roll_W": 212
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "C",
+   "cap": 2700,
+   "battery_x": -12.5,
+   "mass": 1874,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.4,
+   "hover_worst": 0.699,
+   "hover": {
+    "F": 0.699,
+    "M": 0.407,
+    "R": 0.699
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -64.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.4,
+    "watts": 561,
+    "amps": 37.9,
+    "lift_W": 229,
+    "main_W": 119,
+    "roll_W": 207
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1700,
+   "roll": "C",
+   "cap": 2200,
+   "battery_x": -10.7,
+   "mass": 1822,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.68,
+   "hover": {
+    "F": 0.68,
+    "M": 0.396,
+    "R": 0.68
+   },
+   "thrust_g": {
+    "lift": 1206,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -64.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 2.9,
+    "watts": 537,
+    "amps": 36.3,
+    "lift_W": 219,
+    "main_W": 114,
+    "roll_W": 198
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": false
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 3300,
+   "battery_x": -8.2,
+   "mass": 1952,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.713,
+   "hover": {
+    "F": 0.713,
+    "M": 0.344,
+    "R": 0.713
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.1,
+    "watts": 578,
+    "amps": 39.1,
+    "lift_W": 266,
+    "main_W": 93,
+    "roll_W": 213
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 3000,
+   "battery_x": -7.0,
+   "mass": 1920,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.702,
+   "hover": {
+    "F": 0.702,
+    "M": 0.338,
+    "R": 0.702
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.8,
+    "watts": 564,
+    "amps": 38.1,
+    "lift_W": 259,
+    "main_W": 91,
+    "roll_W": 208
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 2700,
+   "battery_x": -5.4,
+   "mass": 1888,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.69,
+   "hover": {
+    "F": 0.69,
+    "M": 0.333,
+    "R": 0.69
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.5,
+    "watts": 549,
+    "amps": 37.1,
+    "lift_W": 251,
+    "main_W": 89,
+    "roll_W": 203
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 2200,
+   "battery_x": -2.1,
+   "mass": 1836,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.671,
+   "hover": {
+    "F": 0.671,
+    "M": 0.323,
+    "R": 0.671
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.0,
+    "watts": 527,
+    "amps": 35.6,
+    "lift_W": 241,
+    "main_W": 85,
+    "roll_W": 195
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "B",
+   "cap": 3300,
+   "battery_x": -18.5,
+   "mass": 1952,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.685,
+   "hover": {
+    "F": 0.685,
+    "M": 0.427,
+    "R": 0.685
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 4.0,
+    "watts": 583,
+    "amps": 39.4,
+    "lift_W": 249,
+    "main_W": 128,
+    "roll_W": 200
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "B",
+   "cap": 3000,
+   "battery_x": -18.2,
+   "mass": 1920,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.673,
+   "hover": {
+    "F": 0.673,
+    "M": 0.42,
+    "R": 0.673
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.8,
+    "watts": 568,
+    "amps": 38.3,
+    "lift_W": 243,
+    "main_W": 123,
+    "roll_W": 196
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2700,
+   "battery_x": -17.8,
+   "mass": 1888,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.662,
+   "hover": {
+    "F": 0.662,
+    "M": 0.413,
+    "R": 0.662
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.5,
+    "watts": 555,
+    "amps": 37.5,
+    "lift_W": 237,
+    "main_W": 121,
+    "roll_W": 191
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2200,
+   "battery_x": -17.0,
+   "mass": 1836,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.644,
+   "hover": {
+    "F": 0.644,
+    "M": 0.401,
+    "R": 0.644
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 2.9,
+    "watts": 532,
+    "amps": 35.9,
+    "lift_W": 227,
+    "main_W": 116,
+    "roll_W": 183
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": false
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 3300,
+   "battery_x": -22.9,
+   "mass": 1952,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.6,
+   "hover_worst": 0.673,
+   "hover": {
+    "F": 0.673,
+    "M": 0.461,
+    "R": 0.673
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 4.0,
+    "watts": 586,
+    "amps": 39.6,
+    "lift_W": 243,
+    "main_W": 142,
+    "roll_W": 195
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 3000,
+   "battery_x": -23.0,
+   "mass": 1920,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.662,
+   "hover": {
+    "F": 0.662,
+    "M": 0.453,
+    "R": 0.662
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.7,
+    "watts": 573,
+    "amps": 38.7,
+    "lift_W": 237,
+    "main_W": 139,
+    "roll_W": 191
+   },
+   "ok": {
+    "hover": false,
+    "mass": false,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 2700,
+   "battery_x": -23.1,
+   "mass": 1888,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.5,
+   "hover_worst": 0.651,
+   "hover": {
+    "F": 0.651,
+    "M": 0.445,
+    "R": 0.651
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.4,
+    "watts": 557,
+    "amps": 37.6,
+    "lift_W": 230,
+    "main_W": 135,
+    "roll_W": 186
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 2200,
+   "battery_x": -23.5,
+   "mass": 1836,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.633,
+   "hover": {
+    "F": 0.633,
+    "M": 0.433,
+    "R": 0.633
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 2.9,
+    "watts": 535,
+    "amps": 36.2,
+    "lift_W": 221,
+    "main_W": 130,
+    "roll_W": 178
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": false
+   }
+  }
+ ],
+ "best": null,
+ "kv_sweep": [
+  {
+   "kv": 1200,
+   "fresh_g": 1357,
+   "tired_g": 1073,
+   "amps": 28.0,
+   "throttle": 1.0,
+   "rpm": 16179
+  },
+  {
+   "kv": 1300,
+   "fresh_g": 1513,
+   "tired_g": 1203,
+   "amps": 33.6,
+   "throttle": 1.0,
+   "rpm": 17088
+  },
+  {
+   "kv": 1400,
+   "fresh_g": 1464,
+   "tired_g": 1282,
+   "amps": 34.9,
+   "throttle": 0.94,
+   "rpm": 16806
+  },
+  {
+   "kv": 1450,
+   "fresh_g": 1413,
+   "tired_g": 1318,
+   "amps": 34.9,
+   "throttle": 0.91,
+   "rpm": 16514
+  },
+  {
+   "kv": 1500,
+   "fresh_g": 1366,
+   "tired_g": 1344,
+   "amps": 35.0,
+   "throttle": 0.88,
+   "rpm": 16236
+  },
+  {
+   "kv": 1600,
+   "fresh_g": 1281,
+   "tired_g": 1281,
+   "amps": 35.0,
+   "throttle": 0.82,
+   "rpm": 15720
+  },
+  {
+   "kv": 1700,
+   "fresh_g": 1206,
+   "tired_g": 1206,
+   "amps": 35.0,
+   "throttle": 0.76,
+   "rpm": 15251
+  }
+ ],
+ "kv_new": 1500,
+ "motors": {
+  "1700": {
+   "r": 0.07,
+   "g": 34,
+   "name": "EMAX 2306 1700 KV (now)"
+  },
+  "1600": {
+   "r": 0.068,
+   "g": 34,
+   "name": "1600 KV"
+  },
+  "1500": {
+   "r": 0.065,
+   "g": 48,
+   "name": "2807-size 1500 KV"
+  },
+  "1450": {
+   "r": 0.062,
+   "g": 48,
+   "name": "1450 KV"
+  },
+  "1400": {
+   "r": 0.06,
+   "g": 48,
+   "name": "1400 KV"
+  },
+  "1300": {
+   "r": 0.055,
+   "g": 48,
+   "name": "2807-size 1300 KV"
+  },
+  "1200": {
+   "r": 0.06,
+   "g": 48,
+   "name": "1200 KV"
+  }
+ },
+ "roll": {
+  "A": {
+   "x": -183,
+   "z": 240,
+   "label": "Now: behind the spar, 240 mm out",
+   "arm_vs_now": 1.0,
+   "hole_front_gap_mm": 34.0
+  },
+  "B": {
+   "x": -139.0,
+   "z": 213.0,
+   "label": "In front of the spar, as far out as the wing allows",
+   "arm_vs_now": 0.89,
+   "hole_front_gap_mm": 8.2
+  },
+  "C": {
+   "x": -120.0,
+   "z": 185.0,
+   "label": "Further forward and inboard",
+   "arm_vs_now": 0.77,
+   "hole_front_gap_mm": 8.1
+  }
+ },
+ "batteries": {
+  "3300": 370,
+  "3000": 338,
+  "2700": 306,
+  "2200": 254
+ },
+ "vs_mass": [
+  {
+   "name": "As drawn (balance point at +6%)",
+   "kv": 1700,
+   "roll": "A",
+   "pts": [
+    [
+     1700,
+     0.676
+    ],
+    [
+     1710,
+     0.68
+    ],
+    [
+     1720,
+     0.684
+    ],
+    [
+     1730,
+     0.688
+    ],
+    [
+     1740,
+     0.692
+    ],
+    [
+     1750,
+     0.696
+    ],
+    [
+     1760,
+     0.7
+    ],
+    [
+     1770,
+     0.704
+    ],
+    [
+     1780,
+     0.708
+    ],
+    [
+     1790,
+     0.712
+    ],
+    [
+     1800,
+     0.716
+    ],
+    [
+     1810,
+     0.72
+    ],
+    [
+     1820,
+     0.724
+    ],
+    [
+     1830,
+     0.728
+    ],
+    [
+     1840,
+     0.732
+    ],
+    [
+     1850,
+     0.736
+    ],
+    [
+     1860,
+     0.74
+    ],
+    [
+     1870,
+     0.744
+    ],
+    [
+     1880,
+     0.748
+    ],
+    [
+     1890,
+     0.752
+    ],
+    [
+     1900,
+     0.756
+    ],
+    [
+     1910,
+     0.76
+    ],
+    [
+     1920,
+     0.763
+    ],
+    [
+     1930,
+     0.767
+    ],
+    [
+     1940,
+     0.771
+    ],
+    [
+     1950,
+     0.775
+    ],
+    [
+     1960,
+     0.779
+    ],
+    [
+     1970,
+     0.783
+    ],
+    [
+     1980,
+     0.787
+    ],
+    [
+     1990,
+     0.791
+    ],
+    [
+     2000,
+     0.795
+    ]
+   ],
+   "max_mass_at_60": null
+  },
+  {
+   "name": "Lift-fan motor 1,500 KV",
+   "kv": 1500,
+   "roll": "A",
+   "pts": [
+    [
+     1700,
+     0.621
+    ],
+    [
+     1710,
+     0.625
+    ],
+    [
+     1720,
+     0.629
+    ],
+    [
+     1730,
+     0.632
+    ],
+    [
+     1740,
+     0.636
+    ],
+    [
+     1750,
+     0.64
+    ],
+    [
+     1760,
+     0.643
+    ],
+    [
+     1770,
+     0.647
+    ],
+    [
+     1780,
+     0.65
+    ],
+    [
+     1790,
+     0.654
+    ],
+    [
+     1800,
+     0.658
+    ],
+    [
+     1810,
+     0.661
+    ],
+    [
+     1820,
+     0.665
+    ],
+    [
+     1830,
+     0.669
+    ],
+    [
+     1840,
+     0.672
+    ],
+    [
+     1850,
+     0.676
+    ],
+    [
+     1860,
+     0.68
+    ],
+    [
+     1870,
+     0.683
+    ],
+    [
+     1880,
+     0.687
+    ],
+    [
+     1890,
+     0.691
+    ],
+    [
+     1900,
+     0.694
+    ],
+    [
+     1910,
+     0.698
+    ],
+    [
+     1920,
+     0.702
+    ],
+    [
+     1930,
+     0.705
+    ],
+    [
+     1940,
+     0.709
+    ],
+    [
+     1950,
+     0.713
+    ],
+    [
+     1960,
+     0.716
+    ],
+    [
+     1970,
+     0.72
+    ],
+    [
+     1980,
+     0.724
+    ],
+    [
+     1990,
+     0.727
+    ],
+    [
+     2000,
+     0.731
+    ]
+   ],
+   "max_mass_at_60": null
+  },
+  {
+   "name": "1,500 KV + roll motors in front of spar",
+   "kv": 1500,
+   "roll": "B",
+   "pts": [
+    [
+     1700,
+     0.596
+    ],
+    [
+     1710,
+     0.6
+    ],
+    [
+     1720,
+     0.603
+    ],
+    [
+     1730,
+     0.607
+    ],
+    [
+     1740,
+     0.61
+    ],
+    [
+     1750,
+     0.614
+    ],
+    [
+     1760,
+     0.617
+    ],
+    [
+     1770,
+     0.621
+    ],
+    [
+     1780,
+     0.624
+    ],
+    [
+     1790,
+     0.628
+    ],
+    [
+     1800,
+     0.631
+    ],
+    [
+     1810,
+     0.635
+    ],
+    [
+     1820,
+     0.638
+    ],
+    [
+     1830,
+     0.642
+    ],
+    [
+     1840,
+     0.645
+    ],
+    [
+     1850,
+     0.649
+    ],
+    [
+     1860,
+     0.652
+    ],
+    [
+     1870,
+     0.656
+    ],
+    [
+     1880,
+     0.659
+    ],
+    [
+     1890,
+     0.663
+    ],
+    [
+     1900,
+     0.666
+    ],
+    [
+     1910,
+     0.67
+    ],
+    [
+     1920,
+     0.673
+    ],
+    [
+     1930,
+     0.677
+    ],
+    [
+     1940,
+     0.68
+    ],
+    [
+     1950,
+     0.684
+    ],
+    [
+     1960,
+     0.687
+    ],
+    [
+     1970,
+     0.691
+    ],
+    [
+     1980,
+     0.694
+    ],
+    [
+     1990,
+     0.698
+    ],
+    [
+     2000,
+     0.701
+    ]
+   ],
+   "max_mass_at_60": 1710
+  },
+  {
+   "name": "1,500 KV + roll motors forward and inboard",
+   "kv": 1500,
+   "roll": "C",
+   "pts": [
+    [
+     1700,
+     0.586
+    ],
+    [
+     1710,
+     0.589
+    ],
+    [
+     1720,
+     0.593
+    ],
+    [
+     1730,
+     0.596
+    ],
+    [
+     1740,
+     0.6
+    ],
+    [
+     1750,
+     0.603
+    ],
+    [
+     1760,
+     0.607
+    ],
+    [
+     1770,
+     0.61
+    ],
+    [
+     1780,
+     0.613
+    ],
+    [
+     1790,
+     0.617
+    ],
+    [
+     1800,
+     0.62
+    ],
+    [
+     1810,
+     0.624
+    ],
+    [
+     1820,
+     0.627
+    ],
+    [
+     1830,
+     0.631
+    ],
+    [
+     1840,
+     0.634
+    ],
+    [
+     1850,
+     0.638
+    ],
+    [
+     1860,
+     0.641
+    ],
+    [
+     1870,
+     0.645
+    ],
+    [
+     1880,
+     0.648
+    ],
+    [
+     1890,
+     0.651
+    ],
+    [
+     1900,
+     0.655
+    ],
+    [
+     1910,
+     0.658
+    ],
+    [
+     1920,
+     0.662
+    ],
+    [
+     1930,
+     0.665
+    ],
+    [
+     1940,
+     0.669
+    ],
+    [
+     1950,
+     0.672
+    ],
+    [
+     1960,
+     0.676
+    ],
+    [
+     1970,
+     0.679
+    ],
+    [
+     1980,
+     0.682
+    ],
+    [
+     1990,
+     0.686
+    ],
+    [
+     2000,
+     0.689
+    ]
+   ],
+   "max_mass_at_60": 1740
+  }
+ ],
+ "cg_sweep": [
+  {
+   "cg": -70.0,
+   "margin": -14.2,
+   "worst": 0.623,
+   "F": 0.564,
+   "M": 0.623,
+   "R": 0.623
+  },
+  {
+   "cg": -68.0,
+   "margin": -13.3,
+   "worst": 0.619,
+   "F": 0.57,
+   "M": 0.619,
+   "R": 0.619
+  },
+  {
+   "cg": -66.0,
+   "margin": -12.5,
+   "worst": 0.614,
+   "F": 0.576,
+   "M": 0.614,
+   "R": 0.614
+  },
+  {
+   "cg": -64.0,
+   "margin": -11.7,
+   "worst": 0.61,
+   "F": 0.582,
+   "M": 0.61,
+   "R": 0.61
+  },
+  {
+   "cg": -62.0,
+   "margin": -10.8,
+   "worst": 0.605,
+   "F": 0.588,
+   "M": 0.605,
+   "R": 0.605
+  },
+  {
+   "cg": -60.0,
+   "margin": -10.0,
+   "worst": 0.601,
+   "F": 0.594,
+   "M": 0.601,
+   "R": 0.601
+  },
+  {
+   "cg": -58.0,
+   "margin": -9.2,
+   "worst": 0.599,
+   "F": 0.599,
+   "M": 0.594,
+   "R": 0.599
+  },
+  {
+   "cg": -56.0,
+   "margin": -8.3,
+   "worst": 0.602,
+   "F": 0.602,
+   "M": 0.584,
+   "R": 0.602
+  },
+  {
+   "cg": -54.0,
+   "margin": -7.5,
+   "worst": 0.606,
+   "F": 0.606,
+   "M": 0.574,
+   "R": 0.606
+  },
+  {
+   "cg": -52.0,
+   "margin": -6.7,
+   "worst": 0.609,
+   "F": 0.609,
+   "M": 0.564,
+   "R": 0.609
+  },
+  {
+   "cg": -50.0,
+   "margin": -5.8,
+   "worst": 0.613,
+   "F": 0.613,
+   "M": 0.554,
+   "R": 0.613
+  },
+  {
+   "cg": -48.0,
+   "margin": -5.0,
+   "worst": 0.616,
+   "F": 0.616,
+   "M": 0.544,
+   "R": 0.616
+  },
+  {
+   "cg": -46.0,
+   "margin": -4.2,
+   "worst": 0.62,
+   "F": 0.62,
+   "M": 0.535,
+   "R": 0.62
+  },
+  {
+   "cg": -44.0,
+   "margin": -3.3,
+   "worst": 0.623,
+   "F": 0.623,
+   "M": 0.525,
+   "R": 0.623
+  },
+  {
+   "cg": -42.0,
+   "margin": -2.5,
+   "worst": 0.627,
+   "F": 0.627,
+   "M": 0.515,
+   "R": 0.627
+  },
+  {
+   "cg": -40.0,
+   "margin": -1.7,
+   "worst": 0.63,
+   "F": 0.63,
+   "M": 0.505,
+   "R": 0.63
+  },
+  {
+   "cg": -38.0,
+   "margin": -0.8,
+   "worst": 0.634,
+   "F": 0.634,
+   "M": 0.495,
+   "R": 0.634
+  },
+  {
+   "cg": -36.0,
+   "margin": 0.0,
+   "worst": 0.637,
+   "F": 0.637,
+   "M": 0.485,
+   "R": 0.637
+  },
+  {
+   "cg": -34.0,
+   "margin": 0.8,
+   "worst": 0.641,
+   "F": 0.641,
+   "M": 0.475,
+   "R": 0.641
+  },
+  {
+   "cg": -32.0,
+   "margin": 1.7,
+   "worst": 0.644,
+   "F": 0.644,
+   "M": 0.465,
+   "R": 0.644
+  },
+  {
+   "cg": -30.0,
+   "margin": 2.5,
+   "worst": 0.648,
+   "F": 0.648,
+   "M": 0.455,
+   "R": 0.648
+  },
+  {
+   "cg": -28.0,
+   "margin": 3.3,
+   "worst": 0.651,
+   "F": 0.651,
+   "M": 0.445,
+   "R": 0.651
+  },
+  {
+   "cg": -26.0,
+   "margin": 4.2,
+   "worst": 0.654,
+   "F": 0.654,
+   "M": 0.435,
+   "R": 0.654
+  },
+  {
+   "cg": -24.0,
+   "margin": 5.0,
+   "worst": 0.658,
+   "F": 0.658,
+   "M": 0.425,
+   "R": 0.658
+  },
+  {
+   "cg": -22.0,
+   "margin": 5.8,
+   "worst": 0.661,
+   "F": 0.661,
+   "M": 0.415,
+   "R": 0.661
+  },
+  {
+   "cg": -20.0,
+   "margin": 6.7,
+   "worst": 0.665,
+   "F": 0.665,
+   "M": 0.405,
+   "R": 0.665
+  },
+  {
+   "cg": -18.0,
+   "margin": 7.5,
+   "worst": 0.668,
+   "F": 0.668,
+   "M": 0.395,
+   "R": 0.668
+  },
+  {
+   "cg": -16.0,
+   "margin": 8.3,
+   "worst": 0.672,
+   "F": 0.672,
+   "M": 0.385,
+   "R": 0.672
+  },
+  {
+   "cg": -14.0,
+   "margin": 9.2,
+   "worst": 0.675,
+   "F": 0.675,
+   "M": 0.375,
+   "R": 0.675
+  },
+  {
+   "cg": -12.0,
+   "margin": 10.0,
+   "worst": 0.679,
+   "F": 0.679,
+   "M": 0.365,
+   "R": 0.679
+  },
+  {
+   "cg": -10.0,
+   "margin": 10.8,
+   "worst": 0.682,
+   "F": 0.682,
+   "M": 0.355,
+   "R": 0.682
+  },
+  {
+   "cg": -8.0,
+   "margin": 11.7,
+   "worst": 0.686,
+   "F": 0.686,
+   "M": 0.345,
+   "R": 0.686
+  },
+  {
+   "cg": -6.0,
+   "margin": 12.5,
+   "worst": 0.689,
+   "F": 0.689,
+   "M": 0.335,
+   "R": 0.689
+  },
+  {
+   "cg": -4.0,
+   "margin": 13.3,
+   "worst": 0.693,
+   "F": 0.693,
+   "M": 0.325,
+   "R": 0.693
+  },
+  {
+   "cg": -2.0,
+   "margin": 14.2,
+   "worst": 0.696,
+   "F": 0.696,
+   "M": 0.315,
+   "R": 0.696
+  },
+  {
+   "cg": 0.0,
+   "margin": 15.0,
+   "worst": 0.7,
+   "F": 0.7,
+   "M": 0.305,
+   "R": 0.7
+  }
+ ],
+ "np": -36,
+ "margin_target": 6.0
+}

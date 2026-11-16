@@ -1,6 +1,6 @@
 // Engineering analysis page: reads the JSON written by analysis/*.py and draws it. No chart library.
 const J = async f => (await fetch('analysis/' + f)).json();
-const [sz, fl, fans, st, cur] = await Promise.all(['sizing.json', 'flight.json', 'fans.json', 'structure.json', 'current.json'].map(J));
+const [sz, fl, fans, st, cur, hv] = await Promise.all(['sizing.json', 'flight.json', 'fans.json', 'structure.json', 'current.json', 'hover.json'].map(J));
 const C = { s1: '#3987e5', s2: '#d95926', s3: '#199e70' }, pct = v => Math.round(v * 100) + '%';
 const el = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
 const status = (ok, warn) => ok ? '<span class="st good"><i>✓</i>Met</span>' : warn ? '<span class="st warn"><i>!</i>Close</span>' : '<span class="st crit"><i>✕</i>Not met</span>';
@@ -45,16 +45,46 @@ function field(d, nx, ny) {   // density map of a generated part: one hue, light
 const app = document.getElementById('app'); app.className = ''; app.innerHTML = '';
 const add = h => { const n = typeof h === 'string' ? el(h) : h; app.append(n); return n; };
 // ---- scorecard
-const n = cur.now, f0 = cur.first;
-add(`<section id="score"><h2>Scorecard</h2><p>The first layout against the aircraft as it is now drawn in the 3D model and the CAD.</p>
-<div class="card"><table><tr><th>Requirement</th><th>Target</th><th class="n">First layout</th><th></th><th class="n">As drawn now</th><th></th></tr>
-<tr><td>Pitch stability margin in forward flight</td><td>+5 to +12%</td><td class="n">${f0.margin}%</td><td>${status(false)}</td><td class="n">+${n.margin}%</td><td>${status(n.margin >= 5)}</td></tr>
-<tr><td>Hardest-working fan in the hover</td><td>60% or less</td><td class="n">${pct(f0.hover_worst)}</td><td>${status(false)}</td><td class="n">${pct(n.hover_worst)}</td><td>${status(n.hover_worst <= .6, n.hover_worst <= .7)}</td></tr>
-<tr><td>Stall speed</td><td>12 m/s or less</td><td class="n">${f0.stall}</td><td>${status(false)}</td><td class="n">${n.stall}</td><td>${status(n.stall <= 12)}</td></tr>
-<tr><td>All-up weight</td><td>1,900 g or less</td><td class="n">${f0.mass} g</td><td>${status(true)}</td><td class="n">${n.mass} g</td><td>${status(n.mass <= 1900, n.mass <= 1950)}</td></tr></table></div>
-<div class="tiles"><div class="tile"><b>${pct(n.hover.F)}</b><span>lift fan in the hover (${n.thrust_g.lift} g available)</span></div><div class="tile"><b>${pct(n.hover.M)}</b><span>tail nozzle (${n.thrust_g.nozzle_down} g available pointing down)</span></div><div class="tile"><b>${pct(n.hover.R)}</b><span>roll motors (${n.thrust_g.roll_pair} g the pair, unmodelled guess)</span></div><div class="tile"><b>${pct(n.ideal_equal_load)}</b><span>the best any layout could do with this thrust and weight</span></div></div>
-<div class="note">Stable now, but the hover is not met and cannot be with these motors at this weight: even perfectly shared, every fan would run at ${pct(n.ideal_equal_load)}. Stability pulled the balance point forward, which unloads the tail nozzle and loads the lift fan and roll motors.</div>
-<div class="card"><h3>What changed from the first layout</h3><table><tr><th>Item</th><th>Change</th><th>Why</th></tr>${cur.changes.map(c => `<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join('')}</table></div></section>`);
+const n = cur.now, f0 = cur.first, pr = hv.steps[hv.steps.length - 1];
+const row = (name, target, a, b, c, okA, okB, okC, warnB, warnC) => `<tr><td>${name}</td><td>${target}</td><td class="n">${a}</td><td>${okA === null ? '' : status(okA)}</td><td class="n">${b}</td><td>${status(okB, warnB)}</td><td class="n">${c}</td><td>${status(okC, warnC)}</td></tr>`;
+add(`<section id="score"><h2>Scorecard</h2><p>The first layout, the aircraft as it is now drawn in the 3D model and the CAD, and the hover-margin proposal below (studied, <b>not yet drawn</b>).</p>
+<div class="card"><div class="scroll" style="max-height:none;overflow-x:auto"><table><tr><th>Requirement</th><th>Target</th><th class="n">First layout</th><th></th><th class="n">As drawn now</th><th></th><th class="n">Proposed</th><th></th></tr>
+${row('Pitch stability margin in forward flight', '+5 to +12%', f0.margin + '%', '+' + n.margin + '%', '+' + pr.margin + '%', false, n.margin >= 5, pr.ok.margin)}
+${row('Hardest-working fan in the hover', '60% or less', pct(f0.hover_worst), pct(n.hover_worst), pct(pr.hover_worst), false, n.hover_worst <= .6, pr.ok.hover, n.hover_worst <= .7, pr.hover_worst <= .7)}
+${row('Stall speed', '12 m/s or less', f0.stall, n.stall, pr.stall, false, n.stall <= 12, pr.ok.stall)}
+${row('All-up weight', '1,900 g or less', f0.mass + ' g', n.mass + ' g', pr.mass + ' g', true, n.mass <= 1900, pr.ok.mass, n.mass <= 1950)}
+${row('Hover time', '3 min or more', 'not computed', hv.now.time.minutes + ' min', pr.time.minutes + ' min', null, hv.now.time.minutes >= 3, pr.ok.time)}</table></div></div>
+<div class="tiles"><div class="tile"><b>${pct(n.hover.F)}</b><span>lift fan in the hover, as drawn (${n.thrust_g.lift} g available)</span></div><div class="tile"><b>${pct(n.hover.M)}</b><span>tail nozzle, as drawn (${n.thrust_g.nozzle_down} g available pointing down)</span></div><div class="tile"><b>${pct(n.hover.R)}</b><span>roll motors, as drawn (${n.thrust_g.roll_pair} g the pair, unmodelled guess)</span></div><div class="tile"><b>${pct(n.ideal_equal_load)}</b><span>the best any layout could do with today's thrust and weight</span></div></div>
+<div class="note">Hover times are new in this loop: a model of fan power, with the roll propellers estimated from momentum theory. Treat them as ±20%.</div>
+<div class="card"><h3>What changed from the first layout to the as-drawn aircraft</h3><table><tr><th>Item</th><th>Change</th><th>Why</th></tr>${cur.changes.map(c => `<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join('')}</table></div></section>`);
+
+// ---- hover margin study
+const rb = hv.roll.B, need = hv.need, C4 = '#a35fd6';
+const hs = add(`<section id="hover"><h2>Hover margin: what it takes to get to 60%</h2>
+<p>In the hover, three things hold the aircraft up: the lift fan near the nose, the tail nozzle at the back, and the two roll motors in the wings. Their thrust is centred ${Math.round(hv.now.cg - hv.now.thrust_centre)} mm behind the balance point, and stability will not let the balance point move aft. So the lift fan and roll motors do all the work and the nozzle idles at ${pct(hv.now.hover.M)}.</p>
+<div class="card"><h3>One change at a time, from the aircraft as drawn</h3><div class="scroll" style="max-height:none;overflow-x:auto"><table><tr><th>Step</th><th class="n">Weight</th><th class="n">Margin</th><th class="n">Lift fan</th><th class="n">Nozzle</th><th class="n">Roll</th><th class="n">Hover time</th></tr>
+${hv.steps.map(s => `<tr><td>${s.step}</td><td class="n">${s.mass} g</td><td class="n">+${s.margin}%</td><td class="n">${pct(s.hover.F)}</td><td class="n">${pct(s.hover.M)}</td><td class="n">${pct(s.hover.R)}</td><td class="n">${s.time.minutes} min</td></tr>`).join('')}</table></div>
+<div id="hstep"></div></div>
+<div class="grid2"><div class="card" id="h1"><h3>Hardest-working fan against all-up weight</h3><p class="mute" style="font-size:13px">Balance point held at +${hv.margin_target}% stability margin.</p></div>
+<div class="card" id="h2"><h3>Why the balance point matters: fan loads, proposed layout</h3><p class="mute" style="font-size:13px">Left of the dashed line the aircraft is unstable in forward flight.</p></div></div>
+<div class="grid2"><div class="card" id="h3"><h3>Lift-fan motor: thrust at 35 A against motor KV</h3><p class="mute" style="font-size:13px">Same 140 mm fan. A lower-KV motor gives more torque per amp, until the battery runs out of volts.</p></div>
+<div class="card" id="h4"><h3>What the roll motors would have to give</h3><p class="mute" style="font-size:13px">Proposed layout. The roll pair's ${1000} g is a guess; nothing has measured it.</p></div></div>
+<div class="note"><b>60% is not reached by layout changes alone</b> on today's thrust figures. The proposal gets to ${pct(pr.hover_worst)} at ${pr.mass} g. Any one of these closes the gap: lift fan ${need.lift_g} g instead of ${pr.thrust_g.lift} g; roll pair ${need.roll_pair_g} g instead of ${pr.thrust_g.roll_pair} g; both ${need.both_pct}% stronger; or the aircraft at ${need.mass_g} g. A 2,200 mAh battery gets to ${pct(hv.combos.find(c => c.kv === hv.kv_new && c.roll === 'B' && c.cap === 2200).hover_worst)} but hovers for only ${hv.combos.find(c => c.kv === hv.kv_new && c.roll === 'B' && c.cap === 2200).time.minutes} min.</div>
+<div class="card"><h3>The proposal</h3><table><tr><th>Item</th><th>Change</th><th>Effect and cost</th></tr>
+<tr><td>Lift-fan motor</td><td>EMAX 2306 1,700 KV → a 2807-size motor of about ${hv.kv_new} KV (about +${hv.motors[hv.kv_new].g - hv.motors[1700].g} g)</td><td>${pr.thrust_g.lift} g instead of ${hv.now.thrust_g.lift} g at the same 35 A, held down to 3.5 V per cell. Motor mount on the fan spider to check</td></tr>
+<tr><td>Roll motors</td><td>From ${-hv.roll.A.x} mm behind the datum, behind the spar, to ${-rb.x} mm, in front of it; ${rb.z} mm out instead of ${hv.roll.A.z}</td><td>Moves their thrust ${rb.x - hv.roll.A.x} mm forward. Roll arm ${Math.round((1 - rb.arm_vs_now) * 100)}% shorter. Pod hangs the motor ahead of the spar; the inner/outer wing joint moves inboard, clear of the propeller duct</td></tr>
+<tr><td>Battery</td><td>4-cell 3,300 → 2,700 mAh (about ${hv.batteries[3300] - hv.batteries[2700]} g lighter), slid ${Math.round(16 - pr.battery_x)} mm aft in the tray</td><td>Hover time ${hv.now.time.minutes} → ${pr.time.minutes} min. Sliding it sets the balance point to +${hv.margin_target}%, the furthest aft that keeps a point in hand above the +5% floor</td></tr>
+<tr><td>Wing, tail, outline</td><td>Unchanged</td><td>So the point where lift acts and the stall speed are unchanged apart from weight</td></tr></table></div></section>`);
+hs.querySelector('#hstep').append(bars(hv.steps.map(s => ({ label: s.step, v: s.hover_worst })), pct, 0.6));
+const VC = [C.s1, C.s2, C.s3, C4];
+hs.querySelector('#h1').append(lineChart({ xLabel: 'all-up weight, g', yLabel: 'hardest-working fan', yMin: 0.5, yMax: 0.9, yFmt: pct, band: { lo: 0.5, hi: 0.6, label: 'target: 60% or less' }, mark: { x: 1900, label: '1,900 g target' },
+  series: hv.vs_mass.map((c, i) => ({ name: c.name, short: ['as drawn', '1,500 KV', '+ roll fwd', '+ roll inboard'][i], color: VC[i], pts: c.pts })) }));
+hs.querySelector('#h2').append(lineChart({ xLabel: 'balance point, mm ahead of the datum', yLabel: 'share of maximum thrust', yMin: 0, yMax: 1, yFmt: pct, band: { lo: 0, hi: 0.6, label: 'target' }, mark: { x: Math.round(hv.np + 5 * 2.4), label: '+5% margin' },
+  series: [{ name: 'Lift fan', color: C.s1, pts: hv.cg_sweep.map(d => [d.cg, d.F]) }, { name: 'Tail nozzle', short: 'nozzle', color: C.s2, pts: hv.cg_sweep.map(d => [d.cg, d.M]) }, { name: 'Roll motors', short: 'roll', color: C.s3, pts: hv.cg_sweep.map(d => [d.cg, d.R]) }] }));
+hs.querySelector('#h3').append(lineChart({ xLabel: 'lift-fan motor, KV', yLabel: 'expected thrust, g', yMin: 1000, yMax: 1600, mark: { x: hv.kv_new, label: 'proposed' },
+  series: [{ name: 'Fresh pack (4.0 V per cell)', short: 'fresh', color: C.s1, pts: hv.kv_sweep.map(r => [r.kv, r.fresh_g]) }, { name: 'Tired pack (3.5 V per cell)', short: 'tired', color: C.s2, pts: hv.kv_sweep.map(r => [r.kv, r.tired_g]) }] }));
+hs.querySelector('#h4').append(lineChart({ xLabel: 'roll pair thrust, g', yLabel: 'hardest-working fan', yMin: 0.5, yMax: 0.8, yFmt: pct, band: { lo: 0.5, hi: 0.6, label: 'target' }, mark: { x: 1000, label: 'today’s guess' },
+  series: [{ name: 'Proposed layout, ' + pr.mass + ' g', short: 'proposed', color: C.s1, pts: hv.roll_sweep }] }));
 const b = sz.base, s = sz.best, T = sz.tmax;
 
 // ---- central trade
@@ -100,6 +130,7 @@ add(`<section id="method"><h2>Methods and limits</h2><div class="card"><table><t
 <tr><td>Where lift acts; stability; lift and tail power</td><td>AeroSandbox vortex-lattice method</td><td>No stall, no fan openings. Wing and tail in one plane, so results with the wing moved aft are less certain</td></tr>
 <tr><td>Stall speed, wing section</td><td>NeuralFoil section data, scaled to the wing</td><td>Rough: within about 15%</td></tr>
 <tr><td>Hover fan loads</td><td>Force and moment balance, linear programme</td><td>Depends on three thrust figures; only two come from a model, none from a test</td></tr>
+<tr><td>Hover time</td><td>Fan model for the two fans; momentum theory (figure of merit 0.55, drive 80%) for the roll propellers; 80% of the pack used</td><td>About ±20%. Battery masses scaled from the 3,300 mAh pack, not weighed</td></tr>
 <tr><td>Pitch response</td><td>JSBSim, six degrees of freedom</td><td>Linear aerodynamics, symmetric flight only, no transition yet</td></tr>
 <tr><td>Fan thrust</td><td>Blade-element with duct momentum</td><td>Valid near design speed only</td></tr>
 <tr><td>Beams</td><td>Beam formulas</td><td>No buckling, no layer-direction weakness</td></tr>
