@@ -105,6 +105,8 @@ a.tog.plain { color: var(--mute); }
 #simbars u { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .1); margin-top: 3px; overflow: hidden; text-decoration: none; }
 #simbars u i { display: block; height: 100%; background: var(--acc2); }
 #simhud .keys { font-size: 11px; color: var(--mute); margin-top: 8px; }
+#apRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; } #apRow span { font-size: 11px; color: var(--mute); margin-right: 2px; }
+#apRow .tog { padding: 4px 10px; font-size: 12px; }
 .pad { position: fixed; bottom: 96px; width: 132px; height: 132px; border-radius: 50%; border: 1px solid var(--line); background: rgba(14, 21, 30, .55); backdrop-filter: blur(6px); z-index: 4; touch-action: none; }
 .pad i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: rgba(255, 122, 26, .85); box-shadow: 0 0 14px rgba(255, 122, 26, .5); pointer-events: none; }
 .pad span { position: absolute; left: 0; right: 0; bottom: -20px; text-align: center; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); pointer-events: none; }

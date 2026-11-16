@@ -1,0 +1,10 @@
+# Simulation-only settings, loaded after f35b.parm when running SITL with tools/sitl-bridge.mjs. Never load on the aircraft.
+ARMING_CHECK    0
+SIM_RATE_HZ     1200
+THR_FAILSAFE    0
+FS_GCS_ENABL    0
+RC_PROTOCOLS    1
+# Tail trims the sim.js aircraft needs in cruise at 18 m/s (left +2.1 deg, right -5.5 deg; the right/left difference
+# holds off the main fan's torque). On the aircraft SERVO_AUTO_TRIM learns these in the first flights instead.
+SERVO1_TRIM     1458
+SERVO2_TRIM     1610
