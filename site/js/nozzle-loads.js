@@ -21,7 +21,7 @@ const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], nrm = a => Math.h
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 
 export const LOADS = {
-  thrustMax: 958, loss90: 0.15,                 // main fan, grams straight (site/js/spec.js THRUSTERS), and the guessed bend loss
+  thrustMax: 958, loss90: 0.25,                 // main fan, grams straight (site/js/spec.js THRUSTERS), and the estimated bend loss (spec.js D.nozzle.loss90)
   mass2: 42.7, mass3: 26.7,                     // segment + collar, grams (cad/kit-report.json)
   rMean: [43.6, 48.7, 48.7], rOuter: [46.6, 51.7, 51.7],   // bearing face mean radius and flange rim radius, mm
   wrap: { fairlead: 90, stage: 80, slave: 120 },             // degrees each cord bends over printed parts

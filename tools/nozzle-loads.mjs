@@ -4,6 +4,7 @@
 import fs from 'fs';
 import { LOADS, FRICTION, SERVOS, servoTorque, worstServo, thrustEnvelope, jointLoads, kgcm } from '../site/js/nozzle-loads.js';
 import { createSim } from '../site/js/sim.js';
+import { hoverTrim, massProps } from '../site/js/spec.js';
 
 let ok = true; const check = (label, pass) => { ok = ok && pass; console.log((pass ? 'PASS ' : 'FAIL ') + label); };
 const servo = SERVOS.mg90s_6v, budget = servo.stall * servo.budget;
@@ -14,7 +15,7 @@ console.log('  ', L90.Q.map(v => v.toFixed(3)).join(' / '), ' |  ', L90.bearings
 
 console.log('\nServo torque needed, kg cm (worst of yaw left / centre / right). MG90S stalls at 2.2 on 6 V; budget', budget.toFixed(2));
 console.log('deflection      ' + [0, 15, 30, 45, 60, 75, 90, 100].map(d => String(d).padStart(6)).join(''));
-for (const [T, tl] of [[LOADS.thrustMax, 'full'], [228, 'hover']]) for (const [fk, f] of Object.entries(FRICTION))
+for (const [T, tl] of [[LOADS.thrustMax, 'full'], [Math.round(hoverTrim(massProps()).M), 'hover']]) for (const [fk, f] of Object.entries(FRICTION))
   console.log(`${tl.padEnd(5)} ${fk.padEnd(6)}    ` + [0, 15, 30, 45, 60, 75, 90, 100].map(d => kgcm(worstServo(d, T, f)).toFixed(2).padStart(6)).join(''));
 
 // the simulated transition (same script as tools/sim-test.mjs): what the servos would have had to hold
@@ -38,7 +39,8 @@ check('with PTFE seal washers and liners and the controller\'s thrust cap, MG90S
 
 const env = thrustEnvelope(servo, FRICTION.ptfe, 5);
 console.log('\nThrust the nozzle can hold (g), MG90S on 6 V, PTFE:', env.filter(([d]) => d % 15 === 0 || d === 100).map(([d, t]) => `${d}:${t}`).join('  '));
-check('hover trim (228 g at 90 deg) is inside the envelope', env.find(([d]) => d === 90)[1] >= 228);
+const trim = hoverTrim(massProps());
+check(`hover trim (${trim.M.toFixed(0)} g of main fan at 90 deg) is inside the envelope`, env.find(([d]) => d === 90)[1] >= trim.M);
 const caps = env.map(([, t]) => Math.min(1, t / LOADS.thrustMax));
 const hdr = `// Written by tools/nozzle-loads.mjs from site/js/nozzle-loads.js. Do not edit by hand: change the model and rerun.
 // Largest main-fan thrust the cord servos (${servo.label}, ${Math.round(servo.budget * 100)}% of stall) can hold, as a fraction of

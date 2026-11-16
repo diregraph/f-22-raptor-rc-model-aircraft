@@ -27,8 +27,8 @@ So the kit is one printed 80 mm fan for a motor you own, plus the nozzle.
 | Part | Qty | Est. g | Notes |
 |---|---|---|---|
 | `edf_impeller` | 1 + spares | 36 | 7 blades, clamps on the motor's M5 shaft with the propeller nut |
-| `edf_duct` | 1 | 76 | Shroud, 45 degree bellmouth, 5 straightening vanes, motor plate, first bearing flange |
-| `edf_tail_cone` | 1 | 8 | Push fit behind the motor plate |
+| `edf_duct` | 1 | 59 | Shroud, 45 degree bellmouth, 6 cambered stator vanes and one straight wire vane, motor plate, first bearing flange |
+| `edf_tail_cone` | 1 | 4.5 | Push fit behind the motor plate; a thin 64 mm cone that reaches into segment 1 |
 | `nozzle_segment_1/2/3` | 1 each | 40 / 40 / 21 | Plain tubes with a flange each end. Segment 1 also has a sleeve for the drive ring, four cord posts and a cord band; segment 2 has two cord posts |
 | `bearing_collar_half` | 4 | 5 | Clamp bearings 2 and 3; zip tie in the middle groove. Also cord pulleys |
 | `bearing_collar_half_j1` | 2 | 4 | Clamp bearing 1. Also servo 1's pulley |
@@ -128,14 +128,14 @@ Torque each servo has to hold, kg cm, worst of yaw left, centre and right:
 
 | Deflection | 0 | 30 | 45 | 60 | 90 | 100 |
 |---|---|---|---|---|---|---|
-| Full thrust, PETG on PETG (as drawn) | 1.0 | 4.3 | 6.6 | 8.7 | 11.8 | 12.6 |
-| Full thrust, with PTFE | 0.4 | 1.7 | 2.6 | 3.4 | 4.6 | 4.8 |
-| Hover thrust (228 g), PETG on PETG | 1.0 | 0.5 | 1.1 | 1.6 | 2.5 | 2.7 |
-| Hover thrust, with PTFE | 0.4 | 0.2 | 0.4 | 0.6 | 1.0 | 1.0 |
+| Full thrust, PETG on PETG (as drawn) | 1.0 | 4.2 | 6.4 | 8.3 | 10.9 | 11.6 |
+| Full thrust, with PTFE | 0.4 | 1.6 | 2.5 | 3.2 | 4.1 | 4.3 |
+| Hover thrust (263 g), PETG on PETG | 1.0 | 0.7 | 1.3 | 1.9 | 2.7 | 2.9 |
+| Hover thrust, with PTFE | 0.4 | 0.2 | 0.5 | 0.7 | 1.0 | 1.1 |
 
 An MG90S stalls at about 2.2 kg cm on 6 V (1.9 on 5 V). We allow the nozzle 70% of that, 1.54 kg cm,
 so the servo is never parked near stall. In the simulated transition and back (`tools/sim-test.mjs`)
-the drawn design needs up to 3.9 kg cm and is over budget 71% of the time: the jet would have
+the drawn design needs up to 3.8 kg cm and is over budget 72% of the time: the jet would have
 straightened the nozzle and pitched the aircraft. Three changes fix it, with no weight added:
 
 1. **PTFE on every sliding face.** A washer between the flange faces and one behind the upstream
@@ -147,10 +147,10 @@ straightened the nozzle and pitched the aircraft. Three changes fix it, with no 
 
 | Deflection | 0-15 | 30 | 45 | 60 | 75 | 90 | 100 |
 |---|---|---|---|---|---|---|---|
-| Most main-fan thrust the nozzle can hold, g | 958 | 892 | 607 | 469 | 392 | 345 | 330 |
+| Most main-fan thrust the nozzle can hold, g | 958 | 909 | 630 | 496 | 422 | 380 | 364 |
 
-The hover needs about 237 g through the nozzle, so the cap leaves 45% for pitch control. With all
-three, the simulated transition peaks at 1.49 kg cm, inside the 1.54 budget, and still passes every
+The hover needs about 263 g from the main fan at 90 degrees, so the cap leaves 44% for pitch control. With all
+three, the simulated transition peaks at 1.43 kg cm, inside the 1.54 budget, and still passes every
 flight check. The cap barely acts in that run.
 
 That margin is thin, and it rests on the friction coefficients, which are guesses. Bench step 6
@@ -160,6 +160,35 @@ same pocket, such as the Hitec HS-5087MH (about 4.3 kg cm on 7.4 V). It weighs a
 
 Things that do not help: shortening segment 3 (the torque does not depend on it), or a bigger drum
 (the servos already use 81 of their 85 degrees each way).
+
+## Where the thrust goes
+
+Compared with the reference build's nozzle (frames from its bench video), and measured on our CAD:
+the bore was cut in 0.2 mm slices along the flow with the nozzle straight.
+
+| Loss | Before | Now | Estimate |
+|---|---|---|---|
+| **Two 45-degree mitred joints** when bent 90 degrees | 15% assumed | 25% assumed | Handbook loss for a sharp 45-degree mitre is about 0.25-0.3 of the duct's dynamic pressure each; two of them, 1.3 diameters apart, about 0.5. With the exit converging 80 to 74 mm that is 20-30% of thrust. Every three-bearing nozzle has it; the reference's does too. Only the thrust stand will say |
+| **Fan swirl** | 5 flat vanes, square to the duct | 6 cambered vanes and a straight wire vane | The rotor leaves the air turning at 17 degrees at the tip and 36 at the hub (free vortex from `analysis/fan_bem.py`); about 16% of the jet's energy is in that spin. Flat vanes meet it at up to 36 degrees and stall. Cambered vanes meet it head-on and turn it straight. Likely 4-6% more thrust, in every pose |
+| **Tail cone** | 30 mm long, about 30-degree taper | 64 mm, about 17 degrees, reaching into segment 1 (which only ever turns about its own axis) | The short cone would have shed a wake the width of the motor. 1-3% |
+| **Bore shape near the canted bearings** | Area swung 92% to 116% to 84%, with an 11.8 mm dip in the wall | 95% to 110% to 83%, dip 9.3 mm | The tilted neck under each collar was 10 mm long; now 6 mm, just the collar. The rest of the dip is geometry: a 91 mm round bearing on a 40-degree cut through an 81 mm bore must pinch the bore top and bottom. Removing it needs a 106 mm bearing, which would not fit between the tail booms. About 1-2% |
+| **Leaks at the bearings** | 0.5 mm play, no seal | Spigot and PTFE washer | About 3%, see Sealing |
+
+The weight went down: duct 2 g, tail cone 3.6 g, segments 1.4 g. The aircraft is now 1,983 g and
+the hardest-working hover fan 59.7%. Raising the bend loss from 15% to 25% does not change the
+hover limit; the main fan works a little harder at 90 degrees (263 g instead of 237 g), still well inside
+the servo cap.
+
+What the reference does differently, from its video: gear rings with a small servo riding on each
+segment (not flush, but stiff); bearing rings bolted together with many screws, probably ball races;
+long, plain segments; and a convergent petal exit. Its controller settings show a 90-degree angle
+limit, a 10-degree yaw limit, a slew of 15 deg/s and a "homing torque", which suggests its servos run
+with a torque limit. Our yaw limit is 20 degrees and our slew 150 deg/s; if the bench shows the
+cords slipping or overshooting, these are the first two numbers to bring down.
+
+Further gains, not done: a smoother, sanded or epoxy-coated bore (print the segments standing up so
+the layer lines run round the bore, not across the flow), and a petal exit like the reference's,
+which is mostly looks.
 
 ## Sealing
 

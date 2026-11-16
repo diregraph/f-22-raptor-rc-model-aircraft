@@ -12,7 +12,7 @@ export const D = {
   stab: { pivotX: -400, pivotY: -9, rootZ: 110, tipZ: 240, rootLE: -328, rootC: 195, tipC: 76, sweep: 34 },
   fin: { rootLE: -255, rootC: 170, tipC: 55, h: 150, sweep: 40, cant: 25, z: 96 },
   groundY: -150,
-  nozzle: { xJ1: -272, yAx: 2, L: [58, 104, 56], loss90: 0.15 },   // main fan + swivel nozzle (cad/propulsion.py kit frame sits here, turned to face aft)
+  nozzle: { xJ1: -272, yAx: 2, L: [58, 104, 56], loss90: 0.25 },   // loss90: thrust lost bent 90 deg, two 45-degree mitred joints (docs/ducted-propulsion.md, "Where the thrust goes"). Main fan + swivel nozzle (cad/propulsion.py kit frame sits here, turned to face aft)
   lift: { y0: -60 },
   battery: { xDefault: -9, xMin: -73, xMax: 16 },
   noseBay: { x0: 344, x1: 414, floor: -14 },
@@ -107,9 +107,9 @@ const rows = [
   ['edfDuct', 'Main fan duct', 'Main fan & nozzle', 'PETG', 'Print', 76, [-225, 2, 0], 6, 'Slides into the nacelle from the rear until its flange meets the body.', 'Shroud, bellmouth, five straightening vanes, the motor plate, the first nozzle bearing and its servo bracket, in one print.'],
   ['motorM', 'Main fan motor', 'Main fan & nozzle', 'Bought', 'Owned', 34, [-218, 2, 0], 6, '4 x M3 screws through the motor plate, reached with the tail cone off.', 'EMAX ECO II 2306 1700KV inside the duct. If the thrust test falls short this is the motor to swap for a higher-speed one.'],
   ['impeller', 'Main fan rotor, 80 mm', 'Main fan & nozzle', 'PETG', 'Print', 36, [-188, 2, 0], 10, 'Clamps on the motor shaft with the propeller nut. Fit last.', 'Seven blades for about 18,000 rpm. Print spares and balance each one.'],
-  ['tailCone', 'Fan tail cone', 'Main fan & nozzle', 'PETG', 'Print', 8, [-262, 2, 0], 6, 'Push fit behind the motor plate.', 'Smooths the flow off the hub. Pull it off to reach the motor screws.'],
-  ['seg1', 'Nozzle segment 1', 'Main fan & nozzle', 'PETG', 'Print', 37, [-300, 2, 0], 7, 'Its flange sits against the duct flange; a two-piece collar clamps them.', 'Turns about the duct axis. Nothing on it but a sleeve for the drive ring, four small cord posts and a cord band.'],
-  ['seg2', 'Nozzle segment 2', 'Main fan & nozzle', 'PETG', 'Print', 33, [-380, 2, 0], 7, 'Collar at each end.', 'The wedge: both its ends are canted 40 degrees. Two small posts guide the cord loop that makes bearing 3 follow bearing 2.'],
+  ['tailCone', 'Fan tail cone', 'Main fan & nozzle', 'PETG', 'Print', 4, [-262, 2, 0], 6, 'Push fit behind the motor plate.', 'Smooths the flow off the hub. Pull it off to reach the motor screws.'],
+  ['seg1', 'Nozzle segment 1', 'Main fan & nozzle', 'PETG', 'Print', 36, [-300, 2, 0], 7, 'Its flange sits against the duct flange; a two-piece collar clamps them.', 'Turns about the duct axis. Nothing on it but a sleeve for the drive ring, four small cord posts and a cord band.'],
+  ['seg2', 'Nozzle segment 2', 'Main fan & nozzle', 'PETG', 'Print', 32, [-380, 2, 0], 7, 'Collar at each end.', 'The wedge: both its ends are canted 40 degrees. Two small posts guide the cord loop that makes bearing 3 follow bearing 2.'],
   ['seg3', 'Nozzle segment 3', 'Main fan & nozzle', 'PETG', 'Print', 18, [-462, 2, 0], 7, 'Collar to segment 2.', 'The exit, slightly narrowed to speed the jet up.'],
   ['collar1', 'Bearing 1 collar (2 halves)', 'Main fan & nozzle', 'PETG', 'Print', 9, [-272, 2, 0], 7, 'Two halves around the flange pair, held by a zip tie in the middle groove. Two PTFE seal washers inside (mass included).', 'Also a pulley: keyed to segment 1, and servo 1 pulls it round with two cords. Silicone-grease the washers.'],
   ['collar2', 'Bearing 2 collar (2 halves)', 'Main fan & nozzle', 'PETG', 'Print', 11, [-330, 2, 0], 7, 'Two halves and a zip tie.', 'Canted 40 degrees. Keyed to segment 2; the cords from the drive ring pull it round.'],
