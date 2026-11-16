@@ -21,9 +21,9 @@ the landing gear for the first time. "Today" is the aircraft as drawn in the CAD
 
 | ID | Requirement | Target | Today | Met? |
 |---|---|---|---|---|
-| R1 | All-up weight | **2,000 g or less** (was 1,900) | 1,981 g | Yes |
-| R2 | Hover thrust margin: each fan at or below this share of its maximum | 60% | 59.6% | Yes, nothing to spare |
-| R3 | Pitch stability in forward flight (static margin: how far the balance point sits ahead of the point where lift acts, as % of wing chord) | +5 to +12% | +6.5% | Yes |
+| R1 | All-up weight | **2,000 g or less** (was 1,900) | 1,989 g | Yes |
+| R2 | Hover thrust margin: each fan at or below this share of its maximum | 60% | 59.8% | Yes, nothing to spare |
+| R3 | Pitch stability in forward flight (static margin: how far the balance point sits ahead of the point where lift acts, as % of wing chord) | +5 to +12% | +6.0% | Yes |
 | R4 | Stall speed | 12 m/s or less | 11.5 m/s | Yes |
 | R5 | Hover time | 3 min | 3.4 min (±20%) | Yes |
 | R6 | Largest part fits the K1C bed (220 x 220 x 250 mm) | all parts | all parts | Yes |

@@ -69,7 +69,7 @@
    "y0": -60
   },
   "battery": {
-   "xDefault": 8,
+   "xDefault": -9,
    "xMin": -73,
    "xMax": 16
   },
@@ -88,18 +88,18 @@
   },
   "gear": {
    "noseX": 437,
-   "noseY": -40.3,
+   "noseY": -25.7,
    "mainX": [
     -83,
     -121
    ],
    "mainZ": 80,
    "mainY": [
-    -45.7,
-    -45
+    -32.1,
+    -31.4
    ],
    "footZ": 128,
-   "retractDeg": 95
+   "retractDeg": 90
   },
   "wireCh": {
    "z0": 66,
@@ -207,7 +207,7 @@
    "group": "Airframe shells",
    "material": "PETG",
    "process": "Print",
-   "mass": 15,
+   "mass": 20,
    "cg": [
     405,
     45,
@@ -220,7 +220,7 @@
    "group": "Airframe shells",
    "material": "LW-PLA",
    "process": "Print",
-   "mass": 98,
+   "mass": 101,
    "cg": [
     215,
     -6,
@@ -768,7 +768,7 @@
    "process": "Buy",
    "mass": 306,
    "cg": [
-    8,
+    -9,
     -3,
     0
    ]
@@ -781,7 +781,7 @@
    "process": "Print",
    "mass": 14,
    "cg": [
-    8,
+    -9,
     -19,
     0
    ]
@@ -1163,10 +1163,10 @@
    "maxG": 823
   }
  ],
- "mass": 1981,
+ "mass": 1989,
  "cg": [
-  -23.28268551236749,
-  -7.30035335689046,
-  0.22968197879858657
+  -24.58169934640523,
+  -7.166918049270991,
+  0.22875816993464052
  ]
 }

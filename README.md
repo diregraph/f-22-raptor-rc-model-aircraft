@@ -23,7 +23,7 @@ sized around parts on hand.
   servos buried beside the fan duct. Interactive model at `/nozzle.html`;
   joint maths in `site/js/nozzle.js`. Read `docs/ducted-propulsion.md` first: it is an
   untested design with a thrust-stand gate before any airframe change.
-- Layout history and open problems: `docs/engineering/` (latest: `04-shape-legs-and-wiring.md`;
+- Layout history and open problems: `docs/engineering/` (latest: `06-scale-shape.md`;
   proposed next: `05-ardupilot-sitl-plan.md`, flying ArduPilot against this model in simulation;
   requirements v2 in `00-requirements-and-plan.md`).
 - `docs/bill-of-materials.md` — what is owned, what is printed, and the roughly $90 still to buy.

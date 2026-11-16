@@ -445,6 +445,8 @@ export function buildModel(cad = {}) {
       const bl = grp(mesh(box(17, len - 12, 6, lean * 0.5, -(len - 12) / 2 - 6, 0), m), mesh(cylZ(9, 6, 0, 0, 0, 16), m),
         mesh(box(22, 9, 20, lean, -len + 4.5, 0), m), mesh(box(10, 9, 3.2, 0, -23.5, 4.6), m));
       return bl; };
+    // CAD legs come hinge-relative in x and y, but the main legs keep their aircraft z: take it out so the carrier can swing them
+    g.mainX.forEach((x, i) => { const id = i ? 'gearMainL' : 'gearMainR'; if (cad[id]) cad[id] = { ...cad[id], geo: cad[id].geo.clone().translate(0, 0, (i ? 1 : -1) * g.mainZ) }; });
     const nose = carrier(V(g.noseX, g.noseY, 0), [0, -260, 0]);
     add('gearNose', L(g.noseY - D.groundY, 0), [0, 0, 0], nose); gear.push({ carrier: nose, axis: 'z', sign: -1, deg: g.retractDeg });
     for (const [id, i, sd] of [['gearMainR', 0, 1], ['gearMainL', 1, -1]]) {
