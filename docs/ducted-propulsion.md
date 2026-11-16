@@ -5,7 +5,9 @@ fan scaling laws and momentum theory. The point of the kit is to replace them wi
 measurements before the airframe is redesigned around it.
 
 Interactive model: `/nozzle.html` on the site. CAD: `cad/propulsion.py`.
-Nozzle maths: `site/js/nozzle.js`, checked by `node tools/nozzle-test.mjs`.
+Nozzle maths: `site/js/nozzle.js`, checked by `node tools/nozzle-test.mjs`. Loads on the
+nozzle: `site/js/nozzle-loads.js`, checked by `node tools/nozzle-loads.mjs`. Flight-controller
+code: `firmware/nozzle/`, checked by `node tools/nozzle-firmware-test.mjs`. `npm test` runs all four.
 
 ## Why 80 mm, and why only the main fan
 
@@ -31,12 +33,15 @@ So the kit is one printed 80 mm fan for a motor you own, plus the nozzle.
 | `bearing_collar_half` | 4 | 5 | Clamp bearings 2 and 3; zip tie in the middle groove. Also cord pulleys |
 | `bearing_collar_half_j1` | 2 | 4 | Clamp bearing 1. Also servo 1's pulley |
 | `nozzle_drive_ring` | 1 | 6 | Free ring behind bearing 1, turned by servo 2 |
-| `servo_cord_drum` | 2 | 10 | 55 mm cord drum on each servo horn |
+| `servo_cord_drum` | 2 | 8 | 55 mm cord drum on each servo horn; pocketed underneath to pay for the washers |
+| `seal_washer` / `seal_washer_j1` | 4 / 2 | 0.7 / 0.6 | **Cut, not printed**, from 0.25 mm PTFE sheet. `cad/dxf/` has the outlines |
 | `cord_fairlead_right/left` (in `cad/build.py`) | 1 each | 2 | Hard strip in the rear face of the body where the cords turn the corner |
 
-Bought: 1 x EMAX 2306 (owned), 2 x MG90S (owned), about 3 m of 0.5 mm braided fishing
-line, 6 zip ties, 4 x M3 x 6 screws, grease. Optional: offcuts of PTFE tube (the 2 mm
-bore printer kind) to line the fairlead holes.
+Bought: 1 x EMAX 2306 (owned), 2 x MG90S (owned), about 3 m of 0.5 mm braided PE
+(Dyneema) fishing line, 6 zip ties, 4 x M3 x 6 screws, silicone grease, a 100 x 100 mm
+piece of 0.25 mm PTFE sheet (about $5), 12 mm PTFE thread-seal tape, and offcuts of PTFE
+tube (the 2 mm bore printer kind) to line the fairlead holes. The PTFE parts are no longer
+optional: see "Can two MG90S hold it?" below.
 
 Printed mass is about 275 g; with motor and servos about 340 g.
 
@@ -108,6 +113,106 @@ body, and turn the corner at a PETG fairlead strip in the body's rear face.
 The same `solve()` function goes into the flight controller: two inputs (deflection,
 yaw), two servo outputs.
 
+## Can two MG90S hold it?
+
+This was not checked when the cord drive was drawn. It is now (`site/js/nozzle-loads.js`), and
+the answer for the drawing as it was is **no**.
+
+The jet does not just push the aircraft; it also tries to unbend the nozzle. The flow enters each
+bearing along the axis of the part upstream, so it has no lever there, but it leaves at the exit, and
+that line misses the axis of bearing 2. At 90 degrees and full thrust (958 g) that is 0.31 N m
+(3.2 kg cm) on bearing 2 before any friction. The bearings also carry up to 9 N along the duct, 11 N
+across it and 1 N m of tilting moment, and plain printed flanges turn that into friction.
+
+Torque each servo has to hold, kg cm, worst of yaw left, centre and right:
+
+| Deflection | 0 | 30 | 45 | 60 | 90 | 100 |
+|---|---|---|---|---|---|---|
+| Full thrust, PETG on PETG (as drawn) | 1.0 | 4.3 | 6.6 | 8.7 | 11.8 | 12.6 |
+| Full thrust, with PTFE | 0.4 | 1.7 | 2.6 | 3.4 | 4.6 | 4.8 |
+| Hover thrust (228 g), PETG on PETG | 1.0 | 0.5 | 1.1 | 1.6 | 2.5 | 2.7 |
+| Hover thrust, with PTFE | 0.4 | 0.2 | 0.4 | 0.6 | 1.0 | 1.0 |
+
+An MG90S stalls at about 2.2 kg cm on 6 V (1.9 on 5 V). We allow the nozzle 70% of that, 1.54 kg cm,
+so the servo is never parked near stall. In the simulated transition and back (`tools/sim-test.mjs`)
+the drawn design needs up to 3.9 kg cm and is over budget 71% of the time: the jet would have
+straightened the nozzle and pitched the aircraft. Three changes fix it, with no weight added:
+
+1. **PTFE on every sliding face.** A washer between the flange faces and one behind the upstream
+   flange at each bearing, PTFE tape in the collar bore, PTFE tube in the fairlead holes. Friction
+   coefficient about 0.08 instead of 0.20; cord friction about 0.10 instead of 0.25.
+2. **Servo rail at 6 V**, not 5 V: 15% more torque for nothing. The regulator must be the adjustable kind.
+3. **The controller caps the main fan by deflection** so the jet never asks for more than the servos
+   have. The cap is in `firmware/nozzle/NozzleLimits.h`, written from the model:
+
+| Deflection | 0-15 | 30 | 45 | 60 | 75 | 90 | 100 |
+|---|---|---|---|---|---|---|---|
+| Most main-fan thrust the nozzle can hold, g | 958 | 892 | 607 | 469 | 392 | 345 | 330 |
+
+The hover needs about 237 g through the nozzle, so the cap leaves 45% for pitch control. With all
+three, the simulated transition peaks at 1.49 kg cm, inside the 1.54 budget, and still passes every
+flight check. The cap barely acts in that run.
+
+That margin is thin, and it rests on the friction coefficients, which are guesses. Bench step 6
+below measures them. If the measured torque is higher, the next step is a stronger servo in the
+same pocket, such as the Hitec HS-5087MH (about 4.3 kg cm on 7.4 V). It weighs about 22 g against
+13 g, though, so a pair costs 17 g that the 2,000 g target does not currently have.
+
+Things that do not help: shortening segment 3 (the torque does not depend on it), or a bigger drum
+(the servos already use 81 of their 85 degrees each way).
+
+## Sealing
+
+Each bearing is two flanges clamped in a collar. Before this change the faces had 0.5 mm of play
+and nothing in the gap. The static pressure inside the nozzle is only about 300 Pa at full thrust (the
+exit converges from 80 to 74 mm), so the leak is small but real: about 1% of the flow per bearing,
+roughly 3% of thrust over three bearings. The play was also slack that the cords would have to take
+up on every reversal.
+
+- **Spigot and counterbore.** The downstream part has a 2 mm lip, 0.9 mm thick, the same bore as the
+  duct, that turns inside a counterbore in the upstream flange with 0.4 mm clearance. The joint is
+  behind a step, out of the jet, and air has to turn twice to escape. The bore stays smooth.
+- **PTFE washers.** One 0.25 mm washer between the flange faces closes the gap; a second, behind the
+  upstream flange, takes up the remaining play. The collar slot is now 0.6 mm wider than the two
+  flanges, so two washers leave 0.1 mm of running clearance. Silicone grease on both sides.
+
+Cut the washers with a craft knife round a template (print the washer STL), a vinyl cutter, or a laser (the DXF
+files are in `cad/dxf/`). The seal adds 4 g; the pocket under each servo drum takes 4.2 g off.
+
+## Controller
+
+Two ports of the same code, so it does not matter which flight controller wins
+(`docs/engineering/05-ardupilot-sitl-plan.md`). Both are checked against `site/js/nozzle.js` by
+`tools/nozzle-firmware-test.mjs`.
+
+- `firmware/nozzle/Nozzle3BSM.h`: C++, no Arduino calls, for the ESP32 and madflight.
+- `firmware/nozzle/nozzle_3bsm.lua`: ArduPilot script. Reads the tilt and rudder outputs, writes two
+  servo pulses on the Script 1 and Script 2 functions. Its input scaling must be confirmed in SITL.
+
+What it does every loop, in order:
+
+1. **Radio lost:** hold the last deflection and centre the yaw.
+2. **Hover guard:** while airborne below 6 m/s, keep at least 35 degrees of deflection, fading out by
+   17 m/s (same as `site/js/sim.js`). Nothing aft of the balance point holds the tail up otherwise.
+3. **Rate limit:** 150 deg/s of deflection and 300 deg/s of yaw. At power-up it assumes the stringing
+   pose (45 degrees) and moves off it at 30 deg/s, so a badly strung nozzle cannot snap a cord.
+4. **Solve** the three bearing angles and the two servo angles.
+5. **Backlash:** when a drum reverses, it overshoots by half the measured slack so the other cord
+   takes the load straight away.
+6. **Pulses:** centre trim and direction for each servo, clamped to 500-2,500 us.
+7. **Thrust cap:** returns the most main-fan thrust the nozzle can hold at the deflection it has
+   reached. The mixer clamps the main motor to it. `site/js/sim.js` does the same.
+
+In the madflight loop it is three lines:
+
+```cpp
+#include "Nozzle3BSM.h"
+nozzle::Nozzle nz;                                   // once
+auto o = nz.update(dt, tiltCmd, yawCmd, airspeed, onGround, rcOk);
+servo1.writeMicroseconds(o.us[0]); servo2.writeMicroseconds(o.us[1]);
+mainThrust = fminf(mainThrust, o.thrustCap * MAIN_MAX);
+```
+
 ## Test plan (the gate before any airframe change)
 
 1. **Print one bearing pair first** (the rear of `nozzle_segment_1`, the front of
@@ -118,7 +223,7 @@ yaw), two servo outputs.
    Step the throttle 30 / 50 / 70 / 100% and log grams and amps.
 4. **Add the nozzle straight**, repeat. Then at 45 and 90 degrees with the scale turned
    to read the right direction.
-5. **Decide.** The airframe needs about 450 g from the nozzle at 90 degrees for hover
+5. **Decide on thrust** (table below). The airframe needs about 450 g from the nozzle at 90 degrees for hover
    at about 60% throttle. Below 550 g at full throttle through the bent nozzle, this
    route does not carry the aircraft with this motor.
 
@@ -127,6 +232,15 @@ yaw), two servo outputs.
 | 700 g or more | Integrate as designed |
 | 550-700 g | Integrate, but shift more lift to the front fan and roll pair |
 | Under 550 g | Change the blade pitch or count and retest; if still short, a higher-KV motor on 70 mm, or stay with the open propeller |
+
+6. **Measure what the servos have to hold** (the model's friction numbers are guesses). Nozzle
+   strung and on the stand, fan off. Hook a luggage scale on the cord at a servo drum and pull until
+   the drum turns: grams x 2.75 / 1000 is kg cm (the drum radius is 2.75 cm). Do it at 0, 45 and 90 degrees, then again with the fan
+   at the hover setting (about 25% of full thrust at 90 degrees). Anything over 1.5 kg cm means the
+   friction is higher than modelled: check the washers, then consider the stronger servo.
+7. **Measure the slack.** Command 45 degrees from above, then from below, and read the exit angle
+   each time with a phone inclinometer on segment 3. Half the difference, turned into servo degrees,
+   goes in `backlashDeg`. More than 3 degrees of exit difference: retension the cords first.
 
 ## Risks, plainly
 
@@ -138,8 +252,9 @@ yaw), two servo outputs.
 - **Thrust may fall short.** Printed fans are usually less efficient than moulded ones.
 - **Weight at the tail** moves the balance point aft. The battery can no longer slide to
   compensate, so integration will need the nozzle as short and thin as tests allow.
-- **Cord drive is the least proven part.** It has been drawn and checked for clashes,
-  not strung. Open questions for the bench: friction where each cord turns 90 degrees
+- **Cord drive is the least proven part.** It has been drawn, checked for clashes and now
+  for load (see "Can two MG90S hold it?"), but not strung. The margin over the servos is
+  about 3%, on guessed friction. Open questions for the bench: friction where each cord turns 90 degrees
   at the fairlead (an MG90S should leave roughly 2.5 kg cm at the bearing after that
   loss; the gears gave about 4); stretch and backlash in about 3 m of line; whether the
   cords stay in 1.4 mm grooves where they cross from one pulley to the next at an angle.
@@ -172,8 +287,9 @@ fails, the aft fuselage goes back to the open-propeller version in git history.
 - **Speed controllers** now stand on edge against the bay side walls, because the bay
   lost its rear 26 mm to the inlet.
 - **Controller behaviour.** With the nozzle straight, nothing aft of the balance point
-  can hold the tail up. The flight controller therefore keeps the nozzle at least 60
-  degrees down until the wing is flying, whatever the pilot asks for.
+  can hold the tail up. The flight controller therefore keeps the nozzle at least 35
+  degrees down until the wing is flying (fully below 6 m/s, fading out by 17 m/s), whatever
+  the pilot asks for. See "Controller".
 
 ### Lift fan
 

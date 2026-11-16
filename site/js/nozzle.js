@@ -13,7 +13,8 @@
 //   servo 2 -> a free ring just behind bearing 1; cords from that ring cross to the bearing-2 collar, so the ring sits at a + k*b
 //   joint 3 is not driven at all: a cord loop from segment 1 to the bearing-3 collar makes it mirror joint 2
 // cord: radius of the cord centre on each pulley, mm (cad/propulsion.py prints the same numbers)
-export const NOZZLE = { alpha: 40, bore: 80, servoTravel: 170, maxDeflection: 100, maxYaw: 20, cord: { band1: 48.3, ring: 50.0, collar: 53.4, drum: 27.5 } };
+export const NOZZLE = { alpha: 40, bore: 80, servoTravel: 170, maxDeflection: 100, maxYaw: 20, cord: { band1: 48.3, ring: 50.0, collar: 53.4, drum: 27.5 },
+  len: [58, 104, 56] };   // len: bearing 1 to 2, 2 to 3, 3 to the exit, mm (cad/propulsion.py L1, L2, L3)
 export const ringRatio = () => NOZZLE.cord.collar / NOZZLE.cord.ring;            // k: ring degrees per degree of joint 2
 const RAD = Math.PI / 180;
 
@@ -59,4 +60,15 @@ export function jointCentres() {   // mid-travel of each pulley over every pose 
     band = [Math.min(band[0], p.band), Math.max(band[1], p.band)]; ring = [Math.min(ring[0], p.ring), Math.max(ring[1], p.ring)];
   }
   return { band: (band[0] + band[1]) / 2, ring: (ring[0] + ring[1]) / 2, bandRange: band[1] - band[0], ringRange: ring[1] - ring[0], bRange: solve(NOZZLE.maxDeflection, 0).b };
+}
+
+// Where everything is for given joint angles: bearing centres p1..p3, exit centre e, jet direction d, the three bearing
+// axes in their current orientation, and the mid-points of segments 2 and 3 (used for their weight). Nozzle frame, mm.
+export function chain(a, b, c, alpha = NOZZLE.alpha) {
+  const { n1, n2, n3 } = axes(alpha), [l1, l2, l3] = NOZZLE.len;
+  const R1 = rot(n1, a * RAD), R12 = mm(R1, rot(n2, b * RAD)), R123 = mm(R12, rot(n3, c * RAD));
+  const along = (p, R, l) => { const v = mv(R, [l, 0, 0]); return [p[0] + v[0], p[1] + v[1], p[2] + v[2]]; };
+  const p1 = [0, 0, 0], p2 = [l1, 0, 0], p3 = along(p2, R12, l2), e = along(p3, R123, l3);
+  return { p: [p1, p2, p3], e, d: mv(R123, [1, 0, 0]), n: [n1, mv(R1, n2), mv(R12, n3)], up: [[1, 0, 0], [1, 0, 0], mv(R12, [1, 0, 0])],
+    mid2: along(p2, R12, l2 / 2), mid3: along(p3, R123, l3 / 2) };
 }
