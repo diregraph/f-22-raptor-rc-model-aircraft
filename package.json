@@ -1,0 +1,14 @@
+{
+  "name": "f35b-vtol-twin",
+  "private": true,
+  "scripts": {
+    "dev": "python3 -m http.server 8765 --directory site",
+    "deploy": "cf deploy site",
+    "deploy:inline": "npm --prefix cf-inline install && npm --prefix cf-inline run deploy",
+    "test": "node tools/sim-test.mjs && node tools/nozzle-test.mjs"
+  },
+  "devDependencies": {
+    "cf": "1.0.0-beta.32"
+  },
+  "type": "module"
+}

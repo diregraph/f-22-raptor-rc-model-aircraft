@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ducted Fan and Swivel Nozzle</title>
+<meta name="description" content="Printable 80 mm ducted fan and three-bearing swivel nozzle for the F-35B model: move the nozzle, see each servo angle, download the parts.">
+<meta name="theme-color" content="#0a0f15">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  #kparts { top: 70px; left: 14px; width: 290px; max-height: calc(100% - 250px); overflow: auto; padding: 12px; }
+  #kinfo { top: 70px; right: 14px; width: 300px; max-height: calc(100% - 250px); overflow: auto; padding: 14px; }
+  #kdock { left: 14px; right: 14px; bottom: 14px; padding: 12px 14px; }
+  #kdock .grid { grid-template-columns: repeat(4, 1fr); margin-bottom: 0; }
+  .kp { padding: 8px 4px; border-top: 1px solid var(--line); font-size: 13px; }
+  .kp:first-of-type { border-top: 0; } .kp b { display: block; } .kp span { color: var(--mute); font-size: 12px; display: block; margin: 2px 0 6px; }
+  .jt { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .jt td, .jt th { padding: 5px 4px; border-top: 1px solid var(--line); text-align: right; font-family: var(--mono); }
+  .jt th { font-family: inherit; font-weight: 500; color: var(--mute); font-size: 11px; } .jt td:first-child, .jt th:first-child { text-align: left; font-family: inherit; }
+  a.back { pointer-events: auto; color: var(--mute); font-size: 12px; text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; background: var(--panel); }
+  @media (max-width: 900px) { #kparts, #kinfo { display: none; } #kdock .grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<header id="top">
+  <div class="brand"><span class="mark"></span><div><h1>DUCTED FAN + SWIVEL NOZZLE</h1><p>Bench kit · untested first design</p></div></div>
+  <div id="hud"><a class="back" href="./">← back to the aircraft</a></div>
+</header>
+<aside id="kparts" class="panel"><div class="panel-head"><h2>Printed parts</h2><span id="kcount" class="muted"></span></div><div id="klist"></div></aside>
+<aside id="kinfo" class="panel">
+  <h2 style="margin-bottom:8px">Nozzle state</h2>
+  <table class="jt"><thead><tr><th>Bearing</th><th>Joint</th><th>Servo</th><th>Pulse</th></tr></thead><tbody id="jrows"></tbody></table>
+  <div class="blk"><h4>Exit direction</h4><p id="kexit"></p></div>
+  <div class="blk"><h4>Thrust (estimate)</h4><p id="kthrust"></p></div>
+  <div class="blk"><h4>How it works</h4><p>Bearing 1 is square to the duct. Bearings 2 and 3 are canted 40° in opposite directions. Turning 2 and 3 by equal and opposite angles bends the jet; bearing 1 turns the whole bend so it points straight down, and a little more or less to swing the jet sideways for yaw. Nothing rides on the nozzle but cords (yellow). Two MG90S servos sit inside the body, each turning a drum. Servo 1 pulls the bearing-1 collar round. Servo 2 pulls a free ring, and cords from that ring work bearing 2. Bearing 3 has no servo: a cord loop makes it mirror bearing 2.</p></div>
+  <div class="blk"><h4>Cord routing</h4><a href="img/nozzle-cords.svg" target="_blank" rel="noopener"><img src="img/nozzle-cords.svg" alt="Side view: servo 1 pulls the bearing-1 collar, servo 2 pulls a free ring whose cords turn bearing 2, and a loop makes bearing 3 follow" style="width:100%;border-radius:8px;display:block"></a><p>Click to enlarge.</p></div>
+  <div class="blk"><h4>Before you run it</h4><p>A printed fan at 18,000 rpm can shed a blade. Run it behind a board, wear eye protection, and never stand in line with the fan disc.</p></div>
+</aside>
+<section id="kdock" class="panel">
+  <div class="grid">
+    <label>Nozzle deflection <output id="oD">0°</output><input id="sD" type="range" min="0" max="100" step="1" value="0"></label>
+    <label>Yaw swing <output id="oY">0°</output><input id="sY" type="range" min="-20" max="20" step="1" value="0"></label>
+    <label>Fan speed <output id="oF">0%</output><input id="sF" type="range" min="0" max="100" step="1" value="40"></label>
+    <label>Explode <output id="oE">0%</output><input id="sE" type="range" min="0" max="1" step="0.01" value="0"></label>
+  </div>
+</section>
+<script type="module" src="js/kit.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>F-35B VTOL Digital Twin</title>
+<meta name="description" content="Interactive blueprint of a 3D-printed, snap-together F-35B vertical take-off model: explode it, inspect every part, follow the assembly.">
+<meta name="theme-color" content="#0a0f15">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<header id="top">
+  <div class="brand"><span class="mark"></span><div><h1>F-35B VTOL</h1><p>Digital twin · rev A</p></div></div>
+  <div id="hud" aria-live="polite"></div>
+</header>
+
+<aside id="parts" class="panel" data-tab="parts">
+  <div class="panel-head"><h2>Parts</h2><span id="partCount" class="muted"></span></div>
+  <input id="search" type="search" placeholder="Filter parts" aria-label="Filter parts">
+  <div id="tree"></div>
+</aside>
+
+<aside id="info" class="panel" data-tab="info">
+  <div id="inspector"></div>
+</aside>
+
+<section id="dock" class="panel" data-tab="controls">
+  <div class="row modes">
+    <button id="mHover" class="seg">Hover</button>
+    <button id="mFwd" class="seg">Forward flight</button>
+    <button id="mAsm" class="seg">Assembly steps</button>
+  </div>
+  <div class="grid">
+    <label>Explode <output id="oExplode">0%</output><input id="explode" type="range" min="0" max="1" step="0.01" value="0"></label>
+    <label>Nozzle tilt <output id="oTilt">90°</output><input id="tilt" type="range" min="0" max="100" step="1" value="90"></label>
+    <label>Nozzle yaw <output id="oYaw">0°</output><input id="yaw" type="range" min="-20" max="20" step="1" value="0"></label>
+    <label>Tail surfaces <output id="oElev">0°</output><input id="elev" type="range" min="-25" max="25" step="1" value="0"></label>
+    <label>Battery position <output id="oBatt"></output><input id="batt" type="range" min="-100" max="-40" step="5" value="-40"></label>
+    <label>Section cut <output id="oCut">off</output><input id="cut" type="range" min="-460" max="470" step="5" value="470"></label>
+  </div>
+  <div class="row toggles">
+    <button id="tSpin" class="tog" aria-pressed="false">Spin propellers</button>
+    <button id="tXray" class="tog" aria-pressed="false">X-ray shells</button>
+    <button id="tForces" class="tog" aria-pressed="true">Balance &amp; thrust</button>
+    <button id="tSim" class="tog fly" aria-pressed="false">Fly it (simulator)</button>
+    <button id="bReset" class="tog plain">Reset view</button>
+    <button id="bShowAll" class="tog plain">Show all</button>
+    <button id="bExport" class="tog plain">Export sim JSON</button>
+    <a class="tog plain" href="nozzle.html">Ducted fan + swivel nozzle kit →</a>
+    <a class="tog plain" href="analysis.html">Engineering analysis →</a>
+  </div>
+</section>
+
+<section id="stepper" hidden>
+  <button id="sPrev" aria-label="Previous step">‹</button>
+  <div id="sBody"></div>
+  <button id="sNext" aria-label="Next step">›</button>
+</section>
+
+<section id="simhud" hidden>
+  <div id="simstats"></div>
+  <div id="simbars"></div>
+  <div class="row"><button id="sReset" class="tog">Reset</button><button id="sHover" class="tog">Nozzle down (hover)</button><button id="sFwd" class="tog">Nozzle aft (fly)</button><button id="sExit" class="tog plain">Exit simulator</button></div>
+  <p class="keys">Keys: W/S climb, A/D yaw, arrows pitch and roll, Q/E nozzle, R reset. On a phone use the two pads.</p>
+</section>
+<div id="padL" class="pad" hidden><i></i><span>climb · yaw</span></div>
+<div id="padR" class="pad" hidden><i></i><span>pitch · roll</span></div>
+
+<nav id="tabs">
+  <button data-t="parts">Parts</button>
+  <button data-t="controls" class="on">Controls</button>
+  <button data-t="info">Inspect</button>
+</nav>
+
+<div id="tip" hidden></div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
