@@ -40,17 +40,19 @@
     <label>Nozzle yaw <output id="oYaw">0°</output><input id="yaw" type="range" min="-20" max="20" step="1" value="0"></label>
     <label>Tail surfaces <output id="oElev">0°</output><input id="elev" type="range" min="-25" max="25" step="1" value="0"></label>
     <label>Landing gear <output id="oGear">down</output><input id="gear" type="range" min="0" max="1" step="0.01" value="0"></label>
-    <label>Battery position <output id="oBatt"></output><input id="batt" type="range" min="-73" max="16" step="1" value="8"></label>
+    <label>Battery position <output id="oBatt"></output><input id="batt" type="range" min="-73" max="16" step="1" value="-9"></label>
     <label>Section cut <output id="oCut">off</output><input id="cut" type="range" min="-460" max="470" step="5" value="470"></label>
   </div>
   <div class="row toggles">
+    <button id="tFinish" class="tog" aria-pressed="true" title="Switch between scale paint and the printed-filament colours">Scale finish</button>
     <button id="tSpin" class="tog" aria-pressed="false">Spin propellers</button>
     <button id="tXray" class="tog" aria-pressed="false">X-ray shells</button>
-    <button id="tForces" class="tog" aria-pressed="true">Balance &amp; thrust</button>
+    <button id="tForces" class="tog" aria-pressed="false">Balance &amp; thrust</button>
     <button id="tSim" class="tog fly" aria-pressed="false">Fly it (simulator)</button>
     <button id="bReset" class="tog plain">Reset view</button>
     <button id="bShowAll" class="tog plain">Show all</button>
     <button id="bExport" class="tog plain">Export sim JSON</button>
+    <a class="tog plain" href="story.html">Build journal →</a>
     <a class="tog plain" href="nozzle.html">Ducted fan + swivel nozzle kit →</a>
     <a class="tog plain" href="analysis.html">Engineering analysis →</a>
   </div>

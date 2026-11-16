@@ -14,10 +14,10 @@ export const D = {
   groundY: -150,
   nozzle: { xJ1: -272, yAx: 2, L: [58, 104, 56], loss90: 0.15 },   // main fan + swivel nozzle (cad/propulsion.py kit frame sits here, turned to face aft)
   lift: { y0: -60 },
-  battery: { xDefault: 8, xMin: -73, xMax: 16 },
+  battery: { xDefault: -9, xMin: -73, xMax: 16 },
   noseBay: { x0: 344, x1: 414, floor: -14 },
   escBay: { x: 65, y: -18.5, z: [43, 65] },
-  gear: { noseX: 437, noseY: -40.3, mainX: [-83, -121], mainZ: 80, mainY: [-45.7, -45], footZ: 128, retractDeg: 95 },
+  gear: { noseX: 437, noseY: -25.7, mainX: [-83, -121], mainZ: 80, mainY: [-32.1, -31.4], footZ: 128, retractDeg: 90 },
   wireCh: { z0: 66, z1: 84, roof: -30, x0: -66, x1: 300 },
 };
 
@@ -75,8 +75,8 @@ const rows = [
   ['nose', 'Nose section', 'Airframe shells', 'LW-PLA', 'Print', 60, [370, -4, 0], 9, 'Pushes onto the nose plug; two 3 mm bamboo-skewer pins drop in from the top.', 'Rear half of the nose. Carries the canopy and the PETG plug.'],
   ['noseCone', 'Nose cone', 'Airframe shells', 'LW-PLA', 'Print', 18, [495, -6, 0], 9, 'Glued to the nose section; two 3 mm bamboo-skewer dowels line it up.', 'The nose is 278 mm long, taller than the printer, so it prints in two pieces. This tip is the first thing to hit the ground: keep spares.'],
   ['noseRing', 'Nose plug', 'Airframe shells', 'PETG', 'Print', 17, [294,  -6,  0], 9, 'Glued into the back of the nose. Plugs 12 mm into the fan bay.', 'A hard PETG collar so the soft nose seats the same way every time.'],
-  ['canopy', 'Canopy', 'Airframe shells', 'PETG', 'Print', 15, [405, 45, 0], 9, 'Held by two strips of tape or small magnets: it is the hatch to the electronics.', 'Print in clear PETG, vase mode. Lift it off to reach the speed controllers, flight controller and receiver.'],
-  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 98, [215, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', 'Houses the lift fan: a 124 mm bore for the shroud ring. The dark recesses at the front corners are the intakes.'],
+  ['canopy', 'Canopy', 'Airframe shells', 'PETG', 'Print', 20, [405, 45, 0], 9, 'Held by two strips of tape or small magnets: it is the hatch to the electronics.', 'Print in clear PETG, vase mode. Lift it off to reach the speed controllers, flight controller and receiver.'],
+  ['fanbay', 'Lift-fan bay', 'Airframe shells', 'LW-PLA', 'Print', 101, [215, -6, 0], 6, 'Slides onto both longerons from the front until the tubes bottom out; the fan spider clips in from below and locks it.', 'Houses the lift fan: a 124 mm bore for the shroud ring. The dark recesses at the front corners are the intakes.'],
   ['tray', 'Centre tray', 'Airframe shells', 'LW-PLA', 'Print', 146, [-22,  -18,  0], 4, 'Slides onto both longerons; the skids and spar carrier blocks clip on through its floor and lock it.', 'Open-top bay for battery and electronics. Its rear end is open above and below: that is the air inlet for the main fan.'],
   ['hatch', 'Top hatch', 'Airframe shells', 'LW-PLA', 'Print', 41, [16, 26, 0], 10, 'Front tongue under the fan bay, rear PETG latch. No tools.', 'Lift off for battery swaps. The dorsal spine stiffens it.'],
   ['aftBridge', 'Aft bridge', 'Airframe shells', 'LW-PLA', 'Print', 80, [-200,  -6,  0], 6, 'Slides onto the longerons between the centre section and the booms.', 'The engine nacelle: the main fan duct slides into its bore from the rear.'],
@@ -122,8 +122,8 @@ const rows = [
   ['nzServo1', 'Nozzle servo 1', 'Main fan & nozzle', 'Bought', 'Owned', 14, [-216, -4, 72], 7, 'Goes up into its pocket from the belly with the drum already on it; a dab of hot glue on each ear.', 'TowerPro MG90S, buried beside the fan duct. Turns the whole nozzle about the duct axis and swings it for yaw.'],
   ['nzServo2', 'Nozzle servo 2', 'Main fan & nozzle', 'Bought', 'Owned', 14, [-216, -4, -72], 7, 'Same pocket on the left side.', 'TowerPro MG90S. Bends the nozzle: it works bearing 2 through the drive ring, and bearing 3 follows by its own cord loop.'],
   // ---- Electronics
-  ['battery', 'Battery, 4-cell 2700 mAh', 'Electronics', 'Bought', 'Buy', 306, [8, -3, 0], 10, 'Hook-and-loop strap on the tray.', 'Heaviest part. 2,700 mAh is the smallest pack that gives 3 minutes of hover at this weight; it slides from +16 (forward stop, against the lift-fan bay) back to -73 to trim balance, and sits at +8.'],
-  ['batteryTray', 'Battery tray', 'Electronics', 'PETG', 'Print', 14, [8, -19, 0], 4, 'Sits on the bay floor and slides fore and aft; hook-and-loop underneath.', 'Lets you shift the battery to trim balance without tools.'],
+  ['battery', 'Battery, 4-cell 2700 mAh', 'Electronics', 'Bought', 'Buy', 306, [-9, -3, 0], 10, 'Hook-and-loop strap on the tray.', 'Heaviest part. 2,700 mAh is the smallest pack that gives 3 minutes of hover at this weight; it slides from +16 (forward stop, against the lift-fan bay) back to -73 to trim balance, and sits at +8.'],
+  ['batteryTray', 'Battery tray', 'Electronics', 'PETG', 'Print', 14, [-9, -19, 0], 4, 'Sits on the bay floor and slides fore and aft; hook-and-loop underneath.', 'Lets you shift the battery to trim balance without tools.'],
   ['fcSled', 'Flight-controller sled', 'Electronics', 'PETG', 'Print', 6, [367, -4, 0], 5, 'Stands on the bay floor on two feet; hook-and-loop underneath.', 'Carries the ESP32 and gyro so the whole brain lifts out for bench work.'],
   ['esp32', 'ESP32 DevKit v1', 'Electronics', 'Bought', 'Owned', 10, [355, 0, 0], 5, 'Pin headers into the sled socket.', 'Runs madflight. Reads the gyro and receiver, drives 4 motors and 4 servos.'],
   ['imu', 'Gyro board (MPU6050)', 'Electronics', 'Bought', 'Buy', 3, [398, -1, 0], 5, 'Foam tape on the sled.', 'Sits close to the balance point so it feels rotation, not sideways shake.'],
