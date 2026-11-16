@@ -23,7 +23,7 @@ SCR_HEAP_SIZE   100000
 Q_TILT_ENABLE   1
 Q_TILT_MASK     2
 Q_TILT_TYPE     0
-Q_TILT_MAX      45
+Q_TILT_MAX      65
 Q_TILT_RATE_UP  40
 Q_TILT_RATE_DN  20
 
@@ -51,13 +51,14 @@ Q_M_SPIN_MAX    0.95
 Q_M_THST_HOVER  0.6
 Q_M_HOVER_LEARN 2
 
-# forward flight: stall 11.5 m/s (requirements v2)
-AIRSPEED_MIN    14
-AIRSPEED_CRUISE 17
+# forward flight. The sim.js wing stalls near 13.6 m/s at 1,989 g (CL max about 0.87), above the 11.5-12 m/s the
+# vortex-lattice study gives; these speeds follow the sim so transitions finish with margin. Revisit after a glide test.
+AIRSPEED_MIN    16
+AIRSPEED_CRUISE 18
 AIRSPEED_MAX    24
-AIRSPEED_STALL  12
+AIRSPEED_STALL  14
 ARSPD_TYPE      0
-Q_ASSIST_SPEED  12
+Q_ASSIST_SPEED  15
 Q_TRANSITION_MS 6000
 MIXING_GAIN     0.5
 KFF_RDDRMIX     0
@@ -65,3 +66,14 @@ KFF_RDDRMIX     0
 # landing gear: up above 8 m, down below 5 m
 LGR_DEPLOY_ALT  5
 LGR_RETRACT_ALT 8
+
+# learn the tail trims in level flight
+SERVO_AUTO_TRIM 1
+
+# Hover yaw comes only from the nozzle swing, which is weak against the fins in wind (SITL: 3 m/s turns the nose
+# into the wind against 10-12 of the 20 deg swing). Let the autopilot weathervane into the wind on purpose instead.
+Q_WVANE_ENABLE  1
+Q_WVANE_GAIN    1
+
+# legs down when the board powers up
+LGR_STARTUP     2

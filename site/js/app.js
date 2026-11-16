@@ -5,6 +5,7 @@ import { STLLoader } from '../vendor/STLLoader.js';
 import { D, PARTS, PART, GROUPS, MATERIALS, STEPS, THRUSTERS, JOINTS, WIRING, CAD, PRINT_PETG, PRINT_LW, massProps, hoverTrim, nozzleExit } from './spec.js';
 import { solve as solveNozzle, exitDirection } from './nozzle.js';
 import { createSim } from './sim.js';
+import { FLIGHTS, loadReplay } from './replay.js';
 import { buildModel } from './build.js';
 
 const $ = s => document.querySelector(s);
@@ -332,7 +333,7 @@ function setSim(on) {
   $('#simhud').hidden = !on; $('#padL').hidden = $('#padR').hidden = !on; simGrid.visible = on; ground.children[1].visible = ground.children[2].visible = !on;
   camera.near = on ? 30 : 10; camera.far = on ? 260000 : 30000; camera.updateProjectionMatrix(); scene.fog = on ? new THREE.Fog(0x0e1620, 40000, 240000) : null;
   if (on) { state.mode = 'hover'; state.explode = 0; lastEx = 0; state.selected = null; state.hidden.clear(); state.cut = 470; state.xray = false; state.tiltTarget = 90; sim = createSim(state.battX); acc = 0; }
-  else { model.root.position.set(0, 0, 0); model.root.quaternion.identity(); ground.position.set(0, D.groundY, 0); sun.position.copy(SUN0); sun.target.position.set(0, 0, 0); state.tilt = state.tiltTarget = 90; state.yaw = 0; props.forEach(p => p.userData.disc.material.opacity = 0); homeView(false); }
+  else { model.root.position.set(0, 0, 0); model.root.quaternion.identity(); ground.position.set(0, D.groundY, 0); sun.position.copy(SUN0); sun.target.position.set(0, 0, 0); state.tilt = state.tiltTarget = 90; state.yaw = 0; state.gear = 0; props.forEach(p => p.userData.disc.material.opacity = 0); homeView(false); }
   inspector(); apply(); resize();
   if (on) { const p = new THREE.Vector3(0, -20, 0); controls.target.copy(p); camera.position.copy(p).add(new THREE.Vector3(-0.72, 0.36, 0.6).normalize().multiplyScalar(innerWidth < 900 ? 4200 : 2600)); }
 }
@@ -342,11 +343,13 @@ function simFrame(dt, now) {
   const inp = { thr: 0.5 + 0.4 * (k('w') - k('s')) + 0.45 * padL.y, yaw: (k('d') - k('a')) * 0.7 + padL.x, pitch: (k('arrowdown') - k('arrowup')) * 0.7 - padR.y, roll: (k('arrowright') - k('arrowleft')) * 0.7 + padR.x, tilt: state.tiltTarget, altHold: true, armed: true };
   for (const key of ['thr']) inp[key] = Math.min(1, Math.max(0, inp[key]));
   for (const key of ['yaw', 'pitch', 'roll']) inp[key] = Math.min(1, Math.max(-1, inp[key]));
-  acc = Math.min(acc + dt, 0.05); while (acc >= SIM_DT) { sim.step(SIM_DT, inp); acc -= SIM_DT; }
+  if (sim.replay) sim.step(dt);                                   // a recorded ArduPilot flight plays back in real time
+  else { acc = Math.min(acc + dt, 0.05); while (acc >= SIM_DT) { sim.step(SIM_DT, inp); acc -= SIM_DT; } }
   const s = sim.s, q = new THREE.Quaternion(s.q[0], s.q[1], s.q[2], s.q[3]);
   const cgW = new THREE.Vector3(s.p[0] * 1000, D.groundY + s.p[1] * 1000, s.p[2] * 1000);
   model.root.quaternion.copy(q); model.root.position.copy(cgW).sub(new THREE.Vector3(...mp.cg).applyQuaternion(q));
   const mDir = setNozzle(s.tilt, s.nozzle); joints.stabs[0].rotation.z = rad(s.tailR); joints.stabs[1].rotation.z = rad(s.tailL);
+  if (Math.abs(state.gear - (s.gear || 0)) > 0.005) { state.gear = s.gear || 0; for (const g of joints.gear || []) g.carrier.rotation[g.axis] = rad(g.sign * g.deg * state.gear); }   // legs fold as the sim (or ArduPilot) retracts them
   state.tilt = s.tilt;
   const sp = i => Math.sqrt(Math.max(0, s.T[i]) / sim.thrusters[i].max);
   fans.lift.rotation.x += dt * 60 * sp(0); fans.main.rotation.x -= dt * 80 * sp(1);
@@ -362,7 +365,8 @@ function simFrame(dt, now) {
   }
   if (now - simHudAt > 110) {
     simHudAt = now; const h = s.p[1] - sim.rest, hard = (s.impact || 0) > 2.5;
-    const mode = s.onGround ? (hard ? 'Hard landing' : 'On the ground') : s.wingW > 0.6 ? 'Wing-borne' : s.wingW > 0.05 ? 'Transition' : 'Hovering';
+    let mode = s.onGround ? (hard ? 'Hard landing' : 'On the ground') : s.wingW > 0.6 ? 'Wing-borne' : s.wingW > 0.05 ? 'Transition' : 'Hovering';
+    if (sim.replay) mode = `ArduPilot ${s.apMode || ''}${s.done ? ' · end' : ''}`;
     $('#simstats').innerHTML = [['Height', h.toFixed(1) + ' m', ''], ['Speed', s.speed.toFixed(1) + ' m/s', ''], ['Climb', s.v[1].toFixed(1) + ' m/s', ''], ['Nozzle', Math.round(s.tilt) + '°', ''], ['State', mode, hard ? 'bad' : '']].map(([a, b, c]) => `<div>${a}<b class="${c}">${b}</b></div>`).join('');
     $('#simbars').innerHTML = ['Front', 'Main', 'Left', 'Right'].map((n, i) => `<div>${n} ${Math.round(100 * s.T[i] / sim.thrusters[i].max)}%<u><i style="width:${100 * s.T[i] / sim.thrusters[i].max}%"></i></u></div>`).join('');
     syncers[1]();
@@ -370,6 +374,17 @@ function simFrame(dt, now) {
   dirty = 2;
 }
 $('#tSim').onclick = () => setSim(!state.sim); $('#sExit').onclick = () => setSim(false);
+// Recorded flights flown by real ArduPilot (tools/sitl-run.py): play them in the same view
+$('#apRow').innerHTML = '<span>Watch ArduPilot fly:</span>' + FLIGHTS.map(f => `<button class="tog" data-ap="${f.id}" title="${f.blurb}">${f.name}</button>`).join('') + '<button class="tog plain" data-ap="">Fly it yourself</button>';
+$('#apRow').addEventListener('click', async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('#apRow button').forEach(x => x.setAttribute('aria-pressed', x === b && b.dataset.ap ? 'true' : 'false'));
+  sim = b.dataset.ap ? await loadReplay(b.dataset.ap, state.battX) : createSim(state.battX); acc = 0; state.tiltTarget = 90;
+});
+// index.html?replay=mission&t=30 opens straight into a recorded flight, t seconds in
+{ const q = new URLSearchParams(location.search), id = q.get('replay');
+  if (id && FLIGHTS.some(f => f.id === id)) { setSim(true); const b = document.querySelector(`#apRow button[data-ap="${id}"]`); b.click();
+    const t = +q.get('t') || 0; if (t) { const wait = () => sim.replay ? sim.seek(t) : setTimeout(wait, 50); wait(); } } }
 $('#sReset').onclick = () => { sim.reset(); state.tiltTarget = 90; };
 $('#sHover').onclick = () => { state.tiltTarget = 90; }; $('#sFwd').onclick = () => { state.tiltTarget = 0; };
 addEventListener('keydown', e => { if (!state.sim || e.target.tagName === 'INPUT') return; const c = e.key.toLowerCase(); keys.add(c); if (c === 'r') $('#sReset').click(); if (c.startsWith('arrow') || c === ' ') e.preventDefault(); });

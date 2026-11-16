@@ -23,7 +23,7 @@ Day 1 exists to replace them with measurements.
 | 2 × 70 mm ducted fans, 6-cell, 3,300 W | 2 × EMAX 2306 with 6 in propellers, 4-cell | Owned; more thrust per watt |
 | Wing-tip micro motors for roll | 2 × EMAX 2306 with 5 in propellers | Owned |
 | Three-bearing swivel nozzle, 3 multi-turn servos, custom board | Rear motor on a printed 2-axis mount: tilt servo + yaw servo | Same function, 2 ordinary servos |
-| Matek board + modified ArduPilot + GPS | ESP32 DevKit + MPU6050 + madflight (Arduino) | Owned; mixer is plain code you can edit |
+| Matek board + modified ArduPilot + GPS | H7 board + stock ArduPilot + two Lua scripts (was ESP32 + madflight until 2026-11-16) | No firmware fork needed; flown in SITL first (section 6) |
 | 2.7 kg | Target 1.3 kg or less | Thrust available |
 | Retractable gear | Fixed wire skids | Weight, time |
 
@@ -118,28 +118,23 @@ about 1.8 x, less some sag; confirm on 4 cells when the controllers arrive.
 
 ## 6. Flight controller
 
-- Hardware: ESP32 DevKit v1 + MPU6050 on I2C + FS-iA6B receiver in PPM mode.
-- Firmware: madflight (Arduino library, derived from dRehmFlight). It supports
-  ESP32, the MPU6050 over I2C, and PPM receivers. It does not list iBUS, so set
-  the receiver to PPM output.
-- Why not ArduPilot: needs a flight controller board you do not own, and the
-  reference builder had to modify it for this layout anyway.
-- Transmitter channels: throttle, roll, pitch, yaw, arm switch, and a knob for
-  tilt angle (manual transition: you turn the knob from hover to forward).
+Decided 2026-11-16: **ArduPilot (ArduPlane 4.7 QuadPlane) on an STM32 H7 board**, replacing the
+ESP32 + madflight plan. It was flown first in simulation against this aircraft's physics; see
+`ardupilot/README.md` and "Autopilot flights" on `/analysis.html`.
 
-Mixer to write (about 20 lines):
-
-```
-tilt     = knob                      // 0 = forward flight, 1 = hover
-hover    = tilt                      // blend factor
-F        = hover * (thr + pitch_pid)
-M        = thr - hover * pitch_pid
-L        = hover * (idle + roll_pid)
-R        = hover * (idle - roll_pid)
-yawServo = centre + hover * yaw_pid
-tailL    = (1 - hover) * (pitch_pid + roll_pid) + stick passthrough
-tailR    = (1 - hover) * (pitch_pid - roll_pid) + stick passthrough
-```
+- Hardware: an ArduPilot H743 wing board with a built-in power board, for example the Matek
+  H743-WLITE (22 g, 12 outputs, barometer, 6 V servo supply; marked end-of-life, so check stock or
+  its successor). It replaces the ESP32, the MPU6050, the 5 V regulator and the 6 V servo regulator
+  (17 g), so the aircraft gains about 5 g. A 1 MB F405 board will not do: the motor layout and the
+  nozzle need Lua scripting.
+- Receiver: the FS-iA6B in PPM mode works with ArduPilot as it is.
+- GPS: needed for position hold (QLOITER) and automatic missions. A 4 g M10 module without a
+  compass is the lightest option, but it would take the last of the weight margin. First flights
+  can go without: QHOVER holds height on the barometer and the pilot holds position.
+- Software: `ardupilot/f35b.parm` plus two Lua scripts, `ardupilot/scripts/f35b_frame.lua` (the
+  motor layout, generated from `spec.js`) and `firmware/nozzle/nozzle_3bsm.lua` (the nozzle).
+- Transmitter channels: throttle, roll, pitch, yaw, arm switch, flight-mode switch (QHOVER /
+  QLOITER / FBWA). Transitions are automatic when switching from a Q mode to FBWA.
 
 ## 7. Schedule
 

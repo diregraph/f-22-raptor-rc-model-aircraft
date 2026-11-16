@@ -2,12 +2,14 @@
 -- ends up running ArduPilot (docs/engineering/05-ardupilot-sitl-plan.md). Same maths as site/js/nozzle.js, checked
 -- against it by tools/nozzle-firmware-test.mjs.
 --
--- In:  the tilt ArduPilot asks for, read from the "Motor Tilt" servo function (41, scaled 0-1000 = 0-90 deg; past 90 is
---      not something ArduPilot asks for, so braking to 100 deg needs a change there), and the yaw from the rudder
---      function (4, scaled -4500..4500 = full yaw swing).
+-- In:  the tilt ArduPilot asks for, read from the "Motor Tilt" servo function 41. Confirmed in SITL (ArduPlane 4.7.2):
+--      0 = motor up (VTOL, jet straight down, 90 deg deflection), 1000 = fully forward (jet straight aft, 0 deg); past
+--      90 deg is not something ArduPilot asks for, so braking to 100 deg needs a change there.
+--      Yaw: in the hover the yaw demand is motors:get_yaw() (-1..1, + = nose right = swing +, confirmed in SITL); the
+--      rudder function (4) carries only the fixed-wing yaw damper in Q modes, so it is used only outside VTOL flight.
 -- Out: two pulses on the "Script 1" and "Script 2" servo functions (94, 95). Set SERVOn_FUNCTION of the two nozzle
 --      servo outputs to 94 and 95, and leave 41 on an unused output so ArduPilot still computes it.
--- Untested on a vehicle: confirm the input scaling in SITL first (plan step 4).
+-- Flown in SITL against the sim.js physics (tools/sitl-run.py); untested on a vehicle.
 
 local N = {}
 local RAD = math.pi / 180
@@ -38,19 +40,24 @@ function N.solve(deflection, yaw)   -- deflection and yaw (degrees) -> joint ang
   return az - clamp(yaw, -yl, yl), b, -b
 end
 
+-- Mid-travel of each pulley over every pose. Done a slice at a time: all 303 solves in one go exceed ArduPilot's
+-- per-call instruction limit (seen in SITL: "exceeded time limit"), so the vehicle loop spreads it over its first calls.
 local centreBand, centreRing
-local function findCentres()
-  local k, bl, bh, rl, rh = N.cfg.collar / N.cfg.ring, 1e9, -1e9, 1e9, -1e9
-  for d = 0, N.cfg.maxDeflection do
+local scan = { d = 0, bl = 1e9, bh = -1e9, rl = 1e9, rh = -1e9 }
+local function findCentres(slice)
+  local k = N.cfg.collar / N.cfg.ring
+  local last = math.min(scan.d + slice - 1, N.cfg.maxDeflection)
+  for d = scan.d, last do
     for y = -1, 1 do
       local a, b = N.solve(d, y * N.yawLimit(d))
       local ring = a + k * b
-      bl, bh, rl, rh = math.min(bl, a), math.max(bh, a), math.min(rl, ring), math.max(rh, ring)
+      scan.bl, scan.bh, scan.rl, scan.rh = math.min(scan.bl, a), math.max(scan.bh, a), math.min(scan.rl, ring), math.max(scan.rh, ring)
     end
   end
-  centreBand, centreRing = (bl + bh) / 2, (rl + rh) / 2
+  scan.d = last + 1
+  if scan.d > N.cfg.maxDeflection then centreBand, centreRing = (scan.bl + scan.bh) / 2, (scan.rl + scan.rh) / 2 end
+  return centreBand ~= nil
 end
-findCentres()
 function N.centres() return centreBand, centreRing end
 
 function N.servoAngles(a, b)   -- joint angles -> degrees from each servo's centre
@@ -88,15 +95,21 @@ function N.update(dt, want, wantYaw, airspeed, onGround, linkOk)
 end
 
 -- On the vehicle: run every 10 ms. In the test harness SRV_Channels does not exist and the module is returned instead.
-if SRV_Channels == nil then return N end
+if SRV_Channels == nil then findCentres(N.cfg.maxDeflection + 1) return N end
 
 local K_TILT, K_RUDDER, K_OUT1, K_OUT2, PERIOD = 41, 4, 94, 95, 10
 local function loop()
-  local tilt = SRV_Channels:get_output_scaled(K_TILT) or 1000
-  local rud = SRV_Channels:get_output_scaled(K_RUDDER) or 0
+  if centreBand == nil then findCentres(10) return loop, PERIOD end   -- about 11 calls, 0.1 s after boot
+  local tilt = SRV_Channels:get_output_scaled(K_TILT) or 0
+  local yaw
+  if quadplane:in_vtol_mode() or quadplane:in_assisted_flight() then
+    yaw = motors:get_yaw() * N.cfg.maxYaw
+  else
+    yaw = (SRV_Channels:get_output_scaled(K_RUDDER) or 0) / 4500 * N.cfg.maxYaw
+  end
   local aspd = ahrs:airspeed_estimate() or 0
   local flying = vehicle:get_likely_flying()
-  local u1, u2 = N.update(PERIOD / 1000, tilt * 90 / 1000, rud / 4500 * N.cfg.maxYaw, aspd, not flying, rc:has_valid_input())
+  local u1, u2 = N.update(PERIOD / 1000, (1000 - tilt) * 90 / 1000, yaw, aspd, not flying, rc:has_valid_input())
   SRV_Channels:set_output_pwm(K_OUT1, u1)
   SRV_Channels:set_output_pwm(K_OUT2, u2)
   return loop, PERIOD

@@ -23,7 +23,8 @@ const SPIN_MIN = 0.12, SPIN_MAX = 0.95;
 const thrust = (pwm, max) => { const t = Math.min(Math.max(((pwm - 1000) / 1000 - SPIN_MIN) / (SPIN_MAX - SPIN_MIN), 0), 1); return max * ((1 - EXPO) * t + EXPO * t * t); };
 // nozzle servo PWM -> joint angles -> direction the jet pushes the aircraft (sim body axes) -> tilt and side swing
 function nozzleFromServos(p1, p2) {
-  const s1 = (p1 - 1500) / 500 * NOZZLE.servoTravel / 2, s2 = (p2 - 1500) / 500 * NOZZLE.servoTravel / 2, c = NOZZLE.cord;
+  const US_PER_DEG = 1000 / 90;                          // as firmware/nozzle/nozzle_3bsm.lua (cfg.usPerDeg, trims 0)
+  const s1 = (p1 - 1500) / US_PER_DEG, s2 = (p2 - 1500) / US_PER_DEG, c = NOZZLE.cord;
   const a = s1 * c.drum / c.band1 + jc.band, ring = s2 * c.drum / c.ring + jc.ring, b = (ring - a) / K;
   const e = exitDirection(a, b, -b), t = [e[0], -e[1], -e[2]];         // flow leaves aft-down; the push is the opposite way
   return { tilt: Math.atan2(Math.hypot(t[1], t[2]), t[0]) * DEG, nozzle: Math.atan2(t[2], t[1]) * DEG };
@@ -49,7 +50,7 @@ sock.on('message', (buf, rinfo) => {
   const dt = Math.min(1 / Math.max(rate, 1), 1 / 200), th = sim.thrusters, nz = nozzleFromServos(pwm[OUT.s1], pwm[OUT.s2]);
   const tail = p => TAIL_SIGN * (p - 1500) / 500 * 25;
   sim.physics(dt, { T: [OUT.F, OUT.M, OUT.L, OUT.R].map((c, i) => thrust(pwm[c], th[i].max) * thrustScale[i]),
-    tilt: nz.tilt, nozzle: nz.nozzle, tailL: tail(pwm[OUT.elevL]), tailR: tail(pwm[OUT.elevR]), gear: pwm[OUT.gear] > 1500 ? 1 : 0 });
+    tilt: nz.tilt, nozzle: nz.nozzle, tailL: tail(pwm[OUT.elevL]), tailR: tail(pwm[OUT.elevR]), gear: pwm[OUT.gear] < 1500 ? 1 : 0 });   // ArduPilot retracts to the low end of the gear output
   const aw = s.onGround ? [0, 0, 0] : s.v.map((v, i) => (v - vPrev[i]) / dt); vPrev = s.v.slice();
   const Rw = rotm(s.q), sf = mmul(T(Rw), [[aw[0]], [aw[1] + G], [aw[2]]]).map(r => r[0]);   // specific force, body axes
   const Rn = mmul(mmul(P, Rw), T(P));

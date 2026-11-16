@@ -1,7 +1,8 @@
 # Plan: fly ArduPilot in simulation before any hardware flies
 
-Status: **proposal, not started.** One decision belongs to Isuru (see "Decision" at the end).
-Nothing in this plan changes the airframe.
+Status: **steps 1 to 6 done in SITL (2026-11-16); Isuru chose ArduPilot for the simulation and the
+aircraft.** Results are under "Results" at the end and on `/analysis.html` ("Autopilot flights").
+How to run it: `ardupilot/README.md`.
 
 ## Why
 
@@ -98,3 +99,27 @@ Isuru decides, after step 5:
 
 Recommendation: do steps 1–5 first. They cost no money and answer whether ArduPilot handles this
 layout before anything is bought.
+
+## Results (2026-11-16, ArduPlane 4.7.2 SITL, `tools/sitl-run.py`)
+
+Decision taken before step 7: Isuru chose option 2, ArduPilot on an H7 board, for both the simulation
+and the aircraft. No firmware fork was needed: stock ArduPlane with the Scripting Matrix frame
+(`Q_FRAME_CLASS 15`) and continuous tilt on motor 2 only (`Q_TILT_TYPE 0`, `Q_TILT_MASK 2`).
+
+| Step | Target | Result |
+|---|---|---|
+| 3 Hover | QHOVER 60 s within ±0.3 m | QLOITER 50 s: height ±0.05 m, position within 0.6 m, fans at 61% |
+| 4 Matrix and nozzle | QLOITER works, yaw from the nozzle | Yes; nozzle trims about 6° of its 20° swing against fan torque |
+| 5 Transitions | ≤ 3 m lost | Full mission flown and landed; about 6 m lost as the lift fans stop at the end of the transition (one run, not ten) |
+| 6 Failures | survive 70% roll motor and a 5 m/s gust | Both survive and land; in wind the nose turns into it, so weathervaning is on |
+
+Findings that change other work:
+- The nozzle script's inputs were wrong for ArduPilot: motor tilt is 0 in the hover and 1000 fully
+  forward (the reverse of the script's assumption), and the rudder output carries only the
+  fixed-wing yaw damper in Q modes. Both fixed in `firmware/nozzle/nozzle_3bsm.lua`, which now reads
+  `motors:get_yaw()` in VTOL flight. Its start-up scan also exceeded ArduPilot's per-call
+  instruction limit and now runs over its first eleven calls.
+- `sim.js` stalls near 13.6 m/s (lift coefficient about 0.87), not the 11.5 m/s of the vortex-lattice
+  study, so transitions are set to finish at 16 m/s.
+- Throttle factors in a Scripting Matrix frame must be set before `MotorsMatrix:init()`, or they are
+  silently ignored and the lift fan works at 66% instead of 60%.

@@ -20,9 +20,21 @@ def attitude(q):
     return math.degrees(math.atan2(-ry, up_y)), math.degrees(math.asin(max(-1, min(1, fy))))
 
 
+def compact(path):
+    """the runner records at 20 Hz with raw PWM; the site needs 10 Hz without it"""
+    d = json.load(open(path))
+    if d['physics'] and 'pwm' in d['physics'][0]:
+        d['physics'] = [{k: v for k, v in r.items() if k != 'pwm'} for r in d['physics'][::2]]
+        d['autopilot'] = d['autopilot'][::2]
+        d['rate_hz'] = 10
+        json.dump(d, open(path, 'w'), separators=(',', ':'))
+    return d
+
+
 def score(name):
-    d = json.load(open(os.path.join(DIR, name + '.json')))
+    d = compact(os.path.join(DIR, name + '.json'))
     P = d['physics']
+    dt = P[1]['t'] - P[0]['t']
     air = [r for r in P if r['p'][1] > 0.5]
     if not air:
         return {'scenario': name, 'flew': False}
@@ -37,7 +49,9 @@ def score(name):
            'hover_fan_load_peak_pct': round(100 * max(load), 1) if load else None,
            'landed': P[-1]['p'][1] < 0.3}
     # steady hover window: 10 s after take-off to 60 s, for the position-hold scenarios
-    hold = [r for r in air if t0 + 10 <= r['t'] <= t0 + 60 and r['tilt'] > 80]
+    land = [e['t'] for e in d['events'] if e.get('mode') == 'QLAND']
+    t_end = min(t0 + 60, land[0] if land else t1)
+    hold = [r for r in air if t0 + 10 <= r['t'] <= t_end and r['tilt'] > 80]
     if hold and name != 'mission':
         hs = [r['p'][1] for r in hold]
         x0, z0 = hold[0]['p'][0], hold[0]['p'][2]
@@ -48,7 +62,7 @@ def score(name):
         out['hold_nozzle_swing_deg'] = round(sum(abs(r['nozzle']) for r in hold) / len(hold), 1)
     if name == 'mission':
         fw = [r for r in air if r['tilt'] < 5]
-        out['forward_flight_s'] = round(len(fw) / 20, 1)
+        out['forward_flight_s'] = round(len(fw) * dt, 1)
         out['max_airspeed_ms'] = out['max_speed_ms']
         hs = [r['p'][1] for r in air]
         out['min_height_after_climb_m'] = round(min(r['p'][1] for r in air if r['t'] > t0 + 20 and r['t'] < t1 - 30), 1) if t1 - t0 > 60 else None
