@@ -2,7 +2,7 @@
 
 Every part of the aircraft as it is now drawn, split into what is already on the shelf and what
 still has to be bought. Masses come from `site/js/spec.js`, which is generated from the CAD, so
-they match the 1,981 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
+they match the 1,989 g all-up figure on `/analysis.html`. Prices are typical hobby-shop prices in
 US dollars at the time of writing, not quotes.
 
 **To buy: about $90.** Everything else is either owned or printed.

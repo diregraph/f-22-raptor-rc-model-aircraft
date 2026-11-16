@@ -266,7 +266,9 @@ def body_master():
 
 def _body_master():
     body = loft([secwire(*s) for s in MID], ruled=False)                                        # a smooth loft through the stations, not straight tapers between them
-    hump = [(126.0, 64.0, 46.0, 50.0), (-10.0, 60.0, 42.0, 50.0), (-139.0, 54.0, 38.0, 48.0)]   # engine spine behind the lift fan
+    # dorsal spine: it starts at the canopy, wraps the lift fan as a raised collar (a longer fan duct for free) and runs aft
+    # to the engine, as on the real aircraft, where the fan doors sit on a hump behind the cockpit
+    hump = [(298.0, 80.0, 50.0, 45.0), (250.0, 89.0, 60.0, 48.0), (170.0, 89.0, 60.0, 49.0), (110.0, 72.0, 48.0, 50.0), (-10.0, 60.0, 42.0, 50.0), (-139.0, 54.0, 38.0, 48.0)]
     hw = [secwire(x, w, tw, w, top, 14.0, 20.0, 2.3) for x, w, tw, top in hump]
     body = body.union(loft(hw, ruled=False))
     for sg in (-1, 1):                                                                          # wing-root blend: the section swells into the body instead of meeting it at a corner
@@ -279,6 +281,11 @@ def _body_master():
         tri = [(X_NOSE - 1, -sg * 82.0), (X_NOSE - 1, -sg * 109.0), (CHEEK_X, -sg * 109.0)]
         wedge = cq.Workplane("XY").polyline(tri).close().extrude(140).translate((0, 0, -70))
         body = body.union(ext.intersect(wedge))
+    # intake mouths: a 44 mm deep recess behind each swept lip, kept above the wire raceway and outboard of the nose joint
+    k = 0.955; m0 = MID[0]
+    mouth = loft([secwire(x, m0[1] * k, m0[2] * k, m0[3] * k, m0[4] * k - 2.0, m0[5] * k, m0[6], m0[7]) for x in (X_NOSE - 12.0, CHEEK_X + 2.0)])
+    for sg in (-1, 1):
+        body = body.cut(mouth.intersect(zbox(X_NOSE - 13.0, CHEEK_X + 3.0, -24.0, 60.0, sg, 85.0, 120.0)))
     return body
 
 def nose_bay_cut():
@@ -351,8 +358,8 @@ def fin(side, grow=0.0):
 def canopy_solid():
     ws = []
     for i in range(13):
-        s = i / 12; x = 316 + 180 * s; k = math.sin(math.pi * s ** 0.72)
-        cw, ch = max(1.2, 34 * k ** 0.5), max(1.2, 27 * k ** 0.65)
+        s = i / 12; x = 305 + 214 * s; k = math.sin(math.pi * s ** 0.66)     # a fifth of the aircraft's length, peak ahead of the middle
+        cw, ch = max(1.2, 37 * k ** 0.5), max(1.2, 33 * k ** 0.62)
         yb = interp(NOSE, x, 4) - 14
         pts = [(x, yb + 14 + ch * math.sin(a) ** 0.9, cw * math.cos(a)) for a in [math.pi * j / 16 for j in range(17)]]
         ws.append(wire(pts + [(x, yb, -cw), (x, yb, cw)]))
@@ -398,6 +405,7 @@ def fuselage_cuts():
     yb = -60.0
     c = longeron_bores().union(cyl("y", FAN_R, -70, 70, FAN_X, 0))                               # lift-fan duct, sized for the shroud ring
     c = c.union(cq.Workplane("XY").circle(FAN_R + 5.2).workplane(offset=-5.2).circle(FAN_R).loft().translate((FAN_X, 0, MID[1][4])))   # seat for the ring lip
+    c = c.union(cq.Workplane("XY").circle(FAN_R + 5.2).workplane(offset=16.0).circle(FAN_R + 10.5).loft().translate((FAN_X, 0, MID[1][4] - 0.01)))   # bellmouth through the spine collar above the ring: the ring still drops in from the top
     c = c.union(cyl("x", DUCT_R, X_NOTCH - 1, PLENUM[0] + 1, Y_AX, 0))                              # main fan duct
     c = c.union(box(PLENUM[0], PLENUM[1], -90, 90, -PLENUM[2], PLENUM[2]))                       # main fan inlet: open on the spine and the belly
     c = c.union(cyl("z", BORE / 2, -HALF_W - 5, HALF_W + 5, SPAR_X, SPAR_Y))                     # spar

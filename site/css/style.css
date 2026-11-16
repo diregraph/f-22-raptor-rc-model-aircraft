@@ -109,6 +109,7 @@ a.tog.plain { color: var(--mute); }
 .pad i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px; border-radius: 50%; background: rgba(255, 122, 26, .85); box-shadow: 0 0 14px rgba(255, 122, 26, .5); pointer-events: none; }
 .pad span { position: absolute; left: 0; right: 0; bottom: -20px; text-align: center; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); pointer-events: none; }
 #padL { left: 22px; } #padR { right: 22px; }
+body.shot #parts, body.shot #info, body.shot #dock, body.shot #top, body.shot #tabs, body.shot #tip { display: none !important; }
 body.sim #parts, body.sim #info, body.sim #dock, body.sim #tabs { display: none !important; }
 
 @media (max-width: 900px) {
