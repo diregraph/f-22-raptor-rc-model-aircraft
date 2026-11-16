@@ -57,14 +57,33 @@ ROLLPARTS = ["motorL", "motorR", "podL", "podR", "propL", "propR"]
 BATT = {c: round(0.105 * c + 23) for c in (3300, 3000, 2700, 2200)}
 BATT_X = (-73.0, 16.0)          # slides aft in the tray from today's x = +16 (the lift-fan bay stops it going forward)
 
-def layout(kv=1700, roll="A", cap=3300, margin_target=None, battery_x=None):
+# ---------- 5. weight savings (owner's choice after the first pass: find about 180 g). Grams per part, estimates.
+# Nose parts are what keeps the aircraft stable (the battery cannot slide further forward than x = +16), so a gram saved
+# in the nose must be paid back by a gram saved further aft. Savings marked balance=False were found and then left out.
+SAVINGS = {
+    "skids": dict(label="Landing skids redrawn from the generative-design study, half the mass", d={"skidF": -9, "skidR": -9}, where="centre", conf="medium: the 2D study gave 24x the stiffness at equal mass"),
+    "longerons": dict(label="Longerons 8 x 0.75 mm aluminium instead of 8 x 1 mm (spar stays 8 x 1)", d={"longeronL": -8.5, "longeronR": -8.5}, where="centre", conf="medium: 17% less stiff; the shells share the load"),
+    "nozzle": dict(label="Thinner printed walls: nozzle 1.3 to 1.0 mm, fan duct 2.2 to 1.6 mm", d={"seg1": -5, "seg2": -7, "seg3": -4, "edfDuct": -15}, where="tail", conf="estimate from the tube areas, not yet re-drawn; check the bearing flanges stay as they are"),
+    "rx": dict(label="Receiver FS-iA6B (15 g) to a micro receiver on the same FlySky link (about 2 g)", d={"rx": -13}, where="nose", conf="high"),
+    "ubec": dict(label="5 V regulator (12 g) to a 2 g buck board", d={"ubec": -10}, where="nose", conf="high"),
+    "esp32": dict(label="ESP32 DevKit to an ESP32 mini board", d={"esp32": -6}, where="nose", conf="high"),
+    "esc": dict(label="Speed controllers: four lighter 45 A singles, about 20 g each instead of 26 g", d={"escF": -6, "escM": -6, "escL": -6, "escR": -6}, where="nose", conf="medium: check the lift motor's 35 A on the bench"),
+    "esc4in1": dict(label="One 4-in-1 speed controller instead of four singles (about 80 g lighter)", d={"escF": -26, "escM": -26, "escL": -26, "escR": -6}, where="nose", conf="left out: the nose is then too light and the aircraft loses its stability margin", balance=False),
+}
+USED = [k for k, v in SAVINGS.items() if v.get("balance", True)]
+
+def layout(kv=1700, roll="A", cap=3300, margin_target=None, battery_x=None, savings=()):
     """Mass, balance point and part list after the changes. With margin_target the battery is slid to give that margin."""
+    dm = {}
+    for k in savings:
+        for pid, g in SAVINGS[k]["d"].items(): dm[pid] = dm.get(pid, 0) + g
     ps = []
     for p in PARTS:
         q = dict(id=p["id"], m=float(p["mass"]), x=float(p["cg"][0]))
         if p["id"] == "motorF": q["m"] = float(MOTORS[kv]["g"])
         if p["id"] in ROLLPARTS: q["x"] += ROLL[roll]["x"] - D["rollX"]
         if p["id"] == "battery": q["m"] = float(BATT[cap])
+        q["m"] += dm.get(p["id"], 0.0)
         ps.append(q)
     bat = next(q for q in ps if q["id"] == "battery")
     m = sum(q["m"] for q in ps)
@@ -105,8 +124,8 @@ def hover_time(h, kv, cap_mah):
     pr = 2 * prop_watts(h["R"] * h["cap"][2] / 2); p = pf + pm + pr + 6.0        # + receiver, flight controller, servos
     return dict(minutes=round(0.8 * cap_mah / 1000 * 14.8 * 60 / p, 1), watts=round(p), amps=round(p / 14.8, 1), lift_W=round(pf), main_W=round(pm), roll_W=round(pr))
 
-def evaluate(kv=1700, roll="A", cap=3300, margin_target=None, battery_x=None, timed=True):
-    m, cg, bx = layout(kv, roll, cap, margin_target, battery_x); h = hover(m, cg, kv, roll)
+def evaluate(kv=1700, roll="A", cap=3300, margin_target=None, battery_x=None, timed=True, savings=()):
+    m, cg, bx = layout(kv, roll, cap, margin_target, battery_x, tuple(savings)); h = hover(m, cg, kv, roll)
     stall = float(np.sqrt(2 * m / 1000 * G / (1.225 * base["s_ref_m2"] * CLMAX)))
     out = dict(kv=kv, roll=roll, cap=cap, battery_x=round(bx, 1), mass=round(m), cg=round(cg, 1), margin=round((cg - NP) / C_REF * 100, 1), stall=round(stall, 1),
                hover_worst=None if h is None else round(h["worst"], 3), hover=None if h is None else {k: round(h[k], 3) for k in "FMR"},
@@ -128,10 +147,15 @@ if __name__ == "__main__":
     steps.append(("Lift-fan motor 1,500 KV", evaluate(kv=KV_NEW, margin_target=6.0)))
     steps.append(("Roll motors in front of the spar", evaluate(kv=KV_NEW, roll="B", margin_target=6.0)))
     steps.append(("Battery 2,700 mAh", evaluate(kv=KV_NEW, roll="B", cap=2700, margin_target=6.0)))
+    steps.append(("Lighter skids, longerons and nozzle walls", evaluate(kv=KV_NEW, roll="B", cap=2700, margin_target=6.0, savings=("skids", "longerons", "nozzle"))))
+    steps.append(("Lighter nose electronics, as far as balance allows", evaluate(kv=KV_NEW, roll="B", cap=2700, margin_target=6.0, savings=USED)))
+    steps.append(("Battery 2,200 mAh", evaluate(kv=KV_NEW, roll="B", cap=2200, margin_target=6.0, savings=USED)))
+    with_4in1 = evaluate(kv=KV_NEW, roll="B", cap=2200, margin_target=6.0, savings=[k for k in USED if k != "esc"] + ["esc4in1"])
+    print("with a 4-in-1 speed controller:", with_4in1["mass"], "g, margin", with_4in1["margin"], "%, worst fan", with_4in1["hover_worst"])
     for n, s in steps: print("%-44s %5d g  margin %5.1f%%  worst fan %s  time %s" % (n, s["mass"], s["margin"], s["hover_worst"], s.get("time", {}).get("minutes")))
 
     # every combination, balance point set for a +6% margin (1 point above the floor, for build scatter)
-    combos = [evaluate(kv, roll, cap, margin_target=6.0) for kv, roll, cap in itertools.product((1700, KV_NEW), "ABC", sorted(BATT, reverse=True))]
+    combos = [evaluate(kv, roll, cap, margin_target=6.0, savings=USED if kv == KV_NEW else ()) for kv, roll, cap in itertools.product((1700, KV_NEW), "ABC", sorted(BATT, reverse=True))]   # 1,500 KV rows include the weight savings
     feasible = [c for c in combos if all(c["ok"].values())]
     # prefer: fewest changes to the outline (roll position), then the most hover margin
     feasible.sort(key=lambda c: ("ABC".index(c["roll"]), c["hover_worst"]))
@@ -142,7 +166,7 @@ if __name__ == "__main__":
     def vs_mass(kv, roll):
         pts = []
         for m_target in range(1700, 2001, 10):
-            m0, cg0, _ = layout(kv, roll, 3300, margin_target=6.0); h = hover(m_target, cg0, kv, roll)    # extra or missing mass placed at the balance point
+            m0, cg0, _ = layout(kv, roll, 3300, margin_target=6.0); h = hover(m_target, -36.0 + 6.0 / 100 * C_REF, kv, roll)    # extra or missing mass placed at the balance point
             pts.append([m_target, None if h is None else round(h["worst"], 3)])
         return pts
     curves = [dict(name="As drawn (balance point at +6%)", kv=1700, roll="A", pts=vs_mass(1700, "A")),
@@ -153,8 +177,8 @@ if __name__ == "__main__":
         ok = [p[0] for p in c["pts"] if p[1] is not None and p[1] <= 0.60]; c["max_mass_at_60"] = max(ok) if ok else None
         print("  %-46s carries %s g at 60%%" % (c["name"], c["max_mass_at_60"]))
     # fan load against balance point, chosen motors, battery and roll position
-    # the recommended package does not reach 60% on modelled thrust: how much more thrust, or less weight, would?
-    pkg = dict(kv=KV_NEW, roll="B", cap=2700)
+    # the recommended package: how much thrust or weight it has in hand, or lacks, against 60%
+    pkg = dict(kv=KV_NEW, roll="B", cap=2200, savings=tuple(USED))
     pm, pcg, _ = layout(**pkg, margin_target=6.0)
     def solve(f, lo, hi):                       # smallest x in [lo, hi] with f(x) <= 0.60 (f falls as x rises)
         for _ in range(40):
@@ -170,6 +194,10 @@ if __name__ == "__main__":
         cg_sweep.append(dict(cg=round(float(cg), 1), margin=round((cg - NP) / C_REF * 100, 1), **({} if h is None else {k: round(h[k], 3) for k in ("worst", "F", "M", "R")})))
     roll_sweep = [[g, round(hover(pm, pcg, KV_NEW, "B", roll_g=g)["worst"], 3)] for g in range(700, 1501, 50)]
     print("to reach 60% with the package:", need)
-    json.dump(dict(need=need, roll_sweep=roll_sweep, package=pkg, now=now, steps=[dict(step=n, **s) for n, s in steps], combos=combos, best=best, kv_sweep=kv_sweep, kv_new=KV_NEW, motors=MOTORS,
+    savings_out = []
+    for k, v in SAVINGS.items():
+        x = sum(next(p for p in PARTS if p["id"] == pid)["cg"][0] * g for pid, g in v["d"].items()) / sum(v["d"].values())
+        savings_out.append(dict(key=k, label=v["label"], g=round(-sum(v["d"].values())), x=round(x), where=v["where"], conf=v["conf"], used=v.get("balance", True)))
+    json.dump(dict(savings=savings_out, with_4in1=with_4in1, need=need, roll_sweep=roll_sweep, package=pkg, now=now, steps=[dict(step=n, **s) for n, s in steps], combos=combos, best=best, kv_sweep=kv_sweep, kv_new=KV_NEW, motors=MOTORS,
                    roll=ROLL, batteries=BATT, vs_mass=curves, cg_sweep=cg_sweep, np=NP, margin_target=6.0),
               open(os.path.join(site, "hover.json"), "w"), indent=1)

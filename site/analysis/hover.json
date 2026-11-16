@@ -1,84 +1,205 @@
 {
+ "savings": [
+  {
+   "key": "skids",
+   "label": "Landing skids redrawn from the generative-design study, half the mass",
+   "g": 18,
+   "x": -52,
+   "where": "centre",
+   "conf": "medium: the 2D study gave 24x the stiffness at equal mass",
+   "used": true
+  },
+  {
+   "key": "longerons",
+   "label": "Longerons 8 x 0.75 mm aluminium instead of 8 x 1 mm (spar stays 8 x 1)",
+   "g": 17,
+   "x": -71,
+   "where": "centre",
+   "conf": "medium: 17% less stiff; the shells share the load",
+   "used": true
+  },
+  {
+   "key": "nozzle",
+   "label": "Thinner printed walls: nozzle 1.3 to 1.0 mm, fan duct 2.2 to 1.6 mm",
+   "g": 31,
+   "x": -303,
+   "where": "tail",
+   "conf": "estimate from the tube areas, not yet re-drawn; check the bearing flanges stay as they are",
+   "used": true
+  },
+  {
+   "key": "rx",
+   "label": "Receiver FS-iA6B (15 g) to a micro receiver on the same FlySky link (about 2 g)",
+   "g": 13,
+   "x": 352,
+   "where": "nose",
+   "conf": "high",
+   "used": true
+  },
+  {
+   "key": "ubec",
+   "label": "5 V regulator (12 g) to a 2 g buck board",
+   "g": 10,
+   "x": 392,
+   "where": "nose",
+   "conf": "high",
+   "used": true
+  },
+  {
+   "key": "esp32",
+   "label": "ESP32 DevKit to an ESP32 mini board",
+   "g": 6,
+   "x": 355,
+   "where": "nose",
+   "conf": "high",
+   "used": true
+  },
+  {
+   "key": "esc",
+   "label": "Speed controllers: four lighter 45 A singles, about 20 g each instead of 26 g",
+   "g": 24,
+   "x": 367,
+   "where": "nose",
+   "conf": "medium: check the lift motor's 35 A on the bench",
+   "used": true
+  },
+  {
+   "key": "esc4in1",
+   "label": "One 4-in-1 speed controller instead of four singles (about 80 g lighter)",
+   "g": 84,
+   "x": 367,
+   "where": "nose",
+   "conf": "left out: the nose is then too light and the aircraft loses its stability margin",
+   "used": false
+  }
+ ],
+ "with_4in1": {
+  "kv": 1500,
+  "roll": "B",
+  "cap": 2200,
+  "battery_x": 16.0,
+  "mass": 1657,
+  "cg": -36.9,
+  "margin": -0.4,
+  "stall": 10.7,
+  "hover_worst": 0.558,
+  "hover": {
+   "F": 0.558,
+   "M": 0.429,
+   "R": 0.558
+  },
+  "thrust_g": {
+   "lift": 1344,
+   "nozzle_down": 814,
+   "roll_pair": 1000
+  },
+  "thrust_centre": -58.7,
+  "roll_arm": 0.89,
+  "time": {
+   "minutes": 3.4,
+   "watts": 464,
+   "amps": 31.4,
+   "lift_W": 183,
+   "main_W": 128,
+   "roll_W": 147
+  },
+  "ok": {
+   "hover": true,
+   "mass": true,
+   "margin": false,
+   "stall": true,
+   "time": true
+  }
+ },
  "need": {
-  "roll_pair_g": 1426,
-  "lift_g": 1528,
-  "mass_g": 1711,
-  "both_pct": 10.3
+  "roll_pair_g": 1001,
+  "lift_g": 1345,
+  "mass_g": 1716,
+  "both_pct": 0.0
  },
  "roll_sweep": [
   [
    700,
-   0.714
+   0.647
   ],
   [
    750,
-   0.705
-  ],
-  [
-   800,
-   0.696
-  ],
-  [
-   850,
-   0.687
-  ],
-  [
-   900,
-   0.679
-  ],
-  [
-   950,
-   0.67
-  ],
-  [
-   1000,
-   0.662
-  ],
-  [
-   1050,
-   0.654
-  ],
-  [
-   1100,
-   0.646
-  ],
-  [
-   1150,
    0.639
   ],
   [
-   1200,
+   800,
    0.631
   ],
   [
+   850,
+   0.623
+  ],
+  [
+   900,
+   0.615
+  ],
+  [
+   950,
+   0.608
+  ],
+  [
+   1000,
+   0.6
+  ],
+  [
+   1050,
+   0.593
+  ],
+  [
+   1100,
+   0.586
+  ],
+  [
+   1150,
+   0.579
+  ],
+  [
+   1200,
+   0.572
+  ],
+  [
    1250,
-   0.624
+   0.566
   ],
   [
    1300,
-   0.617
+   0.559
   ],
   [
    1350,
-   0.61
+   0.553
   ],
   [
    1400,
-   0.603
+   0.547
   ],
   [
    1450,
-   0.597
+   0.541
   ],
   [
    1500,
-   0.59
+   0.535
   ]
  ],
  "package": {
   "kv": 1500,
   "roll": "B",
-  "cap": 2700
+  "cap": 2200,
+  "savings": [
+   "skids",
+   "longerons",
+   "nozzle",
+   "rx",
+   "ubec",
+   "esp32",
+   "esc"
+  ]
  },
  "now": {
   "kv": 1700,
@@ -308,6 +429,123 @@
    },
    "ok": {
     "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Lighter skids, longerons and nozzle walls",
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2700,
+   "battery_x": -50.8,
+   "mass": 1822,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.639,
+   "hover": {
+    "F": 0.639,
+    "M": 0.398,
+    "R": 0.639
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.6,
+    "watts": 526,
+    "amps": 35.5,
+    "lift_W": 225,
+    "main_W": 114,
+    "roll_W": 181
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Lighter nose electronics, as far as balance allows",
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2700,
+   "battery_x": 16.0,
+   "mass": 1769,
+   "cg": -21.7,
+   "margin": 6.0,
+   "stall": 11.1,
+   "hover_worst": 0.62,
+   "hover": {
+    "F": 0.62,
+    "M": 0.387,
+    "R": 0.62
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.8,
+    "watts": 504,
+    "amps": 34.0,
+    "lift_W": 215,
+    "main_W": 110,
+    "roll_W": 173
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "step": "Battery 2,200 mAh",
+   "kv": 1500,
+   "roll": "B",
+   "cap": 2200,
+   "battery_x": 16.0,
+   "mass": 1717,
+   "cg": -22.8,
+   "margin": 5.5,
+   "stall": 10.9,
+   "hover_worst": 0.6,
+   "hover": {
+    "F": 0.6,
+    "M": 0.381,
+    "R": 0.6
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 3.2,
+    "watts": 482,
+    "amps": 32.5,
+    "lift_W": 203,
+    "main_W": 108,
+    "roll_W": 165
+   },
+   "ok": {
+    "hover": true,
     "mass": true,
     "margin": true,
     "stall": true,
@@ -776,130 +1014,16 @@
    "kv": 1500,
    "roll": "A",
    "cap": 3300,
-   "battery_x": -8.2,
-   "mass": 1952,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.6,
-   "hover_worst": 0.713,
-   "hover": {
-    "F": 0.713,
-    "M": 0.344,
-    "R": 0.713
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -72.6,
-   "roll_arm": 1.0,
-   "time": {
-    "minutes": 4.1,
-    "watts": 578,
-    "amps": 39.1,
-    "lift_W": 266,
-    "main_W": 93,
-    "roll_W": 213
-   },
-   "ok": {
-    "hover": false,
-    "mass": false,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "A",
-   "cap": 3000,
-   "battery_x": -7.0,
-   "mass": 1920,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.702,
-   "hover": {
-    "F": 0.702,
-    "M": 0.338,
-    "R": 0.702
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -72.6,
-   "roll_arm": 1.0,
-   "time": {
-    "minutes": 3.8,
-    "watts": 564,
-    "amps": 38.1,
-    "lift_W": 259,
-    "main_W": 91,
-    "roll_W": 208
-   },
-   "ok": {
-    "hover": false,
-    "mass": false,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "A",
-   "cap": 2700,
-   "battery_x": -5.4,
-   "mass": 1888,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.69,
-   "hover": {
-    "F": 0.69,
-    "M": 0.333,
-    "R": 0.69
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -72.6,
-   "roll_arm": 1.0,
-   "time": {
-    "minutes": 3.5,
-    "watts": 549,
-    "amps": 37.1,
-    "lift_W": 251,
-    "main_W": 89,
-    "roll_W": 203
-   },
-   "ok": {
-    "hover": false,
-    "mass": true,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "A",
-   "cap": 2200,
-   "battery_x": -2.1,
-   "mass": 1836,
-   "cg": -21.6,
-   "margin": 6.0,
+   "battery_x": 16.0,
+   "mass": 1833,
+   "cg": -22.4,
+   "margin": 5.7,
    "stall": 11.3,
-   "hover_worst": 0.671,
+   "hover_worst": 0.668,
    "hover": {
-    "F": 0.671,
-    "M": 0.323,
-    "R": 0.671
+    "F": 0.668,
+    "M": 0.327,
+    "R": 0.668
    },
    "thrust_g": {
     "lift": 1344,
@@ -909,12 +1033,164 @@
    "thrust_centre": -72.6,
    "roll_arm": 1.0,
    "time": {
-    "minutes": 3.0,
+    "minutes": 4.4,
     "watts": 527,
     "amps": 35.6,
     "lift_W": 241,
+    "main_W": 87,
+    "roll_W": 193
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 3000,
+   "battery_x": 16.0,
+   "mass": 1801,
+   "cg": -23.1,
+   "margin": 5.4,
+   "stall": 11.2,
+   "hover_worst": 0.656,
+   "hover": {
+    "F": 0.656,
+    "M": 0.325,
+    "R": 0.656
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 4.2,
+    "watts": 512,
+    "amps": 34.6,
+    "lift_W": 233,
     "main_W": 85,
-    "roll_W": 195
+    "roll_W": 188
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 2700,
+   "battery_x": 16.0,
+   "mass": 1769,
+   "cg": -23.8,
+   "margin": 5.1,
+   "stall": 11.1,
+   "hover_worst": 0.643,
+   "hover": {
+    "F": 0.643,
+    "M": 0.322,
+    "R": 0.643
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.8,
+    "watts": 500,
+    "amps": 33.8,
+    "lift_W": 227,
+    "main_W": 85,
+    "roll_W": 182
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "A",
+   "cap": 2200,
+   "battery_x": 16.0,
+   "mass": 1717,
+   "cg": -25.0,
+   "margin": 4.6,
+   "stall": 10.9,
+   "hover_worst": 0.622,
+   "hover": {
+    "F": 0.622,
+    "M": 0.319,
+    "R": 0.622
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -72.6,
+   "roll_arm": 1.0,
+   "time": {
+    "minutes": 3.3,
+    "watts": 478,
+    "amps": 32.3,
+    "lift_W": 215,
+    "main_W": 83,
+    "roll_W": 174
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": false,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "B",
+   "cap": 3300,
+   "battery_x": 9.8,
+   "mass": 1833,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.3,
+   "hover_worst": 0.643,
+   "hover": {
+    "F": 0.643,
+    "M": 0.401,
+    "R": 0.643
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -58.7,
+   "roll_arm": 0.89,
+   "time": {
+    "minutes": 4.4,
+    "watts": 531,
+    "amps": 35.9,
+    "lift_W": 227,
+    "main_W": 116,
+    "roll_W": 182
    },
    "ok": {
     "hover": false,
@@ -927,17 +1203,17 @@
   {
    "kv": 1500,
    "roll": "B",
-   "cap": 3300,
-   "battery_x": -18.5,
-   "mass": 1952,
+   "cap": 3000,
+   "battery_x": 12.8,
+   "mass": 1801,
    "cg": -21.6,
    "margin": 6.0,
-   "stall": 11.6,
-   "hover_worst": 0.685,
+   "stall": 11.2,
+   "hover_worst": 0.632,
    "hover": {
-    "F": 0.685,
-    "M": 0.427,
-    "R": 0.685
+    "F": 0.632,
+    "M": 0.394,
+    "R": 0.632
    },
    "thrust_g": {
     "lift": 1344,
@@ -947,16 +1223,16 @@
    "thrust_centre": -58.7,
    "roll_arm": 0.89,
    "time": {
-    "minutes": 4.0,
-    "watts": 583,
-    "amps": 39.4,
-    "lift_W": 249,
-    "main_W": 128,
-    "roll_W": 200
+    "minutes": 4.1,
+    "watts": 517,
+    "amps": 34.9,
+    "lift_W": 221,
+    "main_W": 112,
+    "roll_W": 178
    },
    "ok": {
     "hover": false,
-    "mass": false,
+    "mass": true,
     "margin": true,
     "stall": true,
     "time": true
@@ -965,17 +1241,17 @@
   {
    "kv": 1500,
    "roll": "B",
-   "cap": 3000,
-   "battery_x": -18.2,
-   "mass": 1920,
-   "cg": -21.6,
+   "cap": 2700,
+   "battery_x": 16.0,
+   "mass": 1769,
+   "cg": -21.7,
    "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.673,
+   "stall": 11.1,
+   "hover_worst": 0.62,
    "hover": {
-    "F": 0.673,
-    "M": 0.42,
-    "R": 0.673
+    "F": 0.62,
+    "M": 0.387,
+    "R": 0.62
    },
    "thrust_g": {
     "lift": 1344,
@@ -986,49 +1262,11 @@
    "roll_arm": 0.89,
    "time": {
     "minutes": 3.8,
-    "watts": 568,
-    "amps": 38.3,
-    "lift_W": 243,
-    "main_W": 123,
-    "roll_W": 196
-   },
-   "ok": {
-    "hover": false,
-    "mass": false,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "B",
-   "cap": 2700,
-   "battery_x": -17.8,
-   "mass": 1888,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.662,
-   "hover": {
-    "F": 0.662,
-    "M": 0.413,
-    "R": 0.662
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -58.7,
-   "roll_arm": 0.89,
-   "time": {
-    "minutes": 3.5,
-    "watts": 555,
-    "amps": 37.5,
-    "lift_W": 237,
-    "main_W": 121,
-    "roll_W": 191
+    "watts": 504,
+    "amps": 34.0,
+    "lift_W": 215,
+    "main_W": 110,
+    "roll_W": 173
    },
    "ok": {
     "hover": false,
@@ -1042,16 +1280,16 @@
    "kv": 1500,
    "roll": "B",
    "cap": 2200,
-   "battery_x": -17.0,
-   "mass": 1836,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.3,
-   "hover_worst": 0.644,
+   "battery_x": 16.0,
+   "mass": 1717,
+   "cg": -22.8,
+   "margin": 5.5,
+   "stall": 10.9,
+   "hover_worst": 0.6,
    "hover": {
-    "F": 0.644,
-    "M": 0.401,
-    "R": 0.644
+    "F": 0.6,
+    "M": 0.381,
+    "R": 0.6
    },
    "thrust_g": {
     "lift": 1344,
@@ -1061,149 +1299,35 @@
    "thrust_centre": -58.7,
    "roll_arm": 0.89,
    "time": {
-    "minutes": 2.9,
-    "watts": 532,
-    "amps": 35.9,
-    "lift_W": 227,
-    "main_W": 116,
-    "roll_W": 183
+    "minutes": 3.2,
+    "watts": 482,
+    "amps": 32.5,
+    "lift_W": 203,
+    "main_W": 108,
+    "roll_W": 165
    },
    "ok": {
-    "hover": false,
+    "hover": true,
     "mass": true,
     "margin": true,
     "stall": true,
-    "time": false
+    "time": true
    }
   },
   {
    "kv": 1500,
    "roll": "C",
    "cap": 3300,
-   "battery_x": -22.9,
-   "mass": 1952,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.6,
-   "hover_worst": 0.673,
-   "hover": {
-    "F": 0.673,
-    "M": 0.461,
-    "R": 0.673
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -52.7,
-   "roll_arm": 0.77,
-   "time": {
-    "minutes": 4.0,
-    "watts": 586,
-    "amps": 39.6,
-    "lift_W": 243,
-    "main_W": 142,
-    "roll_W": 195
-   },
-   "ok": {
-    "hover": false,
-    "mass": false,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "C",
-   "cap": 3000,
-   "battery_x": -23.0,
-   "mass": 1920,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.662,
-   "hover": {
-    "F": 0.662,
-    "M": 0.453,
-    "R": 0.662
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -52.7,
-   "roll_arm": 0.77,
-   "time": {
-    "minutes": 3.7,
-    "watts": 573,
-    "amps": 38.7,
-    "lift_W": 237,
-    "main_W": 139,
-    "roll_W": 191
-   },
-   "ok": {
-    "hover": false,
-    "mass": false,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "C",
-   "cap": 2700,
-   "battery_x": -23.1,
-   "mass": 1888,
-   "cg": -21.6,
-   "margin": 6.0,
-   "stall": 11.5,
-   "hover_worst": 0.651,
-   "hover": {
-    "F": 0.651,
-    "M": 0.445,
-    "R": 0.651
-   },
-   "thrust_g": {
-    "lift": 1344,
-    "nozzle_down": 814,
-    "roll_pair": 1000
-   },
-   "thrust_centre": -52.7,
-   "roll_arm": 0.77,
-   "time": {
-    "minutes": 3.4,
-    "watts": 557,
-    "amps": 37.6,
-    "lift_W": 230,
-    "main_W": 135,
-    "roll_W": 186
-   },
-   "ok": {
-    "hover": false,
-    "mass": true,
-    "margin": true,
-    "stall": true,
-    "time": true
-   }
-  },
-  {
-   "kv": 1500,
-   "roll": "C",
-   "cap": 2200,
-   "battery_x": -23.5,
-   "mass": 1836,
+   "battery_x": 5.4,
+   "mass": 1833,
    "cg": -21.6,
    "margin": 6.0,
    "stall": 11.3,
-   "hover_worst": 0.633,
+   "hover_worst": 0.632,
    "hover": {
-    "F": 0.633,
-    "M": 0.433,
-    "R": 0.633
+    "F": 0.632,
+    "M": 0.432,
+    "R": 0.632
    },
    "thrust_g": {
     "lift": 1344,
@@ -1213,9 +1337,9 @@
    "thrust_centre": -52.7,
    "roll_arm": 0.77,
    "time": {
-    "minutes": 2.9,
+    "minutes": 4.4,
     "watts": 535,
-    "amps": 36.2,
+    "amps": 36.1,
     "lift_W": 221,
     "main_W": 130,
     "roll_W": 178
@@ -1225,11 +1349,162 @@
     "mass": true,
     "margin": true,
     "stall": true,
-    "time": false
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 3000,
+   "battery_x": 8.0,
+   "mass": 1801,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.2,
+   "hover_worst": 0.621,
+   "hover": {
+    "F": 0.621,
+    "M": 0.425,
+    "R": 0.621
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 4.1,
+    "watts": 519,
+    "amps": 35.1,
+    "lift_W": 215,
+    "main_W": 125,
+    "roll_W": 173
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 2700,
+   "battery_x": 11.1,
+   "mass": 1769,
+   "cg": -21.6,
+   "margin": 6.0,
+   "stall": 11.1,
+   "hover_worst": 0.61,
+   "hover": {
+    "F": 0.61,
+    "M": 0.417,
+    "R": 0.61
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.8,
+    "watts": 507,
+    "amps": 34.2,
+    "lift_W": 209,
+    "main_W": 123,
+    "roll_W": 169
+   },
+   "ok": {
+    "hover": false,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
+   }
+  },
+  {
+   "kv": 1500,
+   "roll": "C",
+   "cap": 2200,
+   "battery_x": 16.0,
+   "mass": 1717,
+   "cg": -21.9,
+   "margin": 5.9,
+   "stall": 10.9,
+   "hover_worst": 0.591,
+   "hover": {
+    "F": 0.591,
+    "M": 0.406,
+    "R": 0.591
+   },
+   "thrust_g": {
+    "lift": 1344,
+    "nozzle_down": 814,
+    "roll_pair": 1000
+   },
+   "thrust_centre": -52.7,
+   "roll_arm": 0.77,
+   "time": {
+    "minutes": 3.2,
+    "watts": 485,
+    "amps": 32.8,
+    "lift_W": 199,
+    "main_W": 119,
+    "roll_W": 161
+   },
+   "ok": {
+    "hover": true,
+    "mass": true,
+    "margin": true,
+    "stall": true,
+    "time": true
    }
   }
  ],
- "best": null,
+ "best": {
+  "kv": 1500,
+  "roll": "B",
+  "cap": 2200,
+  "battery_x": 16.0,
+  "mass": 1717,
+  "cg": -22.8,
+  "margin": 5.5,
+  "stall": 10.9,
+  "hover_worst": 0.6,
+  "hover": {
+   "F": 0.6,
+   "M": 0.381,
+   "R": 0.6
+  },
+  "thrust_g": {
+   "lift": 1344,
+   "nozzle_down": 814,
+   "roll_pair": 1000
+  },
+  "thrust_centre": -58.7,
+  "roll_arm": 0.89,
+  "time": {
+   "minutes": 3.2,
+   "watts": 482,
+   "amps": 32.5,
+   "lift_W": 203,
+   "main_W": 108,
+   "roll_W": 165
+  },
+  "ok": {
+   "hover": true,
+   "mass": true,
+   "margin": true,
+   "stall": true,
+   "time": true
+  }
+ },
  "kv_sweep": [
   {
    "kv": 1200,
@@ -1889,290 +2164,290 @@
   {
    "cg": -70.0,
    "margin": -14.2,
-   "worst": 0.623,
-   "F": 0.564,
-   "M": 0.623,
-   "R": 0.623
+   "worst": 0.567,
+   "F": 0.513,
+   "M": 0.567,
+   "R": 0.567
   },
   {
    "cg": -68.0,
    "margin": -13.3,
-   "worst": 0.619,
-   "F": 0.57,
-   "M": 0.619,
-   "R": 0.619
+   "worst": 0.563,
+   "F": 0.518,
+   "M": 0.563,
+   "R": 0.563
   },
   {
    "cg": -66.0,
    "margin": -12.5,
-   "worst": 0.614,
-   "F": 0.576,
-   "M": 0.614,
-   "R": 0.614
+   "worst": 0.558,
+   "F": 0.524,
+   "M": 0.558,
+   "R": 0.558
   },
   {
    "cg": -64.0,
    "margin": -11.7,
-   "worst": 0.61,
-   "F": 0.582,
-   "M": 0.61,
-   "R": 0.61
+   "worst": 0.554,
+   "F": 0.529,
+   "M": 0.554,
+   "R": 0.554
   },
   {
    "cg": -62.0,
    "margin": -10.8,
-   "worst": 0.605,
-   "F": 0.588,
-   "M": 0.605,
-   "R": 0.605
+   "worst": 0.55,
+   "F": 0.535,
+   "M": 0.55,
+   "R": 0.55
   },
   {
    "cg": -60.0,
    "margin": -10.0,
-   "worst": 0.601,
-   "F": 0.594,
-   "M": 0.601,
-   "R": 0.601
+   "worst": 0.546,
+   "F": 0.54,
+   "M": 0.546,
+   "R": 0.546
   },
   {
    "cg": -58.0,
    "margin": -9.2,
-   "worst": 0.599,
-   "F": 0.599,
-   "M": 0.594,
-   "R": 0.599
+   "worst": 0.545,
+   "F": 0.545,
+   "M": 0.541,
+   "R": 0.545
   },
   {
    "cg": -56.0,
    "margin": -8.3,
-   "worst": 0.602,
-   "F": 0.602,
-   "M": 0.584,
-   "R": 0.602
+   "worst": 0.548,
+   "F": 0.548,
+   "M": 0.531,
+   "R": 0.548
   },
   {
    "cg": -54.0,
    "margin": -7.5,
-   "worst": 0.606,
-   "F": 0.606,
-   "M": 0.574,
-   "R": 0.606
+   "worst": 0.551,
+   "F": 0.551,
+   "M": 0.522,
+   "R": 0.551
   },
   {
    "cg": -52.0,
    "margin": -6.7,
-   "worst": 0.609,
-   "F": 0.609,
-   "M": 0.564,
-   "R": 0.609
+   "worst": 0.554,
+   "F": 0.554,
+   "M": 0.513,
+   "R": 0.554
   },
   {
    "cg": -50.0,
    "margin": -5.8,
-   "worst": 0.613,
-   "F": 0.613,
-   "M": 0.554,
-   "R": 0.613
+   "worst": 0.557,
+   "F": 0.557,
+   "M": 0.504,
+   "R": 0.557
   },
   {
    "cg": -48.0,
    "margin": -5.0,
-   "worst": 0.616,
-   "F": 0.616,
-   "M": 0.544,
-   "R": 0.616
+   "worst": 0.56,
+   "F": 0.56,
+   "M": 0.495,
+   "R": 0.56
   },
   {
    "cg": -46.0,
    "margin": -4.2,
-   "worst": 0.62,
-   "F": 0.62,
-   "M": 0.535,
-   "R": 0.62
+   "worst": 0.564,
+   "F": 0.564,
+   "M": 0.486,
+   "R": 0.564
   },
   {
    "cg": -44.0,
    "margin": -3.3,
-   "worst": 0.623,
-   "F": 0.623,
-   "M": 0.525,
-   "R": 0.623
+   "worst": 0.567,
+   "F": 0.567,
+   "M": 0.477,
+   "R": 0.567
   },
   {
    "cg": -42.0,
    "margin": -2.5,
-   "worst": 0.627,
-   "F": 0.627,
-   "M": 0.515,
-   "R": 0.627
+   "worst": 0.57,
+   "F": 0.57,
+   "M": 0.468,
+   "R": 0.57
   },
   {
    "cg": -40.0,
    "margin": -1.7,
-   "worst": 0.63,
-   "F": 0.63,
-   "M": 0.505,
-   "R": 0.63
+   "worst": 0.573,
+   "F": 0.573,
+   "M": 0.459,
+   "R": 0.573
   },
   {
    "cg": -38.0,
    "margin": -0.8,
-   "worst": 0.634,
-   "F": 0.634,
-   "M": 0.495,
-   "R": 0.634
+   "worst": 0.576,
+   "F": 0.576,
+   "M": 0.45,
+   "R": 0.576
   },
   {
    "cg": -36.0,
    "margin": 0.0,
-   "worst": 0.637,
-   "F": 0.637,
-   "M": 0.485,
-   "R": 0.637
+   "worst": 0.579,
+   "F": 0.579,
+   "M": 0.441,
+   "R": 0.579
   },
   {
    "cg": -34.0,
    "margin": 0.8,
-   "worst": 0.641,
-   "F": 0.641,
-   "M": 0.475,
-   "R": 0.641
+   "worst": 0.583,
+   "F": 0.583,
+   "M": 0.432,
+   "R": 0.583
   },
   {
    "cg": -32.0,
    "margin": 1.7,
-   "worst": 0.644,
-   "F": 0.644,
-   "M": 0.465,
-   "R": 0.644
+   "worst": 0.586,
+   "F": 0.586,
+   "M": 0.423,
+   "R": 0.586
   },
   {
    "cg": -30.0,
    "margin": 2.5,
-   "worst": 0.648,
-   "F": 0.648,
-   "M": 0.455,
-   "R": 0.648
+   "worst": 0.589,
+   "F": 0.589,
+   "M": 0.413,
+   "R": 0.589
   },
   {
    "cg": -28.0,
    "margin": 3.3,
-   "worst": 0.651,
-   "F": 0.651,
-   "M": 0.445,
-   "R": 0.651
+   "worst": 0.592,
+   "F": 0.592,
+   "M": 0.404,
+   "R": 0.592
   },
   {
    "cg": -26.0,
    "margin": 4.2,
-   "worst": 0.654,
-   "F": 0.654,
-   "M": 0.435,
-   "R": 0.654
+   "worst": 0.595,
+   "F": 0.595,
+   "M": 0.395,
+   "R": 0.595
   },
   {
    "cg": -24.0,
    "margin": 5.0,
-   "worst": 0.658,
-   "F": 0.658,
-   "M": 0.425,
-   "R": 0.658
+   "worst": 0.598,
+   "F": 0.598,
+   "M": 0.386,
+   "R": 0.598
   },
   {
    "cg": -22.0,
    "margin": 5.8,
-   "worst": 0.661,
-   "F": 0.661,
-   "M": 0.415,
-   "R": 0.661
+   "worst": 0.601,
+   "F": 0.601,
+   "M": 0.377,
+   "R": 0.601
   },
   {
    "cg": -20.0,
    "margin": 6.7,
-   "worst": 0.665,
-   "F": 0.665,
-   "M": 0.405,
-   "R": 0.665
+   "worst": 0.605,
+   "F": 0.605,
+   "M": 0.368,
+   "R": 0.605
   },
   {
    "cg": -18.0,
    "margin": 7.5,
-   "worst": 0.668,
-   "F": 0.668,
-   "M": 0.395,
-   "R": 0.668
+   "worst": 0.608,
+   "F": 0.608,
+   "M": 0.359,
+   "R": 0.608
   },
   {
    "cg": -16.0,
    "margin": 8.3,
-   "worst": 0.672,
-   "F": 0.672,
-   "M": 0.385,
-   "R": 0.672
+   "worst": 0.611,
+   "F": 0.611,
+   "M": 0.35,
+   "R": 0.611
   },
   {
    "cg": -14.0,
    "margin": 9.2,
-   "worst": 0.675,
-   "F": 0.675,
-   "M": 0.375,
-   "R": 0.675
+   "worst": 0.614,
+   "F": 0.614,
+   "M": 0.341,
+   "R": 0.614
   },
   {
    "cg": -12.0,
    "margin": 10.0,
-   "worst": 0.679,
-   "F": 0.679,
-   "M": 0.365,
-   "R": 0.679
+   "worst": 0.617,
+   "F": 0.617,
+   "M": 0.332,
+   "R": 0.617
   },
   {
    "cg": -10.0,
    "margin": 10.8,
-   "worst": 0.682,
-   "F": 0.682,
-   "M": 0.355,
-   "R": 0.682
+   "worst": 0.62,
+   "F": 0.62,
+   "M": 0.323,
+   "R": 0.62
   },
   {
    "cg": -8.0,
    "margin": 11.7,
-   "worst": 0.686,
-   "F": 0.686,
-   "M": 0.345,
-   "R": 0.686
+   "worst": 0.624,
+   "F": 0.624,
+   "M": 0.314,
+   "R": 0.624
   },
   {
    "cg": -6.0,
    "margin": 12.5,
-   "worst": 0.689,
-   "F": 0.689,
-   "M": 0.335,
-   "R": 0.689
+   "worst": 0.627,
+   "F": 0.627,
+   "M": 0.305,
+   "R": 0.627
   },
   {
    "cg": -4.0,
    "margin": 13.3,
-   "worst": 0.693,
-   "F": 0.693,
-   "M": 0.325,
-   "R": 0.693
+   "worst": 0.63,
+   "F": 0.63,
+   "M": 0.295,
+   "R": 0.63
   },
   {
    "cg": -2.0,
    "margin": 14.2,
-   "worst": 0.696,
-   "F": 0.696,
-   "M": 0.315,
-   "R": 0.696
+   "worst": 0.633,
+   "F": 0.633,
+   "M": 0.286,
+   "R": 0.633
   },
   {
    "cg": 0.0,
    "margin": 15.0,
-   "worst": 0.7,
-   "F": 0.7,
-   "M": 0.305,
-   "R": 0.7
+   "worst": 0.636,
+   "F": 0.636,
+   "M": 0.277,
+   "R": 0.636
   }
  ],
  "np": -36,
