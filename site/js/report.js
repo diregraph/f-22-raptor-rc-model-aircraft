@@ -118,7 +118,7 @@ function start() {
   function toJpeg(src, w, h, fx, fy, bg) {
     const k = Math.min(1, 1280 / w), c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
     const ctx = c.getContext('2d'); ctx.fillStyle = bg; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(src, 0, 0, c.width, c.height);
-    pin(ctx, fx * c.width, fy * c.height, Math.max(1, c.width / 900)); return c.toDataURL('image/jpeg', 0.8);
+    if (fx != null) pin(ctx, fx * c.width, fy * c.height, Math.max(1, c.width / 900)); return c.toDataURL('image/jpeg', 0.8);
   }
   function shot(canvas, fx, fy) { return toJpeg(canvas, canvas.width, canvas.height, fx, fy, getComputedStyle(document.body).backgroundColor || '#0a0f15'); }
   async function svgShot(svg, fx, fy) {   // inline the CSS variables the chart uses, then rasterise
@@ -132,12 +132,12 @@ function start() {
   }
 
   // ---- the report form
-  function openForm({ target, view, image, viewUrl, title, describe }) {
+  function openForm({ target, view, image, viewUrl, title, describe, kind = 'problem' }) {
     const m = document.createElement('div'); m.className = 'wb wb-modal';
     m.innerHTML = `<form class="wb-card" novalidate>
       <h3>New report</h3><div class="mute">${esc(describe)}</div>
       ${image ? `<img alt="Screenshot of the reported spot" src="${image}">` : '<div class="mute">No screenshot for this spot; the text above is saved instead.</div>'}
-      <div class="wb-kinds" role="radiogroup" aria-label="Kind">${Object.entries(KIND).map(([k, [n, c]], i) => `<label style="--k:${c}"><input type="radio" name="kind" id="wbKind-${k}" value="${k}" ${i === 1 ? 'checked' : ''}>${n}</label>`).join('')}</div>
+      <div class="wb-kinds" role="radiogroup" aria-label="Kind">${Object.entries(KIND).map(([k, [n, c]], i) => `<label style="--k:${c}"><input type="radio" name="kind" id="wbKind-${k}" value="${k}" ${k === kind ? 'checked' : ''}>${n}</label>`).join('')}</div>
       <input type="text" id="wbTitle" name="title" maxlength="140" placeholder="Short title" value="${esc(title)}" aria-label="Title">
       <textarea id="wbNote" name="note" placeholder="What is wrong, or what would you change? Numbers welcome." aria-label="Note"></textarea>
       <div class="wb-err" role="alert"></div>
@@ -158,6 +158,8 @@ function start() {
     });
   }
 
+  window.__wbReport = { openForm, shot, toast, refreshCount };   // the tweak panel (workbench.js) files its tweaks through the same form
+
   // ---- list of reports
   async function refreshCount() {
     try { const all = await (await fetch('/api/reports', { cache: 'no-store' })).json(); const n = all.filter(r => r.status === 'open').length; $r('#wbList').textContent = `Reports (${n})`; return all; } catch { return []; }
@@ -165,7 +167,7 @@ function start() {
   $r('#wbList').onclick = async () => {
     const all = await refreshCount(), m = document.createElement('div'); m.className = 'wb wb-modal';
     const item = r => { const [n, c] = KIND[r.kind] || [r.kind, '#888'], t = r.target || {};
-      const where = t.type === 'part' ? `${t.name} (${t.id})` : t.type === 'chart' ? [t.section, t.value].filter(Boolean).join(' · ') : t.section || r.page;
+      const where = t.type === 'tweak' ? (t.changes || []).join(' · ') : t.type === 'part' ? `${t.name} (${t.id})` : t.type === 'chart' ? [t.section, t.value].filter(Boolean).join(' · ') : t.section || r.page;
       return `<div class="wb-item ${r.status}">${r.imageUrl ? `<img alt="" src="${r.imageUrl}">` : '<div class="noimg"></div>'}<div><span class="wb-badge" style="--k:${c}">${n}</span><span class="mute">${r.status === 'closed' ? 'closed · ' : ''}${new Date(r.created).toLocaleString()}</span>
         <b>${esc(r.title)}</b><div class="mute">${esc(where)}</div>${r.note ? `<div style="font-size:13px;margin-top:4px">${esc(r.note.slice(0, 220))}</div>` : ''}${r.resolution ? `<div class="mute" style="margin-top:4px">Fix: ${esc(r.resolution)}</div>` : ''}
         ${r.viewUrl ? `<a href="${esc(r.viewUrl)}" data-view="${esc(r.viewUrl)}">Open this view</a>` : ''}</div></div>`; };

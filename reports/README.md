@@ -16,7 +16,7 @@ reports/closed/<id>.*      fixed or declined, with a resolution
 | `kind` | `error` (something is wrong), `problem` (works but is bad), `suggestion` (an idea) |
 | `title`, `note` | the owner's words |
 | `page` | page it was filed from: `index.html` (3D model), `analysis.html`, `nozzle.html`, `story.html` |
-| `target` | what was tapped. 3D: `{type:'part', id, name, point:[x,y,z]}` in aircraft axes (mm, +X nose, +Y up, +Z right wing; part ids are the ones in `site/js/spec.js`). Charts: `{type:'chart', section, chart, value}` with the chart's tooltip at the tap. Text: `{type:'text', section, text}` |
+| `target` | what was tapped. 3D: `{type:'part', id, name, point:[x,y,z]}` in aircraft axes (mm, +X nose, +Y up, +Z right wing; part ids are the ones in `site/js/spec.js`). Charts: `{type:'chart', section, chart, value}` with the chart's tooltip at the tap. Text: `{type:'text', section, text}`. Tweak panel: `{type:'tweak', changes, knobs, before, after}`, where `knobs` are the new numbers (battery pack and station, thrust caps, part masses and stations) and `before`/`after` the live scorecard |
 | `view` | camera and controls at the time; `viewUrl` reopens the same picture (`index.html#view=...`) |
 | `image` | screenshot file name, or null |
 | `status`, `resolution`, `commit` | set by Claude when closing |
@@ -35,6 +35,8 @@ The owner says "work the reports". Then:
    - the requirement targets in `docs/engineering/00-requirements-and-plan.md` still hold, or the change says which one moves and why.
 4. Close each report: move both files to `reports/closed/`, and add `"status": "closed"`, a one-line `"resolution"`
    (what changed, or why it was declined) and the `"commit"` hash.
+   - for a tweak: apply `knobs` to `site/js/spec.js` (and `analysis/` inputs), rerun `analysis/as_drawn.py` and check
+     `site/analysis/current.json` matches the report's `after` scorecard; a gap means the live scorecard (`site/js/score.js`) needs fixing too.
 5. Commit on a branch, open a pull request that lists the reports it closes, and tell the owner.
 
 A report that needs the owner's decision stays open with a `"question"` field added, asked in the thread.

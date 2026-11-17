@@ -37,7 +37,9 @@ Run locally: `npm run dev`, open http://localhost:8765.
 Workbench (owner's Mac): `npm run bench` serves the same site on http://localhost:8765 and the Mac's Wi-Fi address
 (for a phone on the home network), and adds a **Report** button: tap a part of the 3D model or a point on a chart,
 write a note, and the report is saved with a pinned screenshot to `reports/open/`. Commit them with the rest of the
-repo; Claude fixes them in batches ("work the reports", see `reports/README.md`). On the public site the button never appears.
+repo; Claude fixes them in batches. A **Tweak** button on the 3D page changes battery, thrust and any part's mass or
+station and re-scores the design against the targets instantly (`site/js/score.js`); "Save as report" files the tweak.
+Claude fixes reports in batches ("work the reports", see `reports/README.md`). On the public site the button never appears.
 Live: https://f35b.jitfabit.com
 
 Deploy to Cloudflare with the `cf` CLI: `npx cf deploy site` (assets-only Worker).
