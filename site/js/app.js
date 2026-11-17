@@ -446,4 +446,9 @@ addEventListener('hashchange', viewFromHash);
 resize(); homeView(false); buildTree(); inspector(); applyFinish(); apply(); showTab(innerWidth <= 900 ? null : 'controls'); viewFromHash();
 requestAnimationFrame(frame);
 window.__twin = { state, apply, select, focus, setMode, setSim, getSim: () => sim, keys, homeView, camera, controls, parts, massProps: () => mp, trim: () => trim,
-  pickHit, getView, setView, render: () => renderer.render(scene, camera), canvas };
+  pickHit, getView, setView, render: () => renderer.render(scene, camera), canvas, swapGeometry };
+// Workbench: replace a CAD part's shape with a freshly built one (geometry already in aircraft axes). Returns the old one.
+function swapGeometry(id, geo) {
+  const o = parts.get(id); if (!o || !o.isMesh) return null;
+  const old = o.geometry; o.geometry = geo; dirty = Math.max(dirty, 3); return old;
+}

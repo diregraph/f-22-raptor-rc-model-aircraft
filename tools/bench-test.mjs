@@ -7,6 +7,7 @@ import { get } from 'node:http';
 
 const dir = await mkdtemp(join(tmpdir(), 'bench-'));
 process.env.BENCH_REPORTS = dir;
+process.env.CAD_PYTHON = join(dir, 'no-python-here');   // shape knobs must say they are unavailable, not crash
 const { isLocal, cleanReport, reportId, makeServer } = await import('./bench.mjs');
 
 // who may connect
@@ -41,6 +42,9 @@ try {
   for (const p of ['/../package.json', '/%2e%2e/package.json', '/..%2Fpackage.json', '/reports/..%2F..%2Fpackage.json']) assert.notEqual(await raw(p), 200, p);   // no escaping site/ or reports/
   assert.equal(await raw('/..%2Fpackage.json'), 403);
   assert.equal((await fetch(base + '/index.html')).status, 200);
+  const shape = await (await fetch(base + '/api/shape')).json();
+  assert.equal(shape.available, false); assert.match(shape.error, /CadQuery/);
+  assert.equal((await fetch(base + '/api/shape/preview', { method: 'POST', body: '{}' })).status, 503);
 } finally { srv.close(); await rm(dir, { recursive: true, force: true }); }
 
 // the live scorecard must agree with the analysis scorecard (site/analysis/current.json) for the design as drawn
@@ -52,4 +56,11 @@ const heavy = S.defaults(); heavy.battCap = 3300; const s1 = S.score(heavy);
 assert.ok(s1.mass > s0.mass && s1.time > s0.time && s1.hover > s0.hover);
 const weak = S.defaults(); weak.thrust = { F: 300, M: 300, R: 300 }; assert.equal(S.score(weak).hover, null);   // cannot hover
 assert.equal(S.grade('margin', 6.1), 'ok'); assert.equal(S.grade('margin', 4), 'bad'); assert.equal(S.grade('mass', 1990), 'warn');
+// shape changes move the reference area and where lift acts, and the drawn shape scores exactly as before
+const BASE = { WING: { tip_z: 345, root_c: 300, tip_c: 95, sweep: 34 }, STAB: { tip_z: 240, root_c: 195, tip_c: 76, sweep: 34 } };
+const withShape = sh => { const q = S.defaults(); q.shape = sh; q.shapeBase = BASE; return S.score(q); };
+assert.ok(Math.abs(S.shapeAero(BASE).Sref - 0.1584) < 1e-4);                                   // same reference area as analysis/baseline_aero.json
+assert.ok(Math.abs(withShape(BASE).margin - s0.margin) < 1e-9);
+const big = withShape({ ...BASE, WING: { ...BASE.WING, tip_z: 385 } }); assert.ok(big.stall < s0.stall && big.sref > 0.1584);
+assert.ok(withShape({ ...BASE, STAB: { ...BASE.STAB, tip_z: 265 } }).margin > s0.margin);      // more tail: lift acts further aft
 console.log('bench: ok');

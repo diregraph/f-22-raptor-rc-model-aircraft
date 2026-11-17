@@ -4,3 +4,5 @@ node_modules
 dist
 cf-inline/src
 __pycache__/
+.venv-cad/
+.bench/
