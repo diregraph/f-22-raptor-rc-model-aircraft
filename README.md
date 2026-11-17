@@ -39,6 +39,10 @@ Workbench (owner's Mac): `npm run bench` serves the same site on http://localhos
 write a note, and the report is saved with a pinned screenshot to `reports/open/`. Commit them with the rest of the
 repo; Claude fixes them in batches. A **Tweak** button on the 3D page changes battery, thrust and any part's mass or
 station and re-scores the design against the targets instantly (`site/js/score.js`); "Save as report" files the tweak.
+Shape knobs (wing, tailplane, fins) rebuild the real CAD
+parts in about a second through `cad/live.py`, which needs CadQuery in `.venv-cad` (once:
+`~/.pyenv/versions/3.11.8/bin/python -m venv .venv-cad && .venv-cad/bin/pip install cadquery`). "Keep shape" writes
+`cad/params.json` and the part files, and files a report so Claude runs the full checks.
 Claude fixes reports in batches ("work the reports", see `reports/README.md`). On the public site the button never appears.
 Live: https://f35b.jitfabit.com
 

@@ -1,11 +1,20 @@
 // Workbench tweak panel (3D page, local workbench only): number knobs with an instant scorecard against the targets.
 // Battery, thrust estimates, and the mass and station of any part you tap. "Save as report" files the tweak so
 // Claude can make it permanent in spec.js, rerun the studies and check it.
+// Shape knobs (wing, tailplane, fins) need the CadQuery worker (cad/live.py): the parts rebuild for real and replace
+// the ones in the view; "Keep shape" writes them into the CAD and files a report for Claude to check.
 import { PART, THRUSTERS } from './spec.js';
+import { STLLoader } from '../vendor/STLLoader.js';
+import * as THREE from 'three';
 import { TARGETS, BATTERIES, defaults, score, grade } from './score.js';
 
 const BENCH = await fetch('/api/ping', { cache: 'no-store' }).then(r => r.ok && r.json()).then(j => j?.bench === true).catch(() => false);
 if (BENCH) { const wait = () => (window.__twin && document.querySelector('#wbBar') ? start() : setTimeout(wait, 100)); wait(); }
+
+const SHAPE_LABEL = { WING: 'Wing', STAB: 'Tailplane', FIN: 'Fins' };
+const KNOB = { tip_z: 'tip station', root_c: 'root chord', tip_c: 'tip chord', sweep: 'sweep', h: 'height', cant: 'cant' };
+const GROUP_IDS = { WING: ['wingInR', 'wingInL', 'wingOutR', 'wingOutL'], STAB: ['stabR', 'stabL'], FIN: ['finR', 'finL'] };
+const shapeIds = new Set();   // parts whose mass now comes from a shape rebuild
 
 function start() {
   const T = window.__twin, base = defaults(), k = structuredClone(base), B = score(base);
@@ -51,8 +60,9 @@ function start() {
     if (k.battCap !== base.battCap) out.push(`Battery ${k.battCap} mAh (${BATTERIES[k.battCap]} g)`);
     if (Math.round(k.battX) !== Math.round(base.battX)) out.push(`Battery station ${base.battX} → ${k.battX} mm`);
     for (const id of ['F', 'M', 'R']) if (Math.round(k.thrust[id]) !== Math.round(base.thrust[id])) out.push(`${id === 'R' ? 'Roll pair' : id === 'F' ? 'Lift fan' : 'Main fan'} thrust ${Math.round(base.thrust[id])} → ${Math.round(k.thrust[id])} g`);
-    for (const [id, g] of Object.entries(k.mass)) if (g !== PART[id].mass) out.push(`${PART[id].name} mass ${PART[id].mass} → ${g} g`);
+    for (const [id, g] of Object.entries(k.mass)) if (g !== PART[id].mass && !shapeIds.has(id)) out.push(`${PART[id].name} mass ${PART[id].mass} → ${g} g`);
     for (const [id, x] of Object.entries(k.x)) if (x !== PART[id].cg[0]) out.push(`${PART[id].name} station x ${PART[id].cg[0]} → ${x} mm`);
+    if (k.shape) for (const [g, v] of Object.entries(k.shape)) for (const [q, x] of Object.entries(v)) if (x !== k.shapeBase[g][q]) out.push(`${SHAPE_LABEL[g]} ${KNOB[q] || q} ${k.shapeBase[g][q]} → ${x}`);
     return out;
   }
   let lastSel;
@@ -84,6 +94,75 @@ function start() {
   for (const id of ['F', 'M', 'R']) $('#wbT' + id).oninput = e => { k.thrust[id] = base.thrust[id] * e.target.value / 100; render(); };
   $('#wbReset').onclick = () => { Object.assign(k, structuredClone(base)); T.state.battX = base.battX; T.apply(); lastSel = undefined; $('#wbCap').value = k.battCap; render(); };
   setInterval(render, 300);   // follows taps on the model and the main battery slider
+  shapeKnobs();
+
+  // ---- shape knobs: real CAD rebuilds through the workbench server
+  async function shapeKnobs() {
+    const info = await fetch('/api/shape').then(r => r.json()).catch(() => ({ available: false, error: 'workbench server not answering' }));
+    const box = document.createElement('div'); box.id = 'wbShape'; box.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+    $('#wbChanges').previousElementSibling.before(box);
+    if (!info.available) { box.innerHTML = `<h3>Shape</h3><div class="mute">Shape knobs need CadQuery on this Mac: ${esc(info.error)}</div>`; return; }
+    const manifest = await fetch('cad/manifest.json').then(r => r.json()).catch(() => ({}));
+    let kept = structuredClone(info.shape); k.shape = structuredClone(kept); k.shapeBase = kept;
+    const originals = new Map(), loader = new STLLoader();
+    let seq = 0, timer = null, lastOk = true, clashes = [];
+    box.innerHTML = `<h3>Shape · rebuilds the CAD</h3>` + Object.entries(info.limits).map(([g, qs]) => `<div class="mute" style="font-weight:600;color:#cfd9e3">${SHAPE_LABEL[g]}</div>` +
+      Object.entries(qs).map(([q, [lo, hi]]) => `<label><span>${KNOB[q] || q} <output id="wbo-${g}-${q}"></output></span><input type="range" id="wbs-${g}-${q}" data-g="${g}" data-q="${q}" min="${lo}" max="${hi}" step="1" value="${kept[g][q]}"></label>`).join('')).join('') +
+      `<div id="wbShapeStatus" class="mute" aria-live="polite">The shape as drawn.</div>
+       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="wbShapeReset">Undo shape</button><button class="btn go" id="wbKeep" disabled>Keep shape</button></div>`;
+    const status = (t, cls = '') => { const el = box.querySelector('#wbShapeStatus'); el.textContent = t; el.style.color = cls === 'bad' ? '#ff6b6b' : cls === 'ok' ? '#1fd1bd' : ''; };
+    const labels = () => box.querySelectorAll('input[type=range]').forEach(i => { box.querySelector(`#wbo-${i.dataset.g}-${i.dataset.q}`).textContent = `${k.shape[i.dataset.g][i.dataset.q]} ${i.dataset.q === 'sweep' || i.dataset.q === 'cant' ? '°' : 'mm'}`; });
+    const differs = () => Object.keys(k.shape).some(g => Object.keys(k.shape[g]).some(q => k.shape[g][q] !== kept[g][q]));
+    labels();
+    box.addEventListener('input', e => {
+      const i = e.target.closest('input[type=range]'); if (!i) return;
+      k.shape[i.dataset.g][i.dataset.q] = +i.value; labels(); render();      // the aero estimate moves at once
+      clearTimeout(timer); timer = setTimeout(rebuild, 350); status('Rebuilding…');
+    });
+    async function rebuild() {
+      const n = ++seq, t0 = performance.now();
+      const ans = await fetch('/api/shape/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ params: k.shape }) }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+      if (n !== seq) return;                                                    // a newer slider move is already on its way
+      if (!ans.ok) { lastOk = false; status(ans.error, 'bad'); box.querySelector('#wbKeep').disabled = true; return; }
+      for (const [id, p] of Object.entries(ans.parts)) {
+        const geo = loader.parse(await (await fetch(p.url)).arrayBuffer()).applyMatrix4(new THREE.Matrix4().fromArray(p.matrix));
+        geo.computeVertexNormals();
+        const old = T.swapGeometry(id, geo); if (!originals.has(id)) originals.set(id, old); else old?.dispose();
+        if (manifest[id]) { k.mass[id] = Math.max(1, Math.round(PART[id].mass + p.mass - manifest[id].mass)); shapeIds.add(id); }
+      }
+      // parts of groups now back at the kept shape: restore them
+      for (const [id, g] of originals) if (!Object.keys(ans.parts).includes(id) && !ans.groups.some(gr => GROUP_IDS[gr].includes(id))) { T.swapGeometry(id, g)?.dispose(); originals.delete(id); delete k.mass[id]; shapeIds.delete(id); }
+      render();
+      const big = Object.values(ans.parts).filter(p => !p.fits).map(p => p.file);
+      status(`Rebuilt ${Object.keys(ans.parts).length} parts in ${((performance.now() - t0) / 1000).toFixed(1)} s. Checking for clashes…`);
+      const chk = await fetch('/api/shape/check', { method: 'POST', body: '{}' }).then(r => r.json()).catch(() => ({ ok: false }));
+      if (n !== seq) return;
+      clashes = chk.clashes || []; lastOk = true;
+      const msg = [clashes.length ? `Clashes: ${clashes.map(c => `${c[0]} with ${c[1]} (${c[2]} mm³)`).join('; ')}` : 'No clashes with tubes, fans, propellers, servos or battery.',
+        big.length ? `Too big for the printer: ${big.join(', ')}.` : ''].filter(Boolean).join(' ');
+      status(Object.keys(ans.parts).length ? msg : 'The shape as drawn.', clashes.length || big.length ? 'bad' : 'ok');
+      box.querySelector('#wbKeep').disabled = !differs();
+    }
+    box.querySelector('#wbShapeReset').onclick = () => {
+      for (const [id, g] of originals) { T.swapGeometry(id, g)?.dispose(); delete k.mass[id]; shapeIds.delete(id); }
+      originals.clear(); k.shape = structuredClone(kept); seq++;
+      box.querySelectorAll('input[type=range]').forEach(i => { i.value = kept[i.dataset.g][i.dataset.q]; });
+      labels(); render(); status('The shape as drawn.'); box.querySelector('#wbKeep').disabled = true;
+    };
+    box.querySelector('#wbKeep').onclick = async e => {
+      const b = e.target;
+      if (b.dataset.sure !== '1') { b.dataset.sure = '1'; b.textContent = clashes.length ? 'Keep despite clashes?' : 'Sure? Writes the CAD files'; setTimeout(() => { b.dataset.sure = ''; b.textContent = 'Keep shape'; }, 4000); return; }
+      b.disabled = true; b.textContent = 'Keeping…'; b.dataset.sure = '';
+      T.render(); const image = window.__wbReport.shot(T.canvas, null, null), view = T.getView();
+      const ans = await fetch('/api/shape/keep', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ params: k.shape, image, view, viewUrl: `index.html#view=${btoa(unescape(encodeURIComponent(JSON.stringify(view))))}` }) }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+      b.textContent = 'Keep shape';
+      if (!ans.ok) { status(ans.error, 'bad'); b.disabled = false; return; }
+      kept = structuredClone(k.shape); k.shapeBase = kept; originals.clear();
+      status(`Kept. CAD files written; ${ans.report} asks Claude to run the full checks. Reload to see the new masses.`, 'ok');
+      window.__wbReport.toast('Shape kept. Claude will check it on "work the reports".'); window.__wbReport.refreshCount();
+    };
+  }
 
   $('#wbSave').onclick = () => {
     const S = render(), R = window.__wbReport, ch = changes();

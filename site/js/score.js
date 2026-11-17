@@ -42,6 +42,24 @@ export function hoverLoad(m, cg, cap) {
   return best;   // null: no way to hover level
 }
 
+// ---- shape: reference area and where lift acts move with the wing and tailplane (rough, panel-method-free).
+// Each surface is a straight-tapered panel; its lift acts at the quarter point of its mean chord, weighted by its
+// lift slope (Helmbold) and area; the tail sees 55% of it behind the wing's downwash. Only the change from the drawn
+// shape is used, added to the vortex-lattice answers above, so the drawn design scores exactly as before.
+function panel({ root_z, tip_z, root_c, tip_c, sweep, root_le }) {
+  const b = tip_z - root_z, lam = tip_c / root_c, S = (root_c + tip_c) * b, tan = Math.tan(sweep * Math.PI / 180);   // S for both sides
+  const yMac = b / 3 * (1 + 2 * lam) / (1 + lam), cMac = 2 / 3 * root_c * (1 + lam + lam * lam) / (1 + lam);
+  return { S, xac: root_le - yMac * tan - 0.25 * cMac, A: (2 * tip_z) ** 2 / S };
+}
+const slope = A => 2 * Math.PI * A / (2 + Math.sqrt(4 + A * A));
+export const SHAPE_FIXED = { WING: { root_z: 108, root_le: -5 }, STAB: { root_z: 110, root_le: -328 } };   // cad/build.py
+export function shapeAero(shape) {
+  const w = panel({ ...SHAPE_FIXED.WING, ...shape.WING }), t = panel({ ...SHAPE_FIXED.STAB, ...shape.STAB });
+  const Sw = w.S + shape.WING.root_c * 2 * SHAPE_FIXED.WING.root_z;          // reference area: both panels + the body strip between the roots
+  const aw = slope(w.A) * w.S, at = 0.55 * slope(t.A) * t.S;
+  return { Sref: Sw * 1e-6, np: (aw * w.xac + at * t.xac) / (aw + at) };
+}
+
 export function score(k = defaults()) {
   let m = 0, mx = 0;
   for (const p of PARTS) {
@@ -50,16 +68,18 @@ export function score(k = defaults()) {
     if (p.id === 'batteryTray') x = k.battX;
     m += g; mx += g * x;
   }
-  const cg = mx / m, margin = (cg - NP) / C_REF * 100;
+  let np = NP, sref = S_REF;
+  if (k.shape && k.shapeBase) { const a = shapeAero(k.shape), b = shapeAero(k.shapeBase); np += a.np - b.np; sref *= a.Sref / b.Sref; }
+  const cg = mx / m, margin = (cg - np) / C_REF * 100;
   const cap = [k.thrust.F, k.thrust.M * NOZ_EFF, k.thrust.R], h = hoverLoad(m, cg, cap);
-  const stall = Math.sqrt(2 * m / 1000 * G / (1.225 * S_REF * CLMAX));
+  const stall = Math.sqrt(2 * m / 1000 * G / (1.225 * sref * CLMAX));
   let time = null, watts = null;
   if (h) {   // ideal power T^1.5 / sqrt(2 rho A) per disc, scaled to measured-model watts, plus 6 W of electronics
     const ideal = (g, A) => Math.pow(g / 1000 * G, 1.5) / Math.sqrt(2 * RHO * A);
     watts = K_POWER * (ideal(h.F * cap[0], DISC.F) + ideal(h.M * cap[1] / NOZ_EFF, DISC.M) + 2 * ideal(h.R * cap[2] / 2, DISC.R / 2)) + 6;
     time = 0.8 * k.battCap / 1000 * 14.8 * 60 / watts;
   }
-  return { mass: m, cg, margin, hover: h ? h.worst * 100 : null, hoverSplit: h, stall, time, watts };
+  return { mass: m, cg, np, sref, margin, hover: h ? h.worst * 100 : null, hoverSplit: h, stall, time, watts };
 }
 
 // green / amber (within 10% of the limit) / red for one metric

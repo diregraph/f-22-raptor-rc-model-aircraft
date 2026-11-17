@@ -3,13 +3,17 @@
 //   PORT=9000 npm run bench  -> another port
 // Reports land in reports/open/<id>.json (+ <id>.jpg). Claude works them in batches: see reports/README.md.
 import { createServer } from 'node:http';
+import { spawn, execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { createInterface } from 'node:readline';
 import { readFile, writeFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { networkInterfaces } from 'node:os';
 import { join, extname, normalize, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SITE = join(ROOT, 'site'), REPORTS = process.env.BENCH_REPORTS || join(ROOT, 'reports');
+const SITE = join(ROOT, 'site'), REPORTS = process.env.BENCH_REPORTS || join(ROOT, 'reports'), PREVIEW = join(ROOT, '.bench', 'preview');
+const CAD_PY = process.env.CAD_PYTHON || join(ROOT, '.venv-cad', 'bin', 'python');
 const PORT = +process.env.PORT || 8765, HOST = process.env.HOST || '0.0.0.0';
 const MAX_BODY = 8 << 20;   // 8 MB: one JPEG screenshot plus the note
 const KINDS = ['error', 'problem', 'suggestion'];
@@ -49,6 +53,40 @@ export function cleanReport(body, now = new Date()) {
     image: jpeg ? `${id}.jpg` : null,
   };
   return { report, jpeg };
+}
+
+// ---- live CAD: one long-running Python with CadQuery loaded (cad/live.py), requests answered strictly in turn
+let cad = null;
+function startCad() {
+  if (cad) return cad;
+  if (!existsSync(CAD_PY)) return (cad = { error: `No CadQuery Python at ${CAD_PY}. Install it (see README, "Workbench"), or set CAD_PYTHON.` });
+  const proc = spawn(CAD_PY, [join(ROOT, 'cad', 'live.py')], { cwd: ROOT, stdio: ['pipe', 'pipe', 'inherit'] });
+  const waiting = []; let hello;
+  const ready = new Promise((ok, no) => { hello = { ok, no }; });
+  createInterface({ input: proc.stdout }).on('line', line => {
+    let msg; try { msg = JSON.parse(line); } catch { return; }
+    if (msg.ready) return hello.ok(msg);
+    waiting.shift()?.ok(msg);
+  });
+  proc.on('exit', code => { const e = new Error(`CAD worker stopped (exit ${code})`); hello.no(e); waiting.splice(0).forEach(w => w.no(e)); cad = null; });
+  let chain = Promise.resolve();
+  const ask = req => (chain = chain.then(() => ready).then(() => new Promise((ok, no) => { waiting.push({ ok, no }); proc.stdin.write(JSON.stringify(req) + '\n'); })));
+  return (cad = { ready, ask, proc });
+}
+let previewN = 0;
+async function shapeKeep(body) {
+  const c = startCad(); if (c.error) throw new Error(c.error);
+  const ans = await c.ask({ op: 'keep', params: body.params }); if (!ans.ok) return ans;
+  await new Promise(ok => execFile(CAD_PY, [join(ROOT, 'tools', 'sync-mass.py')], { cwd: ROOT }, () => ok()));   // CAD mass estimates into spec.js
+  const lines = [];   // a report so Claude checks the kept shape: full build, clashes, aero rerun, spec.js
+  for (const [g, v] of Object.entries(ans.after)) for (const [q, x] of Object.entries(v)) if (ans.before[g][q] !== x) lines.push(`${g}.${q} ${ans.before[g][q]} → ${x}`);
+  const { report } = cleanReport({ kind: 'suggestion', title: `Kept shape change: ${lines.join(', ')}`.slice(0, 140), note: body.note || '', page: 'index.html',
+    target: { type: 'shape', changes: lines, before: ans.before, after: ans.after, built: ans.built, needs: ['full cad/build.py clash check', 'analysis rerun (baseline_aero, as_drawn)', 'spec.js D.wing/stab/fin and sim AERO in step with cad/params.json'] },
+    view: body.view, viewUrl: body.viewUrl, image: body.image });
+  const dir = join(REPORTS, 'open'); await mkdir(dir, { recursive: true });
+  if (body.image) await writeFile(join(dir, report.image), Buffer.from(body.image.split(',')[1], 'base64'));
+  await writeFile(join(dir, `${report.id}.json`), JSON.stringify(report, null, 2) + '\n');
+  return { ...ans, report: `reports/open/${report.id}.json` };
 }
 
 async function listReports() {
@@ -96,7 +134,25 @@ export function makeServer() {
         console.log(`report saved: reports/open/${report.id}.json  [${report.kind}] ${report.title}`);
         return send(res, 201, { ...report, path: `reports/open/${report.id}.json` });
       }
+      if (path === '/api/shape' && req.method === 'GET') {
+        const c = startCad(); if (c.error) return send(res, 200, { available: false, error: c.error });
+        try { const h = await c.ready; return send(res, 200, { available: true, ...h }); } catch (e) { return send(res, 200, { available: false, error: e.message }); }
+      }
+      if (path.startsWith('/api/shape/') && req.method === 'POST') {
+        const op = path.slice('/api/shape/'.length), c = startCad(); if (c.error) return send(res, 503, { error: c.error });
+        let body; try { body = JSON.parse((await readBody(req)) || '{}'); } catch { return send(res, 400, { error: 'Not valid JSON.' }); }
+        if (op === 'preview') {
+          const n = ++previewN, out = join(PREVIEW, String(n));
+          const ans = await c.ask({ op: 'preview', params: body.params, out });
+          if (ans.ok) for (const p of Object.values(ans.parts)) p.url = `/preview/${n}/${p.stl}`;
+          return send(res, ans.ok ? 200 : 400, ans);
+        }
+        if (op === 'check') { const ans = await c.ask({ op: 'check' }); return send(res, ans.ok ? 200 : 400, ans); }
+        if (op === 'keep') { const ans = await shapeKeep(body); return send(res, ans.ok ? 200 : 400, ans); }
+        return send(res, 404, { error: 'unknown shape operation' });
+      }
       if (path.startsWith('/api/')) return send(res, 404, { error: 'unknown endpoint' });
+      if (path.startsWith('/preview/')) return serveFile(res, PREVIEW, path.slice('/preview/'.length));
       if (path.startsWith('/reports/')) return serveFile(res, REPORTS, path.slice('/reports/'.length));
       return serveFile(res, SITE, path === '/' ? 'index.html' : path.slice(1));
     } catch (e) { send(res, 400, { error: e.message }); }

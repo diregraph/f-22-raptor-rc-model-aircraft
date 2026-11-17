@@ -204,6 +204,13 @@ HATCH = dict(x0=-62.0, x1=94.0, z=84.0)
 WING = dict(root_z=108.0, bury=5.0, mid_z=278.0, tip_z=WING_TIP_Z, root_le=-5.0, root_c=300.0, tip_c=95.0, sweep=34.0, y=-9.0)   # panel joint outboard of the roll duct
 STAB = dict(pivot_x=-400.0, y=-9.0, root_z=110.0, tip_z=240.0, root_le=-328.0, root_c=195.0, tip_c=76.0, sweep=34.0)   # 1.5x the original area: trim at 18 m/s needed 19.5 deg of the 25 available, leaving nothing for manoeuvre
 FIN = dict(root_le=-218.0, root_c=165.0, tip_c=62.0, h=155.0, sweep=42.0, cant=25.0, z=95.0, y0=13.0, bury=2.0)
+# Shape overrides kept from the workbench (cad/live.py, "Keep"): only the lifting surfaces, only the keys in SHAPE_KEYS.
+SHAPE_KEYS = dict(WING=("tip_z", "root_c", "tip_c", "sweep"), STAB=("tip_z", "root_c", "tip_c", "sweep"), FIN=("h", "root_c", "tip_c", "sweep", "cant"))
+SHAPE_DEFAULTS = {k: {q: globals()[k][q] for q in v} for k, v in SHAPE_KEYS.items()}       # as written in this file
+PARAMS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "params.json")
+if os.path.exists(PARAMS_PATH):
+    for _k, _v in json.load(open(PARAMS_PATH)).items():
+        globals()[_k].update({q: float(x) for q, x in _v.items() if q in SHAPE_KEYS[_k]})
 GROUND_Y = -150.0            # the nozzle hangs about 130 mm below the fan axis when it points down, so the legs must be this long
 # Retractable legs, in place of the two tall skids. Each is a flat PETG blade on a 3 mm pivot wire, swung by a 9 g servo,
 # and folds into a T-slot in the belly whose mouth the blade itself closes: no doors, nothing standing in the airflow.
@@ -611,7 +618,8 @@ def fc_sled():       # carries the ESP32 (47 x 23.5 mm hole pattern) and the gyr
 LW, PETG_D = 0.62e-3, 1.27e-3
 # name: (builder, twin id, pivot, print rotation, material)
 ROT_UP = ((0, 1, 0), -90)      # stand the part on its tail: aircraft +X becomes printer up
-PARTS = {
+def parts_table():   # rebuilt after a shape change, because some pivots and print angles depend on the shape
+  return {
     "spar_carrier": (spar_carrier, "sparCarrier", (0, 0, 0), None, "PETG"),
     "fan_spider": (fan_spider, "fanSpider", (0, 0, 0), None, "PETG"),
     "roll_mount_right": (lambda: roll_pod(1), "podR", (0, 0, 0), ((1, 0, 0), 180), "PETG"),
@@ -647,7 +655,8 @@ PARTS = {
     "stabilator_left": (lambda: stab(-1), "stabL", (STAB["pivot_x"], STAB["y"], 0), ((1, 0, 0), -90), "LW-PLA"),
     "fin_right": (lambda: fin(1), "finR", (0, 0, 0), ((1, 0, 0), 90 - FIN["cant"]), "LW-PLA"),
     "fin_left": (lambda: fin(-1), "finL", (0, 0, 0), ((1, 0, 0), -(90 - FIN["cant"])), "LW-PLA"),
-}
+  }
+PARTS = parts_table()
 
 def nozzle_motor_env():
     (x0, x1), w, h = NZ["motor_x"], NZ["motor_w"], NZ["motor_h"]
@@ -686,30 +695,44 @@ def main():
     rep_path = os.path.join(here, "report.json")
     report = json.load(open(rep_path)) if only and os.path.exists(rep_path) else {}
     solids = {}
-    for name, (fn, tid, pivot, rot, mat) in PARTS.items():
+    for name in PARTS:
         if only and name not in only: continue
-        t0 = time.time(); s = fn(); solids[name] = s
-        p = s.rotate((0, 0, 0), rot[0], rot[1]) if rot else s
-        bb = p.val().BoundingBox(); shift = (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -bb.zmin)
-        p = p.translate(shift)
-        fine = mat.startswith("PETG") and name != "canopy"
-        cq.exporters.export(p, os.path.join(here, "stl", name + ".stl"), tolerance=0.01 if fine else 0.04, angularTolerance=0.1 if fine else 0.25)
-        cq.exporters.export(p, os.path.join(here, "step", name + ".step"))
-        shutil.copy(os.path.join(here, "stl", name + ".stl"), os.path.join(site_cad, name + ".stl"))
-        # print pose -> assembly pose (aircraft axes), as a column-major 4x4 for three.js
-        T = cq.Location(cq.Vector(-shift[0], -shift[1], -shift[2]))
-        if rot: T = cq.Location(cq.Vector(0, 0, 0), cq.Vector(*rot[0]), -rot[1]) * T
-        T = cq.Location(cq.Vector(0, 0, 0), cq.Vector(1, 0, 0), -90) * cq.Location(cq.Vector(-pivot[0], 0, -pivot[1])) * T if True else T
-        m = T.wrapped.Transformation(); mat4 = [m.Value(r, c) for c in (1, 2, 3, 4) for r in (1, 2, 3)]
-        mat4 = mat4[0:3] + [0] + mat4[3:6] + [0] + mat4[6:9] + [0] + mat4[9:12] + [1]
-        v = vol(s); area = sum(f.Area() for f in s.faces().vals())
-        mass = v * PETG_D * 0.62 if mat == "PETG" else area * 0.5 * 1.24e-3 if mat == "PETG-clear" else area * 0.55 * LW + v * 0.04 * LW
-        report[name] = {"twin_id": tid, "material": mat, "bed_mm": [round(bb.xlen, 1), round(bb.ylen, 1), round(bb.zlen, 1)], "solids": s.solids().size(),
-                        "mass_est_g": round(mass, 1), "matrix": [round(x, 5) for x in mat4]}
-        print(f"{name:20s} {mat:10s} bed {report[name]['bed_mm']}  solids {report[name]['solids']}  ~{report[name]['mass_est_g']} g  ({time.time() - t0:.1f}s)", flush=True)
+        t0 = time.time(); solids[name] = export_part(name, report, here, site_cad)
+        print(f"{name:20s} {PARTS[name][4]:10s} bed {report[name]['bed_mm']}  solids {report[name]['solids']}  ~{report[name]['mass_est_g']} g  ({time.time() - t0:.1f}s)", flush=True)
+    write_reports(report, rep_path, site_cad)
+    if only: return
+    check(solids, report)
+
+def export_part(name, report, here, site_cad, step=True, parts=None):
+    """Build one part, write its print-pose STL (and STEP) to here/stl and site_cad, and record it in report. Returns the solid."""
+    fn, tid, pivot, rot, mat = (parts or PARTS)[name]
+    s = fn()
+    p = s.rotate((0, 0, 0), rot[0], rot[1]) if rot else s
+    bb = p.val().BoundingBox(); shift = (-(bb.xmin + bb.xmax) / 2, -(bb.ymin + bb.ymax) / 2, -bb.zmin)
+    p = p.translate(shift)
+    fine = mat.startswith("PETG") and name != "canopy"
+    cq.exporters.export(p, os.path.join(here, "stl", name + ".stl"), tolerance=0.01 if fine else 0.04, angularTolerance=0.1 if fine else 0.25)
+    if step: cq.exporters.export(p, os.path.join(here, "step", name + ".step"))
+    if site_cad: shutil.copy(os.path.join(here, "stl", name + ".stl"), os.path.join(site_cad, name + ".stl"))
+    # print pose -> assembly pose (aircraft axes), as a column-major 4x4 for three.js
+    T = cq.Location(cq.Vector(-shift[0], -shift[1], -shift[2]))
+    if rot: T = cq.Location(cq.Vector(0, 0, 0), cq.Vector(*rot[0]), -rot[1]) * T
+    T = cq.Location(cq.Vector(0, 0, 0), cq.Vector(1, 0, 0), -90) * cq.Location(cq.Vector(-pivot[0], 0, -pivot[1])) * T if True else T
+    m = T.wrapped.Transformation(); mat4 = [m.Value(r, c) for c in (1, 2, 3, 4) for r in (1, 2, 3)]
+    mat4 = mat4[0:3] + [0] + mat4[3:6] + [0] + mat4[6:9] + [0] + mat4[9:12] + [1]
+    v = vol(s); area = sum(f.Area() for f in s.faces().vals())
+    mass = v * PETG_D * 0.62 if mat == "PETG" else area * 0.5 * 1.24e-3 if mat == "PETG-clear" else area * 0.55 * LW + v * 0.04 * LW
+    report[name] = {"twin_id": tid, "material": mat, "bed_mm": [round(bb.xlen, 1), round(bb.ylen, 1), round(bb.zlen, 1)], "solids": s.solids().size(),
+                    "mass_est_g": round(mass, 1), "matrix": [round(x, 5) for x in mat4]}
+    return s
+
+def write_reports(report, rep_path, site_cad):
     json.dump(report, open(rep_path, "w"), indent=1)
     json.dump({v["twin_id"]: {"file": k, "matrix": v["matrix"], "material": v["material"], "bed": v["bed_mm"], "mass": v["mass_est_g"]} for k, v in report.items()}, open(os.path.join(site_cad, "manifest.json"), "w"))
-    if only: return
+
+def fits_bed(bed): return min(bed[0], bed[1]) <= 220 and max(bed[0], bed[1]) <= 311 and bed[2] <= 250
+
+def check(solids, report):
     env = envelopes(); clashes = []
     names = list(solids)
     for name, s in solids.items():
@@ -724,8 +747,9 @@ def main():
             if ba.xmax < bb.xmin or bb.xmax < ba.xmin or ba.ymax < bb.ymin or bb.ymax < ba.ymin or ba.zmax < bb.zmin or bb.zmax < ba.zmin: continue
             v = vol(solids[a].intersect(solids[b]))
             if v > 1.0: clashes.append((a, b, round(v, 1)))
-    over = [k for k, v in report.items() if not (min(v["bed_mm"][0], v["bed_mm"][1]) <= 220 and max(v["bed_mm"][0], v["bed_mm"][1]) <= 311 and v["bed_mm"][2] <= 250)]
+    over = [k for k, v in report.items() if not fits_bed(v["bed_mm"])]
     print("clashes (mm^3):", clashes or "none"); print("too big for a 220 x 220 x 250 bed (even diagonal):", over or "none")
+    return clashes, over
 
 if __name__ == "__main__":
     main()
