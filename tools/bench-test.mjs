@@ -42,4 +42,14 @@ try {
   assert.equal(await raw('/..%2Fpackage.json'), 403);
   assert.equal((await fetch(base + '/index.html')).status, 200);
 } finally { srv.close(); await rm(dir, { recursive: true, force: true }); }
+
+// the live scorecard must agree with the analysis scorecard (site/analysis/current.json) for the design as drawn
+const S = await import('../site/js/score.js'), cur = JSON.parse(await readFile(new URL('../site/analysis/current.json', import.meta.url), 'utf8')).now;
+const s0 = S.score();
+assert.equal(Math.round(s0.mass), cur.mass); assert.ok(Math.abs(s0.margin - cur.margin) < 0.1, 'margin ' + s0.margin);
+assert.ok(Math.abs(s0.hover / 100 - cur.hover_worst) < 0.002, 'hover ' + s0.hover); assert.ok(Math.abs(s0.stall - cur.stall) < 0.1, 'stall ' + s0.stall);
+const heavy = S.defaults(); heavy.battCap = 3300; const s1 = S.score(heavy);
+assert.ok(s1.mass > s0.mass && s1.time > s0.time && s1.hover > s0.hover);
+const weak = S.defaults(); weak.thrust = { F: 300, M: 300, R: 300 }; assert.equal(S.score(weak).hover, null);   // cannot hover
+assert.equal(S.grade('margin', 6.1), 'ok'); assert.equal(S.grade('margin', 4), 'bad'); assert.equal(S.grade('mass', 1990), 'warn');
 console.log('bench: ok');
