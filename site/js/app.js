@@ -244,7 +244,7 @@ function homeView(anim = true) {
 
 // ---------- picking
 const ray = new THREE.Raycaster(), ptr = new THREE.Vector2();
-function pick(ev) {
+function pickHit(ev) {   // first visible part under the pointer: { id, point } in aircraft axes (mm), or null
   const r = canvas.getBoundingClientRect(); ptr.set((ev.clientX - r.left) / r.width * 2 - 1, -(ev.clientY - r.top) / r.height * 2 + 1);
   ray.setFromCamera(ptr, camera);
   for (const h of ray.intersectObject(model.root, true)) {
@@ -252,13 +252,14 @@ function pick(ev) {
     if (state.cut < 468 && h.point.z > state.cut) continue;
     if (state.xray && shells.includes(id)) continue;
     let o = h.object, vis = true; while (o) { if (!o.visible) { vis = false; break; } o = o.parent; }
-    if (vis) return id;
+    if (vis) return { id, point: model.root.worldToLocal(h.point.clone()).toArray().map(v => Math.round(v)) };
   }
   return null;
 }
+const pick = ev => pickHit(ev)?.id ?? null;
 let down = null;
 canvas.addEventListener('pointerdown', e => down = [e.clientX, e.clientY]);
-canvas.addEventListener('pointerup', e => { if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 6) select(pick(e)); down = null; });
+canvas.addEventListener('pointerup', e => { if (window.__reportMode) { down = null; return; } if (down && Math.hypot(e.clientX - down[0], e.clientY - down[1]) < 6) select(pick(e)); down = null; });
 canvas.addEventListener('dblclick', e => { const id = pick(e); if (id) focus(id); });
 let hoverQueued = false;
 canvas.addEventListener('pointermove', e => {
@@ -423,6 +424,26 @@ function frame(now) {
 }
 
 if (new URLSearchParams(location.search).has('shot')) document.body.classList.add('shot');   // clean render for stills: no panels
-resize(); homeView(false); buildTree(); inspector(); applyFinish(); apply(); showTab(innerWidth <= 900 ? null : 'controls');
+// ---------- saved views: everything needed to reopen the same picture (used by the workbench reporter, #view=... links)
+const VIEW_KEYS = ['explode', 'tilt', 'yaw', 'elev', 'gear', 'battX', 'cut', 'xray', 'forces', 'scale', 'mode', 'step', 'selected'];
+const r1 = v => Math.round(v * 10) / 10;
+function getView() {
+  const v = Object.fromEntries(VIEW_KEYS.map(k => [k, state[k]]));
+  return { ...v, hidden: [...state.hidden], cam: camera.position.toArray().map(r1), target: controls.target.toArray().map(r1) };
+}
+function setView(v) {
+  for (const k of VIEW_KEYS) if (k in v) state[k] = v[k];
+  state.tiltTarget = state.tilt; lastEx = state.explode; state.hidden = new Set(v.hidden || []);
+  if (v.cam && v.target) { camAnim = null; camera.position.fromArray(v.cam); controls.target.fromArray(v.target); }
+  applyFinish(); apply(); inspector();
+}
+function viewFromHash() {
+  const m = location.hash.match(/^#view=(.+)$/); if (!m) return;
+  try { setView(JSON.parse(decodeURIComponent(escape(atob(m[1]))))); } catch { /* bad link: keep the home view */ }
+}
+addEventListener('hashchange', viewFromHash);
+
+resize(); homeView(false); buildTree(); inspector(); applyFinish(); apply(); showTab(innerWidth <= 900 ? null : 'controls'); viewFromHash();
 requestAnimationFrame(frame);
-window.__twin = { state, apply, select, focus, setMode, setSim, getSim: () => sim, keys, homeView, camera, controls, parts, massProps: () => mp, trim: () => trim };
+window.__twin = { state, apply, select, focus, setMode, setSim, getSim: () => sim, keys, homeView, camera, controls, parts, massProps: () => mp, trim: () => trim,
+  pickHit, getView, setView, render: () => renderer.render(scene, camera), canvas };

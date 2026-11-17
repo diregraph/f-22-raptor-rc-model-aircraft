@@ -33,6 +33,11 @@ sized around parts on hand.
 - `docs/build-plan.md` — 14-day build plan. `docs/source-video.md` — reference build.
 
 Run locally: `npm run dev`, open http://localhost:8765.
+
+Workbench (owner's Mac): `npm run bench` serves the same site on http://localhost:8765 and the Mac's Wi-Fi address
+(for a phone on the home network), and adds a **Report** button: tap a part of the 3D model or a point on a chart,
+write a note, and the report is saved with a pinned screenshot to `reports/open/`. Commit them with the rest of the
+repo; Claude fixes them in batches ("work the reports", see `reports/README.md`). On the public site the button never appears.
 Live: https://f35b.jitfabit.com
 
 Deploy to Cloudflare with the `cf` CLI: `npx cf deploy site` (assets-only Worker).

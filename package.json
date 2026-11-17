@@ -3,9 +3,10 @@
   "private": true,
   "scripts": {
     "dev": "python3 -m http.server 8765 --directory site",
+    "bench": "node tools/bench.mjs",
     "deploy": "cf deploy site",
     "deploy:inline": "npm --prefix cf-inline install && npm --prefix cf-inline run deploy",
-    "test": "node tools/sim-test.mjs && node tools/nozzle-test.mjs && node tools/nozzle-loads.mjs && node tools/nozzle-firmware-test.mjs",
+    "test": "node tools/sim-test.mjs && node tools/nozzle-test.mjs && node tools/nozzle-loads.mjs && node tools/nozzle-firmware-test.mjs && node tools/bench-test.mjs",
     "gen:ardupilot": "node tools/ardupilot-gen.mjs",
     "sitl": "python3 tools/sitl-run.py all && python3 tools/sitl-summary.py"
   },
