@@ -1,0 +1,203 @@
+{
+ "rows": [
+  {
+   "scale": 0.5,
+   "mass": 488,
+   "stall": 11.4,
+   "span_mm": 345,
+   "length_mm": 504,
+   "battery_g": 73,
+   "groups": {
+    "printed": 228,
+    "tubes": 27,
+    "propulsion": 56,
+    "battery": 73,
+    "wiring": 32,
+    "servos": 19,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.55,
+   "mass": 579,
+   "stall": 11.3,
+   "span_mm": 380,
+   "length_mm": 554,
+   "battery_g": 86,
+   "groups": {
+    "printed": 281,
+    "tubes": 34,
+    "propulsion": 66,
+    "battery": 86,
+    "wiring": 39,
+    "servos": 20,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.6,
+   "mass": 684,
+   "stall": 11.3,
+   "span_mm": 414,
+   "length_mm": 605,
+   "battery_g": 101,
+   "groups": {
+    "printed": 340,
+    "tubes": 42,
+    "propulsion": 78,
+    "battery": 101,
+    "wiring": 46,
+    "servos": 23,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.65,
+   "mass": 803,
+   "stall": 11.3,
+   "span_mm": 448,
+   "length_mm": 655,
+   "battery_g": 118,
+   "groups": {
+    "printed": 406,
+    "tubes": 51,
+    "propulsion": 91,
+    "battery": 118,
+    "wiring": 54,
+    "servos": 28,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.7,
+   "mass": 934,
+   "stall": 11.3,
+   "span_mm": 483,
+   "length_mm": 706,
+   "battery_g": 138,
+   "groups": {
+    "printed": 478,
+    "tubes": 61,
+    "propulsion": 106,
+    "battery": 138,
+    "wiring": 63,
+    "servos": 34,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.75,
+   "mass": 1078,
+   "stall": 11.3,
+   "span_mm": 518,
+   "length_mm": 756,
+   "battery_g": 159,
+   "groups": {
+    "printed": 556,
+    "tubes": 73,
+    "propulsion": 123,
+    "battery": 159,
+    "wiring": 72,
+    "servos": 40,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.8,
+   "mass": 1234,
+   "stall": 11.3,
+   "span_mm": 552,
+   "length_mm": 806,
+   "battery_g": 183,
+   "groups": {
+    "printed": 641,
+    "tubes": 86,
+    "propulsion": 141,
+    "battery": 183,
+    "wiring": 83,
+    "servos": 48,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.85,
+   "mass": 1404,
+   "stall": 11.4,
+   "span_mm": 586,
+   "length_mm": 857,
+   "battery_g": 209,
+   "groups": {
+    "printed": 732,
+    "tubes": 100,
+    "propulsion": 160,
+    "battery": 209,
+    "wiring": 94,
+    "servos": 55,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.9,
+   "mass": 1586,
+   "stall": 11.4,
+   "span_mm": 621,
+   "length_mm": 907,
+   "battery_g": 237,
+   "groups": {
+    "printed": 830,
+    "tubes": 115,
+    "propulsion": 181,
+    "battery": 237,
+    "wiring": 105,
+    "servos": 64,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 0.95,
+   "mass": 1782,
+   "stall": 11.5,
+   "span_mm": 656,
+   "length_mm": 958,
+   "battery_g": 267,
+   "groups": {
+    "printed": 935,
+    "tubes": 132,
+    "propulsion": 203,
+    "battery": 267,
+    "wiring": 118,
+    "servos": 73,
+    "fixed": 54
+   },
+   "ok": true
+  },
+  {
+   "scale": 1.0,
+   "mass": 1992,
+   "stall": 11.5,
+   "span_mm": 690,
+   "length_mm": 1008,
+   "battery_g": 300,
+   "groups": {
+    "printed": 1047,
+    "tubes": 150,
+    "propulsion": 227,
+    "battery": 300,
+    "wiring": 131,
+    "servos": 83,
+    "fixed": 54
+   },
+   "ok": true
+  }
+ ],
+ "rules": "Scale study: how small can the skeleton F-35B get? Every part of the skeleton version (analysis/skeleton.py) is scaled by\nthe rule that governs it, and the weight is solved as a fixed point (motors and battery depend on the weight they lift).\n\n  printed parts, skin, nodes, bays   ~ s^2.2   (walls stay at the printable minimum, so mass follows area)\n  tubes                              ~ s^2.5\n  motors, speed controllers, props   ~ M       (same 60% hover load at every size)\n  battery                            ~ M^1.5 / s  (hover power at the fans' disc loading, same hover time)\n  wiring                             ~ s * sqrt(M)\n  servos, nozzle gearmotors          ~ s^2.5, floored at what can be bought (2 g servo, 3 g micro gearmotor)\n  flight controller, receiver, FPV   fixed (22 g H743 board; 2 g ELRS receiver; 22 g FPV)\nStall speed ~ sqrt(M / s^2). Run after skeleton.py: python3 analysis/scale_study.py  (writes site/analysis/scale.json)\n"
+}

@@ -123,3 +123,24 @@ in the weight sum is scaled up by 1.3.
 - No CFD exists in the repository yet. Proposed: OpenFOAM on the Mac for the intakes and the canopy with its
   camera dome.
 - Hover time is scaled from today's 3.4 min by weight, not re-simulated.
+
+## Scale study: 600 to 800 g (owner chose mid size, 2026-11-19)
+
+`python3 analysis/scale_study.py` scales every part of the skeleton version by the rule that governs it and
+solves for the weight (motors and battery depend on what they lift). Writes `site/analysis/scale.json`.
+
+| Size | Weight | Span | Length | Battery | Stall |
+|---|---|---|---|---|---|
+| 55% | 579 g | 380 mm | 554 mm | 86 g | 11.3 m/s |
+| **60%** | **684 g** | **414 mm** | **605 mm** | **101 g** | **11.3 m/s** |
+| 65% | 803 g | 448 mm | 655 mm | 118 g | 11.3 m/s |
+| 100% (today's skeleton) | 1,992 g | 690 mm | 1,008 mm | 300 g | 11.5 m/s |
+
+Weight falls about as size squared, because printed walls cannot get thinner than the nozzle allows. Stall
+speed holds because the weight per wing area stays about the same. About 54 g never shrinks: the flight
+controller, receiver, nozzle board and FPV.
+
+At 60%: main fan about 48 mm, lift fan about 97 mm, roll propellers about 3 in, spar about 360 mm (fits the
+owner's 53 cm carbon tube), longerons about 380 mm (the 30 and 32 cm carbon tubes are just short).
+Risks: the three-bearing nozzle and its gearmotors get tight, and the fan model has not been checked at this
+size. A fixed camera instead of pan/tilt saves weight that matters more at this size.
